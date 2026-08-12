@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/landing/SiteChrome";
 import { Hero } from "@/components/landing/Hero";
+import { ScrollProgress } from "@/components/landing/primitives";
 import {
   ProblemSection,
   ContextSection,
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <div className="min-h-screen bg-background">
+      <ScrollProgress />
       <SiteHeader />
       <main>
         <Hero />
