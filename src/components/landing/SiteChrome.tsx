@@ -87,13 +87,6 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <a
-            href="#acesso"
-            className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:block"
-          >
-            Como acessar
-          </a>
-
           {user ? (
             <div className="flex items-center gap-2">
               {user.picture ? (
