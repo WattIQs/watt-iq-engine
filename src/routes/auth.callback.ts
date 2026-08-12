@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { exchangeGoogleCode } from "../lib/google-auth";
-import { generateOtp, sendOtpEmail } from "../lib/email-otp";
+import { generateOtp, sendOtpEmail } from "../lib/email.otp";
 import { createOtpChallenge } from "../lib/otp-store";
 
 export const Route = createFileRoute("/auth/callback")({
