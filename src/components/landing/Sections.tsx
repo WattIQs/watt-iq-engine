@@ -302,10 +302,10 @@ export function CtaSection() {
             consumo está dizendo sobre a sua empresa.
           </p>
           <a
-            href="#cta"
-            className="mt-9 inline-block rounded-md bg-gradient-energy px-7 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 glow-energy"
+            href="#acesso"
+            className="lift glow-energy mt-9 inline-block rounded-md bg-gradient-energy animate-gradient px-7 py-3 text-sm font-semibold text-primary-foreground hover:lift-hover"
           >
-            Acessar plataforma
+            Ver como acessar
           </a>
         </Reveal>
       </div>
