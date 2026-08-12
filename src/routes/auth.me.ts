@@ -1,30 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { getSessionUser } from "../lib/session";
 
 export const Route = createFileRoute("/auth/me")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const cookie = request.headers.get("cookie") ?? "";
+        const user = getSessionUser(request);
 
-        const match = cookie.match(/wattiq_user=([^;]+)/);
-
-        if (!match?.[1]) {
-          return Response.json(
-            {
-              authenticated: false,
-              user: null,
-            },
-            { status: 200 },
-          );
+        if (!user) {
+          return Response.json({
+            authenticated: false,
+            user: null,
+          });
         }
-
-        const email = decodeURIComponent(match[1]);
 
         return Response.json({
           authenticated: true,
-          user: {
-            email,
-          },
+          user,
         });
       },
     },
