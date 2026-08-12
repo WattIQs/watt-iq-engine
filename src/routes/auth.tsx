@@ -96,8 +96,9 @@ function AuthPage() {
 
             <button
               type="button"
-              onClick={pending}
-              className="lift mt-5 flex w-full items-center justify-center gap-2.5 rounded-md border border-border bg-background px-4 py-2.5 text-sm font-medium hover:border-primary/60 hover:lift-hover"
+              onClick={() => {
+                window.location.href = "/auth/google";
+              }}
             >
               <GoogleIcon />
               Continuar com Google
