@@ -122,7 +122,8 @@ export const Route = createFileRoute("/auth/verify")({
             { status: 500 },
           );
         }
-      },
-    },
+         },
   },
+
+  component: VerifyPage,
 });
