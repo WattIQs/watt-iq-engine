@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { verifyOtpChallenge } from "../lib/otp-store";
-import { createSessionCookie, type SessionUser } from "../lib/session";
+import {
+  createSessionCookie,
+  type SessionUser,
+} from "../lib/session";
 import { VerifyPage } from "../components/auth/VerifyPage";
 
 export const Route = createFileRoute("/auth/verify")({
@@ -9,12 +12,19 @@ export const Route = createFileRoute("/auth/verify")({
       POST: async ({ request }) => {
         try {
           const body = await request.json();
+
           const code =
-            typeof body.code === "string" ? body.code : "";
+            typeof body.code === "string"
+              ? body.code
+              : "";
 
-          const cookie = request.headers.get("cookie") ?? "";
+          const cookie =
+            request.headers.get("cookie") ?? "";
 
-          const otpMatch = cookie.match(/wattiq_otp=([^;]+)/);
+          const otpMatch = cookie.match(
+            /wattiq_otp=([^;]+)/
+          );
+
           const pendingMatch = cookie.match(
             /wattiq_pending_user=([^;]+)/
           );
@@ -28,22 +38,23 @@ export const Route = createFileRoute("/auth/verify")({
                 message:
                   "A sessão de confirmação expirou. Faça login novamente.",
               },
-              { status: 401 },
+              { status: 401 }
             );
           }
 
           if (!/^\d{6}$/.test(code)) {
             return Response.json(
               {
-                message: "Digite um código válido de 6 dígitos.",
+                message:
+                  "Digite um código válido de 6 dígitos.",
               },
-              { status: 400 },
+              { status: 400 }
             );
           }
 
           const email = verifyOtpChallenge(
             challengeId,
-            code,
+            code
           );
 
           if (!email) {
@@ -52,7 +63,7 @@ export const Route = createFileRoute("/auth/verify")({
                 message:
                   "Código incorreto ou expirado. Verifique o e-mail e tente novamente.",
               },
-              { status: 401 },
+              { status: 401 }
             );
           }
 
@@ -62,8 +73,8 @@ export const Route = createFileRoute("/auth/verify")({
             user = JSON.parse(
               Buffer.from(
                 pendingUser,
-                "base64url",
-              ).toString("utf-8"),
+                "base64url"
+              ).toString("utf-8")
             ) as SessionUser;
           } catch {
             return Response.json(
@@ -71,16 +82,17 @@ export const Route = createFileRoute("/auth/verify")({
                 message:
                   "Não foi possível recuperar os dados da conta.",
               },
-              { status: 400 },
+              { status: 400 }
             );
           }
 
           if (!user.sub || !user.email) {
             return Response.json(
               {
-                message: "Dados da conta inválidos.",
+                message:
+                  "Dados da conta inválidos.",
               },
-              { status: 400 },
+              { status: 400 }
             );
           }
 
@@ -93,7 +105,7 @@ export const Route = createFileRoute("/auth/verify")({
                 message:
                   "O código não corresponde à conta que iniciou o login.",
               },
-              { status: 401 },
+              { status: 401 }
             );
           }
 
@@ -111,7 +123,7 @@ export const Route = createFileRoute("/auth/verify")({
         } catch (error) {
           console.error(
             "Erro ao verificar OTP:",
-            error,
+            error
           );
 
           return Response.json(
@@ -119,10 +131,11 @@ export const Route = createFileRoute("/auth/verify")({
               message:
                 "Não foi possível verificar o código.",
             },
-            { status: 500 },
+            { status: 500 }
           );
         }
-         },
+      },
+    },
   },
 
   component: VerifyPage,
