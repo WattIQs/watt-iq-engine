@@ -15,14 +15,14 @@ export async function sendOtpEmail(
   const response = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
     headers: {
-      "accept": "application/json",
+      accept: "application/json",
       "api-key": apiKey,
       "content-type": "application/json",
     },
     body: JSON.stringify({
       sender: {
         name: "WattIQ",
-        email: "SEU_EMAIL_VERIFICADO_NO_BREVO",
+        email: "COLOQUE_AQUI_SEU_EMAIL_VERIFICADO_NO_BREVO",
       },
       to: [
         {
