@@ -10,7 +10,9 @@ import {
 
 
 export const Route = createFileRoute("/auth/email")({
+
   server: {
+
     handlers: {
 
       POST: async ({ request }) => {
@@ -30,8 +32,7 @@ export const Route = createFileRoute("/auth/email")({
 
             return Response.json(
               {
-                message:
-                  "Digite um e-mail válido.",
+                message: "Digite um e-mail válido.",
               },
               {
                 status:400,
@@ -41,9 +42,7 @@ export const Route = createFileRoute("/auth/email")({
           }
 
 
-          const code =
-            generateOtp();
-
+          const code = generateOtp();
 
 
           const challengeId =
@@ -53,24 +52,20 @@ export const Route = createFileRoute("/auth/email")({
             );
 
 
-
           await sendOtpEmail(
             email,
             code,
           );
 
 
-
           const headers =
             new Headers();
-
 
 
           headers.append(
             "Set-Cookie",
             `wattiq_otp=${challengeId}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=600`,
           );
-
 
 
           console.log(
@@ -82,19 +77,16 @@ export const Route = createFileRoute("/auth/email")({
           );
 
 
-
           return Response.json(
             {
               success:true,
-              message:
-                "Código enviado para seu e-mail.",
+              message:"Código enviado para seu e-mail.",
             },
             {
               status:200,
               headers,
             },
           );
-
 
 
         } catch(error) {
@@ -109,7 +101,7 @@ export const Route = createFileRoute("/auth/email")({
           return Response.json(
             {
               message:
-                "Não foi possível iniciar o login. Tente novamente.",
+              "Não foi possível iniciar o login. Tente novamente.",
             },
             {
               status:500,
@@ -122,5 +114,7 @@ export const Route = createFileRoute("/auth/email")({
       },
 
     },
+
   },
+
 });
