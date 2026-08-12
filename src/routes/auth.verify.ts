@@ -14,19 +14,16 @@ export const Route = createFileRoute("/auth/verify")({
           const body = await request.json();
 
           const code =
-            typeof body.code === "string"
-              ? body.code
-              : "";
+            typeof body.code === "string" ? body.code : "";
 
-          const cookie =
-            request.headers.get("cookie") ?? "";
+          const cookie = request.headers.get("cookie") ?? "";
 
           const otpMatch = cookie.match(
-            /wattiq_otp=([^;]+)/
+            /wattiq_otp=([^;]+)/,
           );
 
           const pendingMatch = cookie.match(
-            /wattiq_pending_user=([^;]+)/
+            /wattiq_pending_user=([^;]+)/,
           );
 
           const challengeId = otpMatch?.[1];
@@ -38,7 +35,7 @@ export const Route = createFileRoute("/auth/verify")({
                 message:
                   "A sessão de confirmação expirou. Faça login novamente.",
               },
-              { status: 401 }
+              { status: 401 },
             );
           }
 
@@ -48,22 +45,22 @@ export const Route = createFileRoute("/auth/verify")({
                 message:
                   "Digite um código válido de 6 dígitos.",
               },
-              { status: 400 }
+              { status: 400 },
             );
           }
 
           const email = verifyOtpChallenge(
             challengeId,
-            code
+            code,
           );
 
           if (!email) {
             return Response.json(
               {
                 message:
-                  "Código incorreto ou expirado. Verifique o e-mail e tente novamente.",
+                  "Código incorreto ou expirado. Verifique seu e-mail e tente novamente.",
               },
-              { status: 401 }
+              { status: 401 },
             );
           }
 
@@ -73,8 +70,8 @@ export const Route = createFileRoute("/auth/verify")({
             user = JSON.parse(
               Buffer.from(
                 pendingUser,
-                "base64url"
-              ).toString("utf-8")
+                "base64url",
+              ).toString("utf-8"),
             ) as SessionUser;
           } catch {
             return Response.json(
@@ -82,17 +79,16 @@ export const Route = createFileRoute("/auth/verify")({
                 message:
                   "Não foi possível recuperar os dados da conta.",
               },
-              { status: 400 }
+              { status: 400 },
             );
           }
 
           if (!user.sub || !user.email) {
             return Response.json(
               {
-                message:
-                  "Dados da conta inválidos.",
+                message: "Dados da conta inválidos.",
               },
-              { status: 400 }
+              { status: 400 },
             );
           }
 
@@ -105,7 +101,7 @@ export const Route = createFileRoute("/auth/verify")({
                 message:
                   "O código não corresponde à conta que iniciou o login.",
               },
-              { status: 401 }
+              { status: 401 },
             );
           }
 
@@ -123,7 +119,7 @@ export const Route = createFileRoute("/auth/verify")({
         } catch (error) {
           console.error(
             "Erro ao verificar OTP:",
-            error
+            error,
           );
 
           return Response.json(
@@ -131,7 +127,7 @@ export const Route = createFileRoute("/auth/verify")({
               message:
                 "Não foi possível verificar o código.",
             },
-            { status: 500 }
+            { status: 500 },
           );
         }
       },
