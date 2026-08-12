@@ -33,12 +33,22 @@ export const Route = createFileRoute("/auth/verify")({
           const pendingUserRaw = readCookie(request, "wattiq_pending_user");
 
           if (!challengeId || !pendingUserRaw) {
-            return Response.json(
-              { message: "Sessão de verificação expirada. Solicite um novo código." },
-              { status: 400 },
-            );
-          }
+  console.error("Cookies de verificação:", {
+    challengeId: !!challengeId,
+    pendingUserRaw: !!pendingUserRaw,
+  });
 
+  return Response.json(
+    {
+      message: "Sessão de verificação expirada.",
+      debug: {
+        otp: !!challengeId,
+        pendingUser: !!pendingUserRaw,
+      },
+    },
+    { status: 400 },
+  );
+}
           const email = verifyOtpChallenge(challengeId, code);
 
           if (!email) {
