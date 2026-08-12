@@ -333,3 +333,247 @@
   transform: translateY(-4px);
   box-shadow: 0 18px 40px -28px oklch(0 0 0 / 0.9);
 }
+
+/* --- Premium motion & interaction layer ----------------------------- */
+/* Everything below is additive: new class names only, nothing existing
+   above this line was changed, so auth/login screens are unaffected. */
+
+@keyframes wattiq-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(14px, -18px);
+  }
+}
+
+@keyframes wattiq-orbit {
+  from {
+    transform: rotate(0deg) translateX(10px) rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg) translateX(10px) rotate(-360deg);
+  }
+}
+
+@keyframes wattiq-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.16;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes wattiq-underline {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@utility animate-drift {
+  animation: wattiq-drift 7s ease-in-out infinite;
+}
+
+@utility animate-glow-breathe {
+  animation: wattiq-glow-breathe 5s ease-in-out infinite;
+}
+
+/* Direction-aware reveal variants — same on/in pattern as .reveal above,
+   just different starting transforms. Used by <Reveal variant="..."> */
+.reveal-left,
+.reveal-right,
+.reveal-scale {
+  opacity: 0;
+  filter: blur(6px);
+  transition:
+    opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal-left {
+  transform: translateX(-36px) scale(0.98);
+}
+.reveal-right {
+  transform: translateX(36px) scale(0.98);
+}
+.reveal-scale {
+  transform: scale(0.9);
+}
+.reveal-left.reveal-in,
+.reveal-right.reveal-in,
+.reveal-scale.reveal-in {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+}
+
+/* Tilt / spotlight card — mouse-tracked 3D tilt with a cursor-following
+   glow, driven by --mx/--my custom properties set from JS (see TiltCard). */
+.tilt-card {
+  position: relative;
+  transition:
+    transform 0.15s ease-out,
+    box-shadow 0.35s ease,
+    border-color 0.35s ease;
+  will-change: transform;
+}
+.tilt-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    280px circle at var(--mx, 50%) var(--my, 50%),
+    oklch(0.72 0.19 145 / 0.16),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.tilt-card:hover::before,
+.tilt-card:focus-within::before {
+  opacity: 1;
+}
+.tilt-card:hover,
+.tilt-card:focus-within {
+  border-color: oklch(0.72 0.19 145 / 0.45);
+  box-shadow:
+    0 30px 70px -32px oklch(0 0 0 / 0.65),
+    0 0 0 1px oklch(0.72 0.19 145 / 0.18),
+    var(--glow-energy);
+}
+
+/* Sweeping shine that plays once on hover (used on buttons / feature tiles) */
+.shine-hover {
+  position: relative;
+  overflow: hidden;
+}
+.shine-hover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 20%,
+    oklch(1 0 0 / 0.22) 48%,
+    oklch(1 0 0 / 0.22) 52%,
+    transparent 80%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.shine-hover:hover::after {
+  transform: translateX(120%);
+}
+
+/* Pulsing ring used behind primary CTAs to draw the eye */
+.cta-ring {
+  position: relative;
+  isolation: isolate;
+}
+.cta-ring::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  z-index: -1;
+  border-radius: inherit;
+  border: 1.5px solid oklch(0.72 0.19 145 / 0.55);
+  animation: wattiq-ring 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+/* Animated underline for nav-style links */
+.underline-grow {
+  position: relative;
+}
+.underline-grow::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1.5px;
+  background: var(--gradient-energy);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.underline-grow:hover::after {
+  transform: scaleX(1);
+}
+
+/* Scroll progress bar, driven by --scroll-progress (0 to 1) */
+.scroll-progress-track {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 60;
+  background: oklch(1 0 0 / 0.06);
+  pointer-events: none;
+}
+.scroll-progress-bar {
+  height: 100%;
+  transform-origin: left;
+  transform: scaleX(var(--scroll-progress, 0));
+  background: var(--gradient-energy);
+  box-shadow: 0 0 14px oklch(0.72 0.19 145 / 0.65);
+}
+
+/* Carousel controls */
+.carousel-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.5rem;
+  width: 2.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+  color: var(--color-foreground);
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    opacity 0.25s ease;
+}
+.carousel-arrow:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: oklch(0.72 0.19 145 / 0.55);
+  box-shadow: var(--glow-energy);
+}
+.carousel-arrow:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.carousel-dot {
+  height: 6px;
+  width: 6px;
+  border-radius: 999px;
+  background: var(--color-border);
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.carousel-dot[data-active="true"] {
+  width: 22px;
+  background: var(--gradient-energy);
+  box-shadow: 0 0 10px oklch(0.72 0.19 145 / 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tilt-card {
+    transform: none !important;
+  }
+  .cta-ring::before {
+    animation: none;
+  }
+}
