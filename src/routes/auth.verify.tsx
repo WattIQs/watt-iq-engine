@@ -1,20 +1,96 @@
 import { useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { verifyOtpChallenge } from "../lib/otp-store";
 
 const mark = "/wattiq-logo.png";
 
 export const Route = createFileRoute("/auth/verify")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        try {
+          const body = await request.json();
+          const code = typeof body.code === "string" ? body.code : "";
+
+          const cookie = request.headers.get("cookie") ?? "";
+          const match = cookie.match(/wattiq_otp=([^;]+)/);
+          const challengeId = match?.[1];
+
+          if (!challengeId) {
+            return Response.json(
+              {
+                message:
+                  "A confirmação expirou. Faça login novamente.",
+              },
+              { status: 401 },
+            );
+          }
+
+          if (!/^\d{6}$/.test(code)) {
+            return Response.json(
+              {
+                message: "Digite um código válido de 6 dígitos.",
+              },
+              { status: 400 },
+            );
+          }
+
+          const email = verifyOtpChallenge(challengeId, code);
+
+          if (!email) {
+            return Response.json(
+              {
+                message:
+                  "Código incorreto ou expirado. Verifique seu e-mail e tente novamente.",
+              },
+              { status: 401 },
+            );
+          }
+
+          /*
+           * IMPORTANTE:
+           * Neste momento o OTP foi confirmado.
+           *
+           * A sessão definitiva será criada pelo callback
+           * quando armazenarmos os dados completos do Google.
+           *
+           * Por enquanto redirecionamos para a página inicial.
+           */
+
+          return new Response(null, {
+            status: 302,
+            headers: {
+              Location: "/",
+              "Set-Cookie":
+                "wattiq_otp=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax",
+            },
+          });
+        } catch (error) {
+          console.error("Erro ao verificar OTP:", error);
+
+          return Response.json(
+            {
+              message:
+                "Não foi possível verificar o código.",
+            },
+            { status: 500 },
+          );
+        }
+      },
+    },
+  },
+
   component: VerifyPage,
 });
 
 function VerifyPage() {
-  const navigate = useNavigate();
-
   const [code, setCode] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
     if (code.length !== 6) {
@@ -28,22 +104,30 @@ function VerifyPage() {
     try {
       const response = await fetch("/auth/verify", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ code }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setMessage(data.message || "Código inválido ou expirado.");
+      if (response.redirected) {
+        window.location.href = response.url;
         return;
       }
 
-      navigate({ to: "/" });
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(
+          data.message || "Código inválido ou expirado.",
+        );
+        return;
+      }
     } catch {
-      setMessage("Não foi possível verificar o código. Tente novamente.");
+      setMessage(
+        "Não foi possível verificar o código. Tente novamente.",
+      );
     } finally {
       setLoading(false);
     }
@@ -81,7 +165,10 @@ function VerifyPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+          <form
+            onSubmit={handleSubmit}
+            className="mt-7 space-y-5"
+          >
             <label className="block">
               <span className="text-xs font-medium text-muted-foreground">
                 Código de confirmação
@@ -91,7 +178,9 @@ function VerifyPage() {
                 value={code}
                 onChange={(event) =>
                   setCode(
-                    event.target.value.replace(/\D/g, "").slice(0, 6),
+                    event.target.value
+                      .replace(/\D/g, "")
+                      .slice(0, 6),
                   )
                 }
                 inputMode="numeric"
@@ -107,7 +196,9 @@ function VerifyPage() {
               disabled={loading || code.length !== 6}
               className="lift w-full rounded-md bg-gradient-energy px-4 py-3 text-sm font-semibold text-primary-foreground transition-all duration-300 hover:lift-hover disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? "Verificando..." : "Confirmar código"}
+              {loading
+                ? "Verificando..."
+                : "Confirmar código"}
             </button>
           </form>
 
