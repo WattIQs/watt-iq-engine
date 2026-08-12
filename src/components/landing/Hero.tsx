@@ -7,7 +7,7 @@ export function Hero() {
     <section className="relative overflow-hidden border-b border-border">
       <div className="grid-backdrop pointer-events-none absolute inset-0 opacity-70" aria-hidden />
       <div
-        className="pointer-events-none absolute -top-40 left-1/2 h-[320px] w-[620px] -translate-x-1/2 rounded-full opacity-12 blur-3xl animate-energy-pulse"
+        className="pointer-events-none absolute -top-40 left-1/2 h-[320px] w-[620px] -translate-x-1/2 rounded-full opacity-[0.12] blur-3xl animate-energy-pulse"
         style={{ background: "var(--gradient-energy)" }}
         aria-hidden
       />
