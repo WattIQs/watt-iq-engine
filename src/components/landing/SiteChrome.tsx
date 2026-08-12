@@ -37,16 +37,23 @@ export function SiteHeader() {
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside,
+    );
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener(
+        "mousedown",
+        handleClickOutside,
+      );
     };
   }, []);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
+
         <Link
           to="/"
           className="flex items-center gap-2.5"
@@ -63,6 +70,7 @@ export function SiteHeader() {
             Watt<span className="text-primary">IQ</span>
           </span>
         </Link>
+
 
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
           <a
@@ -94,56 +102,61 @@ export function SiteHeader() {
           </a>
         </nav>
 
+
         <div className="flex items-center gap-2">
+
           {user ? (
-            <div className="relative" ref={menuRef}>
+
+            <div
+              className="relative"
+              ref={menuRef}
+            >
+
               <button
                 type="button"
-                onClick={() => setMenuOpen((open) => !open)}
+                onClick={() =>
+                  setMenuOpen(
+                    (open) => !open,
+                  )
+                }
                 className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-secondary"
-                aria-expanded={menuOpen}
-                aria-haspopup="menu"
               >
+
                 {user.picture ? (
+
                   <img
                     src={user.picture}
                     alt=""
                     className="h-8 w-8 rounded-full"
                   />
+
                 ) : (
+
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-                    {user.name.charAt(0).toUpperCase()}
+                    {user.name
+                      .charAt(0)
+                      .toUpperCase()}
                   </div>
+
                 )}
 
+
                 <span className="hidden max-w-48 truncate text-sm font-medium sm:block">
-                  {user.email}
+                  Olá, {user.name}
                 </span>
 
-                <svg
-                  viewBox="0 0 20 20"
-                  className={`h-4 w-4 text-muted-foreground transition-transform ${
-                    menuOpen ? "rotate-180" : ""
-                  }`}
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M5 7.5 10 12.5 15 7.5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
               </button>
 
+
               {menuOpen ? (
+
                 <div
                   role="menu"
                   className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-xl border border-border bg-card p-1.5 shadow-xl animate-rise"
                 >
+
                   <div className="border-b border-border px-3 py-3">
+
                     <p className="text-sm font-semibold">
                       {user.name}
                     </p>
@@ -151,19 +164,25 @@ export function SiteHeader() {
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">
                       {user.email}
                     </p>
+
                   </div>
+
 
                   <a
                     href="/auth/google"
                     role="menuitem"
                     className="mt-1 block rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-secondary"
                   >
-                    <span className="font-medium">Trocar conta</span>
+                    <span className="font-medium">
+                      Trocar conta
+                    </span>
 
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       Entrar com outro Google
                     </span>
+
                   </a>
+
 
                   <a
                     href="/auth/logout"
@@ -172,22 +191,33 @@ export function SiteHeader() {
                   >
                     Sair
                   </a>
+
+
                 </div>
+
               ) : null}
+
+
             </div>
+
           ) : (
+
             <Link
               to="/auth"
               className="lift rounded-md bg-gradient-energy animate-gradient px-4 py-2 text-sm font-semibold text-primary-foreground hover:lift-hover"
             >
               Entrar
             </Link>
+
           )}
+
         </div>
+
       </div>
     </header>
   );
 }
+
 
 export function SiteFooter() {
   return (
