@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const mark = "/wattiq-logo.png";
 
@@ -11,6 +11,8 @@ type User = {
 
 export function SiteHeader() {
   const [user, setUser] = useState<User | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/auth/me")
@@ -19,14 +21,27 @@ export function SiteHeader() {
 
         const data = await response.json();
 
-        if (data.authenticated) {
-          return data.user;
-        }
-
-        return null;
+        return data.authenticated ? data.user : null;
       })
       .then(setUser)
       .catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   return (
@@ -77,29 +92,87 @@ export function SiteHeader() {
           >
             Intelligence
           </a>
-
-          <a
-            href="#acesso"
-            className="transition-colors hover:text-foreground"
-          >
-            Acesso
-          </a>
         </nav>
 
         <div className="flex items-center gap-2">
           {user ? (
-            <div className="flex items-center gap-2">
-              {user.picture ? (
-                <img
-                  src={user.picture}
-                  alt=""
-                  className="h-8 w-8 rounded-full"
-                />
-              ) : null}
+            <div className="relative" ref={menuRef}>
+              <button
+                type="button"
+                onClick={() => setMenuOpen((open) => !open)}
+                className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-secondary"
+                aria-expanded={menuOpen}
+                aria-haspopup="menu"
+              >
+                {user.picture ? (
+                  <img
+                    src={user.picture}
+                    alt=""
+                    className="h-8 w-8 rounded-full"
+                  />
+                ) : (
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
 
-              <span className="hidden text-sm font-medium sm:block">
-                {user.name}
-              </span>
+                <span className="hidden max-w-48 truncate text-sm font-medium sm:block">
+                  {user.email}
+                </span>
+
+                <svg
+                  viewBox="0 0 20 20"
+                  className={`h-4 w-4 text-muted-foreground transition-transform ${
+                    menuOpen ? "rotate-180" : ""
+                  }`}
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M5 7.5 10 12.5 15 7.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+
+              {menuOpen ? (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full mt-2 w-64 overflow-hidden rounded-xl border border-border bg-card p-1.5 shadow-xl animate-rise"
+                >
+                  <div className="border-b border-border px-3 py-3">
+                    <p className="text-sm font-semibold">
+                      {user.name}
+                    </p>
+
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+
+                  <a
+                    href="/auth/google"
+                    role="menuitem"
+                    className="mt-1 block rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-secondary"
+                  >
+                    <span className="font-medium">Trocar conta</span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      Entrar com outro Google
+                    </span>
+                  </a>
+
+                  <a
+                    href="/auth/logout"
+                    role="menuitem"
+                    className="block rounded-lg px-3 py-2.5 text-sm text-destructive transition-colors hover:bg-destructive/10"
+                  >
+                    Sair
+                  </a>
+                </div>
+              ) : null}
             </div>
           ) : (
             <Link
