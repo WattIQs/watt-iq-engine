@@ -13,12 +13,16 @@ export const Route = createFileRoute("/auth/callback")({
         const error = url.searchParams.get("error");
 
         if (error) {
-          return new Response(`Google recusou o login: ${error}`, {
-            status: 400,
-            headers: {
-              "content-type": "text/plain; charset=utf-8",
+          return new Response(
+            `Google recusou o login: ${error}`,
+            {
+              status: 400,
+              headers: {
+                "content-type":
+                  "text/plain; charset=utf-8",
+              },
             },
-          });
+          );
         }
 
         if (!code) {
@@ -27,7 +31,8 @@ export const Route = createFileRoute("/auth/callback")({
             {
               status: 400,
               headers: {
-                "content-type": "text/plain; charset=utf-8",
+                "content-type":
+                  "text/plain; charset=utf-8",
               },
             },
           );
@@ -37,7 +42,9 @@ export const Route = createFileRoute("/auth/callback")({
           const tokens = await exchangeGoogleCode(code);
 
           if (!tokens.access_token) {
-            throw new Error("Google não retornou access_token");
+            throw new Error(
+              "Google não retornou access_token",
+            );
           }
 
           const userResponse = await fetch(
@@ -56,13 +63,22 @@ export const Route = createFileRoute("/auth/callback")({
           }
 
           const googleUser = (await userResponse.json()) as {
+            id?: string;
             email?: string;
             name?: string;
             picture?: string;
           };
 
           if (!googleUser.email) {
-            throw new Error("Google não retornou o e-mail do usuário");
+            throw new Error(
+              "Google não retornou o e-mail do usuário",
+            );
+          }
+
+          if (!googleUser.id) {
+            throw new Error(
+              "Google não retornou o ID do usuário",
+            );
           }
 
           const otp = generateOtp();
@@ -72,24 +88,43 @@ export const Route = createFileRoute("/auth/callback")({
             otp,
           );
 
-          await sendOtpEmail(googleUser.email, otp);
+          await sendOtpEmail(
+            googleUser.email,
+            otp,
+          );
+
+          const userData = Buffer.from(
+            JSON.stringify({
+              sub: googleUser.id,
+              email: googleUser.email,
+              name: googleUser.name ?? googleUser.email,
+              picture: googleUser.picture,
+            }),
+          ).toString("base64url");
 
           return new Response(null, {
             status: 302,
             headers: {
               Location: "/auth/verify",
-              "Set-Cookie": `wattiq_otp=${challengeId}; Path=/; Max-Age=600; HttpOnly; Secure; SameSite=Lax`,
+              "Set-Cookie": [
+                `wattiq_otp=${challengeId}; Path=/; Max-Age=600; HttpOnly; Secure; SameSite=Lax`,
+                `wattiq_pending_user=${userData}; Path=/; Max-Age=600; HttpOnly; Secure; SameSite=Lax`,
+              ].join(", "),
             },
           });
         } catch (error) {
-          console.error("Erro no Google OAuth:", error);
+          console.error(
+            "Erro no Google OAuth:",
+            error,
+          );
 
           return new Response(
             "Não foi possível iniciar a confirmação do login. Tente novamente.",
             {
               status: 500,
               headers: {
-                "content-type": "text/plain; charset=utf-8",
+                "content-type":
+                  "text/plain; charset=utf-8",
               },
             },
           );
