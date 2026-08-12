@@ -47,12 +47,71 @@ function GoogleIcon() {
 
 function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const pending = () =>
-    setNotice(
-      "O login por e-mail ainda não está configurado. Use o Google para entrar.",
-    );
+  async function handleEmailLogin(
+    event: React.FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    setNotice(null);
+
+    if (!email.trim()) {
+      setNotice("Digite seu e-mail.");
+      return;
+    }
+
+    if (!password) {
+      setNotice("Digite sua senha.");
+      return;
+    }
+
+    if (mode === "signup" && !name.trim()) {
+      setNotice("Digite seu nome.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch("/auth/email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          name: name.trim(),
+          mode,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setNotice(
+          data.message ||
+            "Não foi possível iniciar o login.",
+        );
+        return;
+      }
+
+      window.location.href = "/auth/verify";
+    } catch (error) {
+      console.error(error);
+
+      setNotice(
+        "Não foi possível iniciar o login. Tente novamente.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="min-h-screen">
@@ -77,29 +136,39 @@ function AuthPage() {
 
           <h1 className="mt-9 text-3xl font-semibold tracking-tight text-balance">
             Este é o ponto de{" "}
-            <span className="text-gradient-energy">login</span>
+            <span className="text-gradient-energy">
+              login
+            </span>
           </h1>
 
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Entre na sua conta WattIQ para acessar seu painel energético.
+            Entre na sua conta WattIQ para acessar seu
+            painel energético.
           </p>
 
           <div className="mt-8 rounded-xl border border-border bg-card p-6 shadow-sm">
             <div className="grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1 text-sm">
-              {(["signin", "signup"] as const).map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setMode(m)}
-                  className={`rounded-md px-3 py-2 font-medium transition-all duration-300 ${
-                    mode === m
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {m === "signin" ? "Entrar" : "Criar conta"}
-                </button>
-              ))}
+              {(["signin", "signup"] as const).map(
+                (m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => {
+                      setMode(m);
+                      setNotice(null);
+                    }}
+                    className={`rounded-md px-3 py-2 font-medium transition-all duration-300 ${
+                      mode === m
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {m === "signin"
+                      ? "Entrar"
+                      : "Criar conta"}
+                  </button>
+                ),
+              )}
             </div>
 
             <button
@@ -121,16 +190,15 @@ function AuthPage() {
 
             <form
               className="space-y-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                pending();
-              }}
+              onSubmit={handleEmailLogin}
             >
               {mode === "signup" ? (
                 <Field
                   label="Nome"
                   type="text"
                   placeholder="Seu nome"
+                  value={name}
+                  onChange={setName}
                 />
               ) : null}
 
@@ -138,25 +206,34 @@ function AuthPage() {
                 label="E-mail"
                 type="email"
                 placeholder="voce@empresa.com.br"
+                value={email}
+                onChange={setEmail}
               />
 
               <Field
                 label="Senha"
                 type="password"
                 placeholder="••••••••"
+                value={password}
+                onChange={setPassword}
               />
 
               <button
                 type="submit"
-                className="lift w-full rounded-md bg-gradient-energy animate-gradient px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:lift-hover"
+                disabled={loading}
+                className="lift w-full rounded-md bg-gradient-energy animate-gradient px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:lift-hover disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {mode === "signin" ? "Entrar no painel" : "Criar conta"}
+                {loading
+                  ? "Enviando código..."
+                  : mode === "signin"
+                    ? "Entrar no painel"
+                    : "Criar conta"}
               </button>
             </form>
 
             {notice ? (
               <p
-                role="status"
+                role="alert"
                 className="mt-5 animate-rise rounded-md border border-accent/40 bg-accent/10 p-4 text-xs leading-relaxed text-foreground"
               >
                 {notice}
@@ -180,10 +257,14 @@ function Field({
   label,
   type,
   placeholder,
+  value,
+  onChange,
 }: {
   label: string;
   type: string;
   placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
 }) {
   return (
     <label className="block">
@@ -194,6 +275,10 @@ function Field({
       <input
         type={type}
         placeholder={placeholder}
+        value={value}
+        onChange={(event) =>
+          onChange(event.target.value)
+        }
         className="mt-1.5 w-full rounded-md border border-input bg-background px-3 py-2.5 text-sm outline-none transition-all duration-300 placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-ring/30"
       />
     </label>
