@@ -7,7 +7,7 @@ export function Hero() {
     <section className="relative overflow-hidden border-b border-border">
       <div className="grid-backdrop pointer-events-none absolute inset-0 opacity-70" aria-hidden />
       <div
-        className="pointer-events-none absolute -top-40 left-1/2 h-[420px] w-[720px] -translate-x-1/2 rounded-full opacity-25 blur-3xl animate-energy-pulse"
+        className="pointer-events-none absolute -top-40 left-1/2 h-[320px] w-[620px] -translate-x-1/2 rounded-full opacity-12 blur-3xl animate-energy-pulse"
         style={{ background: "var(--gradient-energy)" }}
         aria-hidden
       />
@@ -16,7 +16,7 @@ export function Hero() {
           <img
             src={logo.url}
             alt="WattIQ — sistema de monitoramento energético para empresas"
-            className="h-28 w-auto rounded-xl object-cover object-[50%_38%] sm:h-32"
+            className="h-32 w-auto object-contain sm:h-40"
             width={320}
             height={128}
           />
@@ -87,16 +87,14 @@ function HeroPanel() {
       </div>
       <div className="mt-5 flex h-44 items-end gap-2 rounded-lg border border-border bg-background/60 p-4">
         {bars.map((h, i) => (
-          <div key={i} className="flex-1" style={{ height: "100%" }}>
-            <div
-              className="w-full rounded-sm bg-gradient-energy"
-              style={{
-                height: `${h}%`,
-                marginTop: `${100 - h}%`,
-                animation: `wattiq-rise 0.8s cubic-bezier(.22,1,.36,1) ${i * 70}ms both`,
-              }}
-            />
-          </div>
+          <div
+            key={i}
+            className="flex-1 rounded-sm bg-gradient-energy"
+            style={{
+              height: `${h}%`,
+              animation: `wattiq-rise 0.8s cubic-bezier(.22,1,.36,1) ${i * 70}ms both`,
+            }}
+          />
         ))}
       </div>
       <p className="mt-4 text-xs leading-relaxed text-muted-foreground">

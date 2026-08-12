@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import logo from "@/assets/wattiq-logo.png.asset.json";
+import mark from "@/assets/wattiq-mark.png.asset.json";
 
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/70 bg-background/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
         <Link to="/" className="flex items-center gap-2.5" aria-label="WattIQ — início">
-          <img src={logo.url} alt="" aria-hidden className="h-8 w-8 object-cover object-[50%_28%]" />
+          <img src={mark.url} alt="" aria-hidden className="h-8 w-8 object-contain" />
           <span className="text-lg font-semibold tracking-tight">
             Watt<span className="text-primary">IQ</span>
           </span>
