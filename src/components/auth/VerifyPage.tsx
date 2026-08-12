@@ -41,10 +41,42 @@ export function VerifyPage() {
       }
 
       window.location.href = "/";
-    } catch {
+    } catch (error) {
+      console.error(error);
       setMessage(
         "Não foi possível verificar o código. Tente novamente.",
       );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    setMessage("");
+    setLoading(true);
+
+    try {
+      const response = await fetch("/auth/email", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setMessage(
+          data.message || "Não foi possível reenviar o código.",
+        );
+        return;
+      }
+
+      setMessage("Um novo código foi enviado para seu e-mail.");
+    } catch (error) {
+      console.error(error);
+      setMessage("Não foi possível reenviar o código.");
     } finally {
       setLoading(false);
     }
@@ -63,7 +95,7 @@ export function VerifyPage() {
             className="h-9 w-9 object-contain"
           />
 
-          <span className="text-lg font-semibold">
+          <span className="text-lg font-semibold tracking-tight">
             Watt<span className="text-primary">IQ</span>
           </span>
         </Link>
@@ -74,8 +106,9 @@ export function VerifyPage() {
               Confirme seu login
             </h1>
 
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
               Enviamos um código de 6 dígitos para seu e-mail.
+              Digite o código abaixo para continuar.
             </p>
           </div>
 
@@ -102,30 +135,40 @@ export function VerifyPage() {
                 autoComplete="one-time-code"
                 maxLength={6}
                 placeholder="000000"
-                className="mt-2 w-full rounded-md border border-input bg-background px-4 py-4 text-center text-2xl font-semibold tracking-[0.5em]"
+                className="mt-2 w-full rounded-md border border-input bg-background px-4 py-4 text-center text-2xl font-semibold tracking-[0.5em] outline-none focus:border-primary"
               />
             </label>
 
             <button
               type="submit"
               disabled={loading || code.length !== 6}
-              className="w-full rounded-md bg-gradient-energy px-4 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+              className="w-full rounded-md bg-gradient-energy px-4 py-3 text-sm font-semibold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading
-                ? "Verificando..."
-                : "Confirmar código"}
+              {loading ? "Verificando..." : "Confirmar código"}
             </button>
           </form>
 
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={loading}
+            className="mt-4 w-full text-sm font-medium text-primary hover:underline disabled:opacity-50"
+          >
+            Reenviar código
+          </button>
+
           {message && (
-            <p className="mt-5 rounded-md border border-destructive/30 bg-destructive/10 p-4 text-center text-sm text-destructive">
+            <p
+              role="status"
+              className="mt-5 rounded-md border border-border bg-muted p-4 text-center text-sm"
+            >
               {message}
             </p>
           )}
 
           <Link
             to="/auth"
-            className="mt-6 block text-center text-sm text-muted-foreground"
+            className="mt-6 block text-center text-sm text-muted-foreground hover:text-foreground"
           >
             ← Voltar para o login
           </Link>
