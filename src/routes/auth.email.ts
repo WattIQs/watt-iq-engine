@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { setCookie } from "@tanstack/react-start/server";
+import { setResponseHeader } from "@tanstack/react-start/server";
 import { createOtpChallenge } from "../lib/otp-store";
 import {
   generateOtp,
@@ -11,7 +11,16 @@ export const Route = createFileRoute("/auth/email")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const body = await request.json();
+          const body = await request.json().catch(() => null);
+
+          if (!body) {
+            return Response.json(
+              {
+                message: "Dados inválidos.",
+              },
+              { status: 400 },
+            );
+          }
 
           const email =
             typeof body.email === "string"
@@ -40,38 +49,41 @@ export const Route = createFileRoute("/auth/email")({
             JSON.stringify({
               sub: email,
               email,
+              name: email.split("@")[0],
             }),
           ).toString("base64url");
 
-          setCookie("wattiq_otp", challengeId, {
-            httpOnly: true,
-            secure: true,
-            sameSite: "lax",
-            path: "/",
-            maxAge: 600,
+
+          const cookies = [
+            `wattiq_otp=${challengeId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+            `wattiq_pending_user=${pendingUser}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+          ];
+
+
+          setResponseHeader(
+            "Set-Cookie",
+            cookies,
+          );
+
+
+          console.log("Cookies criados:", {
+            otp: challengeId,
+            pendingUser: true,
+            email,
           });
 
-          setCookie(
-            "wattiq_pending_user",
-            pendingUser,
-            {
-              httpOnly: true,
-              secure: true,
-              sameSite: "lax",
-              path: "/",
-              maxAge: 600,
-            },
-          );
 
           return Response.json(
             {
               success: true,
-              message: "Código enviado para seu e-mail.",
+              message:
+                "Código enviado para seu e-mail.",
             },
             {
               status: 200,
             },
           );
+
         } catch (error) {
           console.error(
             "Erro ao iniciar login por e-mail:",
@@ -83,7 +95,9 @@ export const Route = createFileRoute("/auth/email")({
               message:
                 "Não foi possível iniciar o login. Tente novamente.",
             },
-            { status: 500 },
+            {
+              status: 500,
+            },
           );
         }
       },
