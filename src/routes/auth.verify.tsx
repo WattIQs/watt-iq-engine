@@ -10,11 +10,10 @@ import {
 } from "../lib/session";
 
 
-
 function readCookie(
   request: Request,
-  name:string,
-){
+  name: string,
+) {
 
   const header =
     request.headers.get("cookie");
@@ -38,7 +37,7 @@ function readCookie(
 
 
   return cookie.substring(
-    name.length + 1
+    name.length + 1,
   );
 
 }
@@ -52,6 +51,7 @@ component:VerifyPage,
 
 
 server:{
+
 handlers:{
 
 
@@ -73,13 +73,11 @@ body.code.trim()
 "";
 
 
-
 if(code.length !== 6){
 
 return Response.json(
 {
-message:
-"Digite o código completo de 6 dígitos.",
+message:"Digite o código completo de 6 dígitos.",
 },
 {
 status:400,
@@ -99,7 +97,7 @@ request,
 
 
 console.log(
-"Cookie OTP recebido:",
+"Cookie OTP:",
 challengeId,
 );
 
@@ -130,14 +128,13 @@ code,
 
 
 console.log(
-"Email validado:",
+"Resultado OTP:",
 email,
 );
 
 
 
 if(!email){
-
 
 return Response.json(
 {
@@ -148,7 +145,6 @@ message:
 status:400,
 },
 );
-
 
 }
 
@@ -171,12 +167,10 @@ const headers =
 new Headers();
 
 
-
 headers.append(
 "Set-Cookie",
 createSessionCookie(user),
 );
-
 
 
 headers.append(
@@ -205,7 +199,6 @@ console.error(
 "Erro verify:",
 error,
 );
-
 
 
 return Response.json(
