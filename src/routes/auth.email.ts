@@ -45,13 +45,13 @@ export const Route = createFileRoute("/auth/email")({
 
           await sendOtpEmail(email, code);
 
-          const pendingUser = Buffer.from(
-            JSON.stringify({
-              sub: email,
-              email,
-              name: email.split("@")[0],
-            }),
-          ).toString("base64url");
+          const pendingUser = encodeURIComponent(
+  JSON.stringify({
+    sub: email,
+    email,
+    name: email.split("@")[0],
+  }),
+);
 
 
           const cookies = [
