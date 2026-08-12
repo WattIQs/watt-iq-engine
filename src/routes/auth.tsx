@@ -48,7 +48,6 @@ function GoogleIcon() {
 function AuthPage() {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -60,13 +59,10 @@ function AuthPage() {
 
     setNotice(null);
 
-    if (!email.trim()) {
-      setNotice("Digite seu e-mail.");
-      return;
-    }
+    const normalizedEmail = email.trim().toLowerCase();
 
-    if (!password) {
-      setNotice("Digite sua senha.");
+    if (!normalizedEmail) {
+      setNotice("Digite seu e-mail.");
       return;
     }
 
@@ -80,12 +76,12 @@ function AuthPage() {
     try {
       const response = await fetch("/auth/email", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: email.trim(),
-          password,
+          email: normalizedEmail,
           name: name.trim(),
           mode,
         }),
@@ -103,7 +99,7 @@ function AuthPage() {
 
       window.location.href = "/auth/verify";
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao iniciar login:", error);
 
       setNotice(
         "Não foi possível iniciar o login. Tente novamente.",
@@ -210,14 +206,6 @@ function AuthPage() {
                 onChange={setEmail}
               />
 
-              <Field
-                label="Senha"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={setPassword}
-              />
-
               <button
                 type="submit"
                 disabled={loading}
@@ -279,6 +267,7 @@ function Field({
         onChange={(event) =>
           onChange(event.target.value)
         }
+        required
         className="mt-1.5 w-full rounded-md border border-input bg-background px-3 py-2.5 text-sm outline-none transition-all duration-300 placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-ring/30"
       />
     </label>
