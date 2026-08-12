@@ -39,7 +39,7 @@ function GoogleIcon() {
       />
       <path
         fill="#EA4335"
-        d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.4 6.7l4 3.1A7 7 0 0 1 12 4.8Z"
+        d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 12 0 12 12 0 0 0 1.4 6.7l4 3.1A7 7 0 0 1 12 4.8Z"
       />
     </svg>
   );
@@ -59,9 +59,9 @@ function AuthPage() {
 
     setNotice(null);
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const cleanEmail = email.trim().toLowerCase();
 
-    if (!normalizedEmail) {
+    if (!cleanEmail) {
       setNotice("Digite seu e-mail.");
       return;
     }
@@ -81,7 +81,7 @@ function AuthPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: normalizedEmail,
+          email: cleanEmail,
           name: name.trim(),
           mode,
         }),
@@ -92,7 +92,7 @@ function AuthPage() {
       if (!response.ok) {
         setNotice(
           data.message ||
-            "Não foi possível iniciar o login.",
+            "Não foi possível enviar o código.",
         );
         return;
       }
@@ -267,7 +267,6 @@ function Field({
         onChange={(event) =>
           onChange(event.target.value)
         }
-        required
         className="mt-1.5 w-full rounded-md border border-input bg-background px-3 py-2.5 text-sm outline-none transition-all duration-300 placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-ring/30"
       />
     </label>
