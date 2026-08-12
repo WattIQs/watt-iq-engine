@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { setResponseHeader } from "@tanstack/react-start/server";
+import { setCookie } from "@tanstack/react-start/server";
 import { createOtpChallenge } from "../lib/otp-store";
 import {
   generateOtp,
@@ -43,14 +43,24 @@ export const Route = createFileRoute("/auth/email")({
             }),
           ).toString("base64url");
 
-          setResponseHeader(
-            "Set-Cookie",
-            `wattiq_otp=${challengeId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
-          );
+          setCookie("wattiq_otp", challengeId, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "lax",
+            path: "/",
+            maxAge: 600,
+          });
 
-          setResponseHeader(
-            "Set-Cookie",
-            `wattiq_pending_user=${pendingUser}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+          setCookie(
+            "wattiq_pending_user",
+            pendingUser,
+            {
+              httpOnly: true,
+              secure: true,
+              sameSite: "lax",
+              path: "/",
+              maxAge: 600,
+            },
           );
 
           return Response.json(
