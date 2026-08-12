@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  createOtpChallenge,
-} from "../lib/otp-store";
+import { setResponseHeader } from "@tanstack/react-start/server";
+import { createOtpChallenge } from "../lib/otp-store";
 import {
   generateOtp,
   sendOtpEmail,
@@ -30,8 +29,10 @@ export const Route = createFileRoute("/auth/email")({
 
           const code = generateOtp();
 
-          const challengeId =
-            createOtpChallenge(email, code);
+          const challengeId = createOtpChallenge(
+            email,
+            code,
+          );
 
           await sendOtpEmail(email, code);
 
@@ -42,14 +43,12 @@ export const Route = createFileRoute("/auth/email")({
             }),
           ).toString("base64url");
 
-          const headers = new Headers();
-
-          headers.append(
+          setResponseHeader(
             "Set-Cookie",
             `wattiq_otp=${challengeId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
           );
 
-          headers.append(
+          setResponseHeader(
             "Set-Cookie",
             `wattiq_pending_user=${pendingUser}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
           );
@@ -57,12 +56,10 @@ export const Route = createFileRoute("/auth/email")({
           return Response.json(
             {
               success: true,
-              message:
-                "Código enviado para seu e-mail.",
+              message: "Código enviado para seu e-mail.",
             },
             {
               status: 200,
-              headers,
             },
           );
         } catch (error) {
