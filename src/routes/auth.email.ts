@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { setResponseHeader } from "@tanstack/react-start/server";
 import { createOtpChallenge } from "../lib/otp-store";
 import {
   generateOtp,
@@ -18,7 +17,9 @@ export const Route = createFileRoute("/auth/email")({
               {
                 message: "Dados inválidos.",
               },
-              { status: 400 },
+              {
+                status: 400,
+              },
             );
           }
 
@@ -32,45 +33,60 @@ export const Route = createFileRoute("/auth/email")({
               {
                 message: "Digite um e-mail válido.",
               },
-              { status: 400 },
+              {
+                status: 400,
+              },
             );
           }
 
+
           const code = generateOtp();
+
 
           const challengeId = createOtpChallenge(
             email,
             code,
           );
 
-          await sendOtpEmail(email, code);
 
-          const pendingUser = encodeURIComponent(
-  JSON.stringify({
-    sub: email,
-    email,
-    name: email.split("@")[0],
-  }),
-);
-
-
-          const cookies = [
-            `wattiq_otp=${challengeId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
-            `wattiq_pending_user=${pendingUser}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
-          ];
-
-
-          setResponseHeader(
-            "Set-Cookie",
-            cookies,
+          await sendOtpEmail(
+            email,
+            code,
           );
 
 
-          console.log("Cookies criados:", {
-            otp: challengeId,
-            pendingUser: true,
-            email,
-          });
+          const pendingUser = encodeURIComponent(
+            JSON.stringify({
+              sub: email,
+              email,
+              name: email.split("@")[0],
+            }),
+          );
+
+
+          const headers = new Headers();
+
+
+          headers.append(
+            "Set-Cookie",
+            `wattiq_otp=${challengeId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+          );
+
+
+          headers.append(
+            "Set-Cookie",
+            `wattiq_pending_user=${pendingUser}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+          );
+
+
+          console.log(
+            "Cookies criados:",
+            {
+              otp: true,
+              pendingUser: true,
+              email,
+            },
+          );
 
 
           return Response.json(
@@ -81,14 +97,17 @@ export const Route = createFileRoute("/auth/email")({
             },
             {
               status: 200,
+              headers,
             },
           );
+
 
         } catch (error) {
           console.error(
             "Erro ao iniciar login por e-mail:",
             error,
           );
+
 
           return Response.json(
             {
