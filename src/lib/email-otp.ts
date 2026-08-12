@@ -34,7 +34,7 @@ export async function sendOtpEmail(
         subject: "Seu código de confirmação WattIQ",
         htmlContent: `
           <div style="font-family: Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 32px;">
-            <h1 style="margin-bottom: 8px;">Confirme seu login</h1>
+            <h1>Confirme seu login</h1>
 
             <p style="color: #666;">
               Use o código abaixo para confirmar seu acesso à WattIQ:
@@ -59,8 +59,6 @@ export async function sendOtpEmail(
   if (!response.ok) {
     const error = await response.text();
 
-    throw new Error(
-      `Erro ao enviar e-mail: ${error}`,
-    );
+    throw new Error(`Erro ao enviar e-mail: ${error}`);
   }
 }
