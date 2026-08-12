@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import mark from "@/assets/wattiq-mark.png.asset.json";
+const mark = "/wattiq-logo.png";
 
 const title = "Entrar na WattIQ — Acesso ao painel energético";
 const description =
@@ -62,7 +62,7 @@ function AuthPage() {
       <div className="flex flex-col justify-center px-5 py-14 sm:px-10 lg:px-16">
         <div className="mx-auto w-full max-w-md animate-rise">
           <Link to="/" className="inline-flex items-center gap-2.5" aria-label="WattIQ — início">
-            <img src={mark.url} alt="" aria-hidden className="h-9 w-9 object-contain" />
+            <img src={mark} alt="" aria-hidden className="h-9 w-9 object-contain" />
             <span className="text-lg font-semibold tracking-tight">
               Watt<span className="text-primary">IQ</span>
             </span>
