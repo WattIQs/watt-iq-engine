@@ -16,13 +16,22 @@ export function SiteHeader() {
           <a href="#solucao" className="transition-colors hover:text-foreground">A solução</a>
           <a href="#indicadores" className="transition-colors hover:text-foreground">Indicadores</a>
           <a href="#intelligence" className="transition-colors hover:text-foreground">Intelligence</a>
+          <a href="#acesso" className="transition-colors hover:text-foreground">Acesso</a>
         </nav>
-        <a
-          href="#cta"
-          className="rounded-md bg-gradient-energy px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5"
-        >
-          Acessar plataforma
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href="#acesso"
+            className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:block"
+          >
+            Como acessar
+          </a>
+          <Link
+            to="/auth"
+            className="lift rounded-md bg-gradient-energy animate-gradient px-4 py-2 text-sm font-semibold text-primary-foreground hover:lift-hover"
+          >
+            Entrar
+          </Link>
+        </div>
       </div>
     </header>
   );

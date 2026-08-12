@@ -11,6 +11,7 @@ import {
   DashboardSection,
   CtaSection,
 } from "@/components/landing/Sections";
+import { AccessSection } from "@/components/landing/AccessSection";
 
 const title = "WattIQ — Energia medida. Inteligência aplicada.";
 const description =
@@ -43,6 +44,7 @@ function Index() {
         <IndicatorsSection />
         <IntelligenceSection />
         <DashboardSection />
+        <AccessSection />
         <CtaSection />
       </main>
       <SiteFooter />
