@@ -1,4 +1,4 @@
-import logo from "@/assets/wattiq-logo.png.asset.json";
+const logo = "/wattiq-logo.png";
 
 const bars = [38, 52, 44, 66, 58, 79, 71, 92];
 
@@ -14,7 +14,7 @@ export function Hero() {
       <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 py-20 lg:grid-cols-[1.05fr_1fr] lg:py-28">
         <div className="animate-rise">
           <img
-            src={logo.url}
+            src={logo}
             alt="WattIQ — sistema de monitoramento energético para empresas"
             className="h-32 w-auto object-contain sm:h-40"
             width={320}
