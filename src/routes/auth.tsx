@@ -79,18 +79,16 @@ function AuthPage() {
           <div className="mt-8 rounded-xl border border-border bg-card p-6 shadow-sm">
             <div className="grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1 text-sm">
               {(["signin", "signup"] as const).map((m) => (
-                <button
-                  key={m}
+               <button
                   type="button"
-                  onClick={() => setMode(m)}
-                  className={`rounded-md px-3 py-2 font-medium transition-all duration-300 ${
-                    mode === m
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {m === "signin" ? "Entrar" : "Criar conta"}
-                </button>
+                  onClick={() => {
+                    window.location.href = "/auth/google";
+                    }}
+                    className="lift mt-5 flex w-full items-center justify-center gap-2.5 rounded-md border border-border bg-background px-4 py-2.5 text-sm font-medium transition-all duration-300 hover:border-primary/60 hover:lift-hover"
+                  >
+                    <GoogleIcon />
+                    Continuar com Google
+                  </button>
               ))}
             </div>
 
