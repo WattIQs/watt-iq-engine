@@ -4,19 +4,9 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
- */
+/* =========================================================
+   WATTIQ DESIGN SYSTEM
+   ========================================================= */
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -26,96 +16,142 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
+
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
+
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-energy: var(--accent);
 }
 
 :root {
   --radius: 0.5rem;
+
   --background: oklch(0.17 0.035 250);
   --foreground: oklch(0.97 0.005 240);
+
   --card: oklch(0.21 0.035 250);
   --card-foreground: oklch(0.97 0.005 240);
+
   --popover: oklch(0.21 0.035 250);
   --popover-foreground: oklch(0.97 0.005 240);
+
   --primary: oklch(0.72 0.19 145);
   --primary-foreground: oklch(0.16 0.035 250);
+
   --secondary: oklch(0.26 0.035 250);
   --secondary-foreground: oklch(0.97 0.005 240);
+
   --muted: oklch(0.26 0.032 250);
   --muted-foreground: oklch(0.72 0.02 245);
+
   --accent: oklch(0.86 0.22 130);
   --accent-foreground: oklch(0.16 0.035 250);
+
   --destructive: oklch(0.62 0.2 25);
   --destructive-foreground: oklch(0.98 0.005 240);
+
   --border: oklch(0.3 0.03 250);
   --input: oklch(0.3 0.03 250);
+
   --ring: oklch(0.72 0.19 145);
+
   --chart-1: oklch(0.72 0.19 145);
   --chart-2: oklch(0.86 0.22 130);
   --chart-3: oklch(0.62 0.13 190);
   --chart-4: oklch(0.55 0.09 250);
   --chart-5: oklch(0.8 0.12 160);
+
   --sidebar: oklch(0.19 0.035 250);
   --sidebar-foreground: oklch(0.97 0.005 240);
+
   --sidebar-primary: oklch(0.72 0.19 145);
   --sidebar-primary-foreground: oklch(0.16 0.035 250);
+
   --sidebar-accent: oklch(0.26 0.035 250);
-  --sidebar-accent-foreground: oklch(0.97 0.005 240);
   --sidebar-border: oklch(0.3 0.03 250);
   --sidebar-ring: oklch(0.72 0.19 145);
 
-  --gradient-energy: linear-gradient(
-    100deg,
-    oklch(0.72 0.19 145),
-    oklch(0.86 0.22 130)
-  );
-  --glow-energy: 0 0 40px oklch(0.72 0.19 145 / 0.28);
-  --surface-grid: linear-gradient(
+  --gradient-energy:
+    linear-gradient(
+      100deg,
+      oklch(0.72 0.19 145),
+      oklch(0.86 0.22 130)
+    );
+
+  --glow-energy:
+    0 0 40px
+    oklch(0.72 0.19 145 / 0.28);
+
+  --surface-grid:
+    linear-gradient(
       oklch(1 0 0 / 0.035) 1px,
       transparent 1px
     ),
-    linear-gradient(90deg, oklch(1 0 0 / 0.035) 1px, transparent 1px);
+    linear-gradient(
+      90deg,
+      oklch(1 0 0 / 0.035) 1px,
+      transparent 1px
+    );
+
+  /* Motion */
+  --motion-ease:
+    cubic-bezier(0.16, 1, 0.3, 1);
+
+  --motion-ease-soft:
+    cubic-bezier(0.22, 1, 0.36, 1);
+
+  --motion-ease-smooth:
+    cubic-bezier(0.25, 0.8, 0.25, 1);
+
+  --motion-duration: 1.05s;
 }
 
 .dark {
   color-scheme: dark;
 }
 
-@theme inline {
-  --color-energy: var(--accent);
-}
+/* =========================================================
+   BASE
+   ========================================================= */
 
 @layer base {
   * {
@@ -125,18 +161,26 @@
   html {
     scroll-behavior: smooth;
     color-scheme: dark;
+    text-rendering: optimizeLegibility;
   }
 
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   ::selection {
-    background: oklch(0.72 0.19 145 / 0.3);
+    background:
+      oklch(0.72 0.19 145 / 0.3);
   }
 }
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
 
 @utility text-gradient-energy {
   background-image: var(--gradient-energy);
@@ -158,11 +202,16 @@
   background-size: 56px 56px;
 }
 
+/* =========================================================
+   BASIC ANIMATIONS
+   ========================================================= */
+
 @keyframes wattiq-rise {
   from {
     opacity: 0;
     transform: translateY(24px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -174,6 +223,7 @@
   100% {
     opacity: 0.5;
   }
+
   50% {
     opacity: 1;
   }
@@ -183,38 +233,18 @@
   from {
     transform: translateX(-100%);
   }
+
   to {
     transform: translateX(100%);
   }
 }
-
-@utility animate-rise {
-  animation: wattiq-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@utility animate-energy-pulse {
-  animation: wattiq-pulse 3s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-
-/* --- Motion layer -------------------------------------------------- */
 
 @keyframes wattiq-float {
   0%,
   100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-8px);
   }
@@ -224,6 +254,7 @@
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
@@ -234,6 +265,7 @@
   100% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
@@ -243,6 +275,7 @@
   from {
     transform: scaleY(0.05);
   }
+
   to {
     transform: scaleY(1);
   }
@@ -253,6 +286,7 @@
     opacity: 0.55;
     transform: scale(0.85);
   }
+
   70%,
   100% {
     opacity: 0;
@@ -260,238 +294,526 @@
   }
 }
 
+/* =========================================================
+   HERO / GENERAL ANIMATIONS
+   ========================================================= */
+
+@utility animate-rise {
+  animation:
+    wattiq-rise
+    1.05s
+    var(--motion-ease)
+    both;
+}
+
+@utility animate-energy-pulse {
+  animation:
+    wattiq-pulse
+    3s
+    ease-in-out
+    infinite;
+}
+
 @utility animate-float {
-  animation: wattiq-float 6s ease-in-out infinite;
+  animation:
+    wattiq-float
+    6s
+    ease-in-out
+    infinite;
 }
 
 @utility animate-grow-bar {
   transform-origin: bottom;
-  animation: wattiq-grow 1s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  animation:
+    wattiq-grow
+    1s
+    var(--motion-ease)
+    both;
 }
 
 @utility animate-ping-ring {
-  animation: wattiq-ring 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation:
+    wattiq-ring
+    2.4s
+    var(--motion-ease)
+    infinite;
 }
 
 @utility animate-gradient {
   background-size: 200% 200%;
-  animation: wattiq-gradient-shift 8s ease infinite;
+
+  animation:
+    wattiq-gradient-shift
+    8s
+    ease
+    infinite;
 }
 
 @utility shimmer {
-  background-image: linear-gradient(
-    90deg,
-    transparent 0%,
-    oklch(1 0 0 / 0.08) 45%,
-    oklch(1 0 0 / 0.16) 50%,
-    oklch(1 0 0 / 0.08) 55%,
-    transparent 100%
-  );
+  background-image:
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      oklch(1 0 0 / 0.08) 45%,
+      oklch(1 0 0 / 0.16) 50%,
+      oklch(1 0 0 / 0.08) 55%,
+      transparent 100%
+    );
+
   background-size: 200% 100%;
-  animation: wattiq-shimmer 2.6s linear infinite;
+
+  animation:
+    wattiq-shimmer
+    2.6s
+    linear
+    infinite;
 }
 
-@utility lift {
-  transition:
-    transform 0.5s var(--motion-ease-soft),
-    border-color 0.4s ease,
-    box-shadow 0.55s var(--motion-ease-soft);
-}
-
-@utility lift-hover {
-  transform: translate3d(0, -5px, 0) scale(1.012);
-  box-shadow:
-    0 24px 55px -32px oklch(0 0 0 / 0.94),
-    0 8px 24px -18px oklch(0.72 0.19 145 / 0.16);
-}
-
-
-/* ================================================================
-   WATTIQ — PREMIUM MOTION LAYER
-   Inspirado nas transições suaves do site de referência, adaptado
-   para a linguagem visual da WattIQ.
-   ================================================================ */
-
- :root {
-  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
-  --motion-ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
-  --motion-duration: 1.18s;
-}
+/* =========================================================
+   SCROLL PROGRESS
+   ========================================================= */
 
 .scroll-progress {
   position: fixed;
-  inset: 0 0 auto 0;
+
+  inset:
+    0 0 auto 0;
+
   z-index: 120;
+
   height: 2px;
   width: 100%;
+
   pointer-events: none;
+
   transform-origin: left center;
-  background: var(--gradient-energy);
-  box-shadow: 0 0 24px oklch(0.72 0.19 145 / 0.32);
+
+  background:
+    var(--gradient-energy);
+
+  box-shadow:
+    0 0 24px
+    oklch(0.72 0.19 145 / 0.32);
+
   will-change: transform;
 }
 
+/* =========================================================
+   PREMIUM SCROLL REVEAL
+   ========================================================= */
+
 .reveal {
   --reveal-delay: 0ms;
+
   opacity: 0;
-  transform: translate3d(0, 52px, 0) scale(0.978);
-  filter: blur(11px);
+
+  transform:
+    translate3d(
+      0,
+      34px,
+      0
+    )
+    scale(0.985);
+
+  filter:
+    blur(6px);
+
   transition:
-    opacity var(--motion-duration) var(--motion-ease-soft) var(--reveal-delay),
-    transform var(--motion-duration) var(--motion-ease) var(--reveal-delay),
-    filter calc(var(--motion-duration) * 0.9) var(--motion-ease-soft) var(--reveal-delay);
-  will-change: opacity, transform, filter;
+    opacity
+      950ms
+      var(--motion-ease-soft)
+      var(--reveal-delay),
+
+    transform
+      1050ms
+      var(--motion-ease)
+      var(--reveal-delay),
+
+    filter
+      850ms
+      var(--motion-ease-soft)
+      var(--reveal-delay);
+
+  will-change:
+    opacity,
+    transform,
+    filter;
+
   backface-visibility: hidden;
+
+  transform-origin:
+    center center;
 }
 
 .reveal-in {
   opacity: 1;
-  transform: translate3d(0, 0, 0) scale(1);
-  filter: blur(0);
+
+  transform:
+    translate3d(
+      0,
+      0,
+      0
+    )
+    scale(1);
+
+  filter:
+    blur(0);
 }
+
+/*
+ * Stagger visual apenas pela posição.
+ *
+ * Sem movimentos laterais grandes:
+ * isso evita aquela sensação de elementos
+ * vindo de lados diferentes.
+ */
 
 @media (min-width: 700px) {
   .reveal:nth-child(3n + 1):not(.reveal-in) {
-    transform: translate3d(-26px, 46px, 0) scale(0.978);
+    transform:
+      translate3d(
+        -10px,
+        34px,
+        0
+      )
+      scale(0.985);
   }
 
   .reveal:nth-child(3n + 2):not(.reveal-in) {
-    transform: translate3d(0, 52px, 0) scale(0.978);
+    transform:
+      translate3d(
+        0,
+        38px,
+        0
+      )
+      scale(0.985);
   }
 
   .reveal:nth-child(3n):not(.reveal-in) {
-    transform: translate3d(26px, 46px, 0) scale(0.978);
+    transform:
+      translate3d(
+        10px,
+        34px,
+        0
+      )
+      scale(0.985);
   }
 }
 
+/* Conteúdo interno entra um pouco depois */
+
 .reveal-in > * {
-  animation: wattiq-content-settle 0.8s var(--motion-ease) var(--reveal-delay) both;
+  animation:
+    wattiq-content-settle
+    650ms
+    var(--motion-ease)
+    var(--reveal-delay)
+    both;
 }
 
 @keyframes wattiq-content-settle {
-  from { transform: translateY(4px); opacity: 0.96; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    opacity: 0.94;
+
+    transform:
+      translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0);
+  }
 }
 
-/* Professional glass surface: lift + light reflection, kept subtle. */
+/* =========================================================
+   SURFACE CARDS
+   ========================================================= */
+
 .surface-card {
   position: relative;
+
   isolation: isolate;
+
   overflow: hidden;
-  transform-origin: center center;
+
+  transform-origin:
+    center center;
+
   transition:
-    transform 0.6s var(--motion-ease),
-    border-color 0.55s ease,
-    box-shadow 0.7s var(--motion-ease),
-    background-color 0.55s ease;
-  will-change: transform, box-shadow;
+    transform
+      650ms
+      var(--motion-ease),
+
+    border-color
+      500ms
+      ease,
+
+    box-shadow
+      700ms
+      var(--motion-ease),
+
+    background-color
+      500ms
+      ease;
+
+  will-change:
+    transform,
+    box-shadow;
 }
+
+/*
+ * REFLEXO CORRIGIDO
+ *
+ * NÃO usa --mx / --my.
+ *
+ * Portanto o mouse não cria mais aquele
+ * "sol" aleatório dentro dos cards.
+ */
 
 .surface-card::before {
   content: "";
+
   position: absolute;
+
   inset: 0;
+
   pointer-events: none;
+
   z-index: 0;
+
   opacity: 0;
+
   background:
-    radial-gradient(320px 210px at var(--mx, 50%) var(--my, 50%),
-      oklch(0.98 0.01 145 / 0.105),
-      transparent 66%),
-    linear-gradient(125deg, transparent 24%, oklch(1 0 0 / 0.028) 45%, transparent 66%);
-  transition: opacity 0.45s ease;
+    linear-gradient(
+      118deg,
+      transparent 20%,
+      oklch(1 0 0 / 0.025) 43%,
+      oklch(0.86 0.22 130 / 0.035) 50%,
+      oklch(1 0 0 / 0.02) 57%,
+      transparent 78%
+    );
+
+  transform:
+    translateX(-55%);
+
+  transition:
+    opacity
+      700ms
+      ease,
+
+    transform
+      1100ms
+      var(--motion-ease);
 }
 
 .surface-card::after {
   content: "";
+
   position: absolute;
+
   top: -60%;
-  left: -90%;
-  width: 34%;
+  left: -100%;
+
+  width: 28%;
   height: 220%;
+
   pointer-events: none;
+
   z-index: 1;
+
   opacity: 0;
-  transform: rotate(16deg);
-  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.065), transparent);
-  filter: blur(1px);
-  transition: left 1.15s var(--motion-ease), opacity 0.4s ease;
+
+  transform:
+    rotate(16deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      oklch(1 0 0 / 0.045),
+      transparent
+    );
+
+  filter:
+    blur(1px);
+
+  transition:
+    left
+      1.2s
+      var(--motion-ease),
+
+    opacity
+      450ms
+      ease;
 }
 
 .surface-card:hover {
-  transform: translate3d(0, -6px, 0) scale(1.012);
-  border-color: oklch(0.72 0.19 145 / 0.30);
+  transform:
+    translate3d(
+      0,
+      -4px,
+      0
+    )
+    scale(1.006);
+
+  border-color:
+    oklch(
+      0.72
+      0.19
+      145
+      /
+      0.3
+    );
+
   box-shadow:
-    0 26px 70px -38px oklch(0 0 0 / 0.94),
-    0 10px 24px -18px oklch(0.72 0.19 145 / 0.18),
-    0 0 0 1px oklch(0.72 0.19 145 / 0.035);
+    0 24px 60px -38px
+      oklch(0 0 0 / 0.92),
+
+    0 10px 28px -20px
+      oklch(
+        0.72
+        0.19
+        145
+        /
+        0.16
+      );
 }
 
 .surface-card:hover::before {
   opacity: 1;
+
+  transform:
+    translateX(55%);
 }
 
 .surface-card:hover::after {
   left: 125%;
+
   opacity: 1;
 }
 
 .surface-card > * {
   position: relative;
+
   z-index: 2;
-  transition: transform 0.6s var(--motion-ease);
+
+  transition:
+    transform
+      550ms
+      var(--motion-ease);
 }
 
 .surface-card:hover > * {
-  transform: translateY(-1px);
+  transform:
+    translateY(-1px);
 }
 
-/* True light reflection + gentle 3D depth for hero/product-like objects. */
+/* =========================================================
+   TILT CARD / HERO
+   ========================================================= */
+
 .tilt-card {
   --tilt-x: 0deg;
   --tilt-y: 0deg;
   --tilt-scale: 1;
   --tilt-perspective: 1000px;
+
   --shine-x: 50%;
   --shine-y: 50%;
+
   position: relative;
+
   isolation: isolate;
+
   transform:
-    perspective(var(--tilt-perspective))
+    perspective(
+      var(--tilt-perspective)
+    )
     rotateX(var(--tilt-x))
     rotateY(var(--tilt-y))
     scale(var(--tilt-scale));
-  transform-style: preserve-3d;
+
+  transform-style:
+    preserve-3d;
+
   transition:
-    transform 0.7s var(--motion-ease),
-    filter 0.7s ease,
-    box-shadow 0.7s var(--motion-ease);
-  will-change: transform;
+    transform
+      700ms
+      var(--motion-ease),
+
+    filter
+      700ms
+      ease,
+
+    box-shadow
+      700ms
+      var(--motion-ease);
+
+  will-change:
+    transform;
 }
 
 .tilt-card::before {
   content: "";
+
   position: absolute;
+
   inset: 0;
+
   z-index: 3;
+
   pointer-events: none;
+
   border-radius: inherit;
+
   background:
     radial-gradient(
-      260px 180px at var(--shine-x) var(--shine-y),
-      oklch(1 0 0 / 0.12),
-      transparent 62%
+      210px 140px
+      at
+      var(--shine-x)
+      var(--shine-y),
+
+      oklch(
+        1
+        0
+        0
+        /
+        0.075
+      ),
+
+      transparent 65%
     );
+
   opacity: 0;
-  transition: opacity 0.45s ease;
-  mix-blend-mode: screen;
+
+  transition:
+    opacity
+      500ms
+      ease;
+
+  mix-blend-mode:
+    screen;
 }
 
 .tilt-card:hover {
-  filter: saturate(1.04);
+  filter:
+    saturate(1.025);
+
   box-shadow:
-    0 30px 80px -42px oklch(0 0 0 / 0.95),
-    0 0 70px -48px oklch(0.72 0.19 145 / 0.55);
+    0 28px 70px -44px
+      oklch(0 0 0 / 0.94),
+
+    0 0 55px -48px
+      oklch(
+        0.72
+        0.19
+        145
+        /
+        0.42
+      );
 }
 
 .tilt-card:hover::before {
@@ -500,92 +822,248 @@
 
 .tilt-card-shine {
   position: absolute;
+
   inset: -40%;
+
   z-index: 2;
+
   pointer-events: none;
+
   opacity: 0;
+
   background:
     linear-gradient(
       115deg,
       transparent 38%,
-      oklch(1 0 0 / 0.055) 47%,
-      oklch(1 0 0 / 0.10) 50%,
-      oklch(1 0 0 / 0.055) 53%,
+      oklch(1 0 0 / 0.035) 47%,
+      oklch(1 0 0 / 0.065) 50%,
+      oklch(1 0 0 / 0.035) 53%,
       transparent 62%
     );
-  transform: translateX(-28%) rotate(8deg);
+
+  transform:
+    translateX(-28%)
+    rotate(8deg);
+
   transition:
-    transform 1.2s var(--motion-ease),
-    opacity 0.5s ease;
+    transform
+      1.25s
+      var(--motion-ease),
+
+    opacity
+      500ms
+      ease;
 }
 
-.tilt-card:hover .tilt-card-shine {
+.tilt-card:hover
+  .tilt-card-shine {
   opacity: 1;
-  transform: translateX(28%) rotate(8deg);
+
+  transform:
+    translateX(28%)
+    rotate(8deg);
 }
 
 .tilt-card-content {
   position: relative;
+
   z-index: 4;
-  transform: translateZ(18px);
+
+  transform:
+    translateZ(18px);
 }
 
-/* Buttons: a controlled light sweep instead of a permanent neon glow. */
+/* =========================================================
+   BUTTON LIGHT SWEEP
+   ========================================================= */
+
 a.bg-gradient-energy,
 button.bg-gradient-energy {
   position: relative;
+
   overflow: hidden;
+
   isolation: isolate;
+
+  transition:
+    transform
+      450ms
+      var(--motion-ease),
+
+    box-shadow
+      500ms
+      var(--motion-ease);
+}
+
+a.bg-gradient-energy:hover,
+button.bg-gradient-energy:hover {
+  transform:
+    translateY(-2px);
+
+  box-shadow:
+    0 14px 35px -18px
+      oklch(
+        0.72
+        0.19
+        145
+        /
+        0.5
+      );
 }
 
 a.bg-gradient-energy::after,
 button.bg-gradient-energy::after {
   content: "";
+
   position: absolute;
-  inset: -80% auto -80% -55%;
+
+  inset:
+    -80%
+    auto
+    -80%
+    -55%;
+
   width: 40%;
-  transform: rotate(18deg);
-  background: linear-gradient(
-    90deg,
-    transparent,
-    oklch(1 0 0 / 0.22),
-    transparent
-  );
-  transition: transform 0.9s var(--motion-ease);
-  pointer-events: none;
+
+  transform:
+    rotate(18deg);
+
+  background:
+    linear-gradient(
+      90deg,
+      transparent,
+      oklch(1 0 0 / 0.18),
+      transparent
+    );
+
+  transition:
+    transform
+      900ms
+      var(--motion-ease);
+
+  pointer-events:
+    none;
 }
 
 a.bg-gradient-energy:hover::after,
 button.bg-gradient-energy:hover::after {
-  transform: translateX(410%) rotate(18deg);
+  transform:
+    translateX(410%)
+    rotate(18deg);
 }
 
-/* Hero visual: let the dashboard breathe instead of snapping into place. */
+/* =========================================================
+   HERO
+   ========================================================= */
+
 .animate-rise {
-  animation-duration: 1.05s;
-  animation-timing-function: var(--motion-ease);
+  animation-duration:
+    1.05s;
+
+  animation-timing-function:
+    var(--motion-ease);
 }
 
-/* Respect accessibility preferences exactly like the reference. */
-@media (prefers-reduced-motion: reduce) {
+/* =========================================================
+   SECTION EYEBROW
+   ========================================================= */
+
+.section-eyebrow {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 0.5rem;
+
+  color:
+    var(--primary);
+
+  font-size:
+    0.68rem;
+
+  line-height:
+    1rem;
+
+  font-weight:
+    600;
+
+  letter-spacing:
+    0.14em;
+
+  text-transform:
+    uppercase;
+}
+
+.section-eyebrow-dot {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 999px;
+
+  background:
+    var(--accent);
+
+  box-shadow:
+    0 0 12px
+    oklch(
+      0.86
+      0.22
+      130
+      /
+      0.5
+    );
+}
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+@media (
+  prefers-reduced-motion: reduce
+) {
   html {
-    scroll-behavior: auto !important;
+    scroll-behavior:
+      auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration:
+      0.001ms !important;
+
+    animation-iteration-count:
+      1 !important;
+
+    transition-duration:
+      0.001ms !important;
   }
 
   .scroll-progress {
-    transition: none !important;
+    transition:
+      none !important;
   }
 
   .reveal,
   .reveal-in {
     opacity: 1 !important;
+
     transform: none !important;
+
     filter: none !important;
   }
 
   .surface-card,
   .tilt-card {
     transform: none !important;
+
     transition: none !important;
+  }
+
+  .surface-card::before,
+  .surface-card::after,
+  .tilt-card::before,
+  .tilt-card-shine {
+    display: none !important;
   }
 }
