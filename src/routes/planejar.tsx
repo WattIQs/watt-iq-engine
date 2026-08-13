@@ -487,7 +487,7 @@ function PlanejarPage() {
        */
 
       const response = await fetch(
-        `${API_URL}/api/ai/chat`,
+        `${API_URL}/api/ai.chat`,
         {
           method: "POST",
           credentials: "include",
