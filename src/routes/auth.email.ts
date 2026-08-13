@@ -1,95 +1,33 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createOtpChallenge } from "../lib/otp-store";
+
+import { createOtpChallenge } from "../../lib/otp-store";
+
 import {
   generateOtp,
   sendOtpEmail,
-} from "../lib/email.otp";
+} from "../../lib/email.otp";
 
 export const Route = createFileRoute("/auth/email")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          const contentType =
-            request.headers.get("content-type") || "";
-
-          if (!contentType.includes("application/json")) {
-            return Response.json(
-              {
-                message:
-                  "Requisição inválida.",
-              },
-              {
-                status: 400,
-              },
-            );
-          }
-
-          const rawBody = await request.text();
-
-          if (!rawBody.trim()) {
-            return Response.json(
-              {
-                message:
-                  "Dados de login não enviados.",
-              },
-              {
-                status: 400,
-              },
-            );
-          }
-
-          let body: unknown;
-
-          try {
-            body = JSON.parse(rawBody);
-          } catch {
-            return Response.json(
-              {
-                message:
-                  "Dados de login inválidos.",
-              },
-              {
-                status: 400,
-              },
-            );
-          }
-
-          if (
-            typeof body !== "object" ||
-            body === null
-          ) {
-            return Response.json(
-              {
-                message:
-                  "Dados de login inválidos.",
-              },
-              {
-                status: 400,
-              },
-            );
-          }
-
-          const data = body as {
-            email?: unknown;
-            name?: unknown;
-          };
+          const body = await request.json();
 
           const email =
-            typeof data.email === "string"
-              ? data.email.trim().toLowerCase()
+            typeof body?.email === "string"
+              ? body.email.trim().toLowerCase()
               : "";
 
           const name =
-            typeof data.name === "string"
-              ? data.name.trim()
+            typeof body?.name === "string"
+              ? body.name.trim()
               : "";
 
           if (!email) {
             return Response.json(
               {
-                message:
-                  "Digite um e-mail válido.",
+                message: "Digite um e-mail válido.",
               },
               {
                 status: 400,
@@ -104,25 +42,6 @@ export const Route = createFileRoute("/auth/email")({
               email,
               code,
             );
-
-          if (
-            typeof challengeId !== "string" ||
-            !challengeId
-          ) {
-            console.error(
-              "createOtpChallenge não retornou um UUID válido.",
-            );
-
-            return Response.json(
-              {
-                message:
-                  "Não foi possível criar a verificação.",
-              },
-              {
-                status: 500,
-              },
-            );
-          }
 
           await sendOtpEmail(
             email,
@@ -140,30 +59,40 @@ export const Route = createFileRoute("/auth/email")({
 
           const pendingUserData =
             Buffer.from(
-              JSON.stringify(
-                pendingUser,
-              ),
+              JSON.stringify(pendingUser),
             ).toString("base64url");
 
-          const headers =
-            new Headers();
+          const headers = new Headers();
 
           headers.append(
             "Set-Cookie",
-            `wattiq_otp=${challengeId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+            [
+              `wattiq_otp=${challengeId}`,
+              "Path=/",
+              "HttpOnly",
+              "Secure",
+              "SameSite=Lax",
+              "Max-Age=600",
+            ].join("; "),
           );
 
           headers.append(
             "Set-Cookie",
-            `wattiq_pending_user=${pendingUserData}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+            [
+              `wattiq_pending_user=${pendingUserData}`,
+              "Path=/",
+              "HttpOnly",
+              "Secure",
+              "SameSite=Lax",
+              "Max-Age=600",
+            ].join("; "),
           );
 
           console.log(
-            "OTP enviado e desafio criado:",
+            "OTP criado:",
             {
               challengeId,
-              emailDomain:
-                email.split("@")[1] || "",
+              email,
             },
           );
 
