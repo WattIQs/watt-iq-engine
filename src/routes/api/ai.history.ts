@@ -20,20 +20,42 @@ export const Route = createFileRoute("/api/ai/history")({
             );
           }
 
+          const conversationResult = await db.query(
+            `
+              SELECT id
+              FROM ai_conversations
+              WHERE user_id = $1
+              ORDER BY updated_at DESC
+              LIMIT 1
+            `,
+            [user.sub],
+          );
+
+          if (conversationResult.rows.length === 0) {
+            return Response.json({
+              conversationId: null,
+              messages: [],
+            });
+          }
+
+          const conversationId =
+            conversationResult.rows[0].id;
+
           const result = await db.query(
             `
-            SELECT
-              role,
-              content,
-              created_at
-            FROM ai_conversations
-            WHERE user_email = $1
-            ORDER BY created_at ASC
+              SELECT
+                role,
+                content,
+                created_at
+              FROM ai_messages
+              WHERE conversation_id = $1
+              ORDER BY created_at ASC, id ASC
             `,
-            [user.email],
+            [conversationId],
           );
 
           return Response.json({
+            conversationId,
             messages: result.rows.map((row) => ({
               role: row.role,
               content: row.content,
