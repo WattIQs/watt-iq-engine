@@ -6,18 +6,14 @@ import { createSessionCookie } from "../lib/session";
 function readCookie(request: Request, name: string) {
   const header = request.headers.get("cookie");
 
-  if (!header) {
-    return null;
-  }
+  if (!header) return null;
 
   const cookie = header
     .split(";")
     .map((c) => c.trim())
     .find((c) => c.startsWith(`${name}=`));
 
-  if (!cookie) {
-    return null;
-  }
+  if (!cookie) return null;
 
   return cookie.substring(name.length + 1);
 }
@@ -42,9 +38,7 @@ export const Route = createFileRoute("/auth/verify")({
                 message:
                   "Digite o código completo de 6 dígitos.",
               },
-              {
-                status: 400,
-              },
+              { status: 400 },
             );
           }
 
@@ -58,20 +52,13 @@ export const Route = createFileRoute("/auth/verify")({
             "wattiq_pending_user",
           );
 
-          console.log("Cookies:", {
-            otp: !!challengeId,
-            pendingUser: !!pendingUserRaw,
-          });
-
-          if (!challengeId || !pendingUserRaw) {
+          if (!challengeId) {
             return Response.json(
               {
                 message:
                   "Sessão de verificação expirada. Solicite um novo código.",
               },
-              {
-                status: 400,
-              },
+              { status: 400 },
             );
           }
 
@@ -80,42 +67,41 @@ export const Route = createFileRoute("/auth/verify")({
             code,
           );
 
-          console.log(
-            "Resultado OTP:",
-            email,
-          );
-
           if (!email) {
             return Response.json(
               {
                 message:
                   "Código inválido ou expirado.",
               },
-              {
-                status: 400,
-              },
+              { status: 400 },
             );
           }
 
-          const pendingUser = JSON.parse(
-            Buffer.from(
-              pendingUserRaw,
-              "base64url",
-            ).toString("utf-8"),
-          ) as {
-            sub: string;
-            email: string;
-            name?: string;
-            picture?: string;
-          };
+          let pendingUser = null;
+
+          if (pendingUserRaw) {
+            try {
+              pendingUser = JSON.parse(
+                Buffer.from(
+                  pendingUserRaw,
+                  "base64url",
+                ).toString("utf-8"),
+              );
+            } catch {
+              pendingUser = null;
+            }
+          }
 
           const user = {
-            sub: pendingUser.sub,
-            email: pendingUser.email,
+            sub:
+              pendingUser?.sub ??
+              email,
+            email,
             name:
-              pendingUser.name ??
-              pendingUser.email.split("@")[0],
-            picture: pendingUser.picture,
+              pendingUser?.name ??
+              email.split("@")[0],
+            picture:
+              pendingUser?.picture ?? "",
           };
 
           const headers = new Headers();
@@ -135,9 +121,18 @@ export const Route = createFileRoute("/auth/verify")({
             "wattiq_pending_user=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
           );
 
+          console.log(
+            "SESSÃO CRIADA:",
+            {
+              email: user.email,
+              sub: user.sub,
+            },
+          );
+
           return Response.json(
             {
               success: true,
+              user,
             },
             {
               status: 200,
