@@ -286,12 +286,16 @@ type ChatMessage = {
   content: string;
 };
 
-export const Route = createFileRoute("/api/ai/chat")({
+export const Route = createFileRoute(
+  "/api/ai/chat",
+)({
   server: {
     handlers: {
       POST: async ({ request }) => {
         let user:
-          | ReturnType<typeof getSessionUser>
+          | ReturnType<
+              typeof getSessionUser
+            >
           | null = null;
 
         try {
@@ -301,13 +305,14 @@ export const Route = createFileRoute("/api/ai/chat")({
            * =====================================================
            */
 
-          user = getSessionUser(request);
+          user =
+            getSessionUser(request);
 
           if (!user) {
             return Response.json(
               {
-                success: false,
-                message: "Sessão expirada. Faça login novamente.",
+                message:
+                  "Sessão expirada. Faça login novamente.",
               },
               { status: 401 },
             );
@@ -327,7 +332,8 @@ export const Route = createFileRoute("/api/ai/chat")({
            * =====================================================
            */
 
-          const apiKey = process.env.GEMINI_API_KEY;
+          const apiKey =
+            process.env.GEMINI_API_KEY;
 
           if (!apiKey) {
             console.error(
@@ -336,7 +342,6 @@ export const Route = createFileRoute("/api/ai/chat")({
 
             return Response.json(
               {
-                success: false,
                 message:
                   "A inteligência da WattIQ não está configurada no servidor.",
               },
@@ -350,88 +355,65 @@ export const Route = createFileRoute("/api/ai/chat")({
            * =====================================================
            */
 
-          const body = await request.json();
+          const body =
+            await request.json();
 
           const conversationId =
-            typeof body?.conversationId === "string"
-              ? body.conversationId
-              : null;
+            typeof body?.conversationId ===
+            "string"
+              ? body.conversationId.trim()
+              : "";
 
-          const messages = Array.isArray(body?.messages)
-            ? body.messages
-            : [];
-
-          if (!conversationId) {
-            return Response.json(
-              {
-                success: false,
-                message:
-                  "Nenhuma conversa foi selecionada.",
-              },
-              { status: 400 },
-            );
-          }
-
-          /*
-           * =====================================================
-           * 5. VALIDA CONVERSA
-           * =====================================================
-           */
-
-          const conversationResult = await db.query(
-            `
-              SELECT id
-              FROM ai_conversations
-              WHERE id = $1
-                AND user_id = $2
-              LIMIT 1
-            `,
-            [conversationId, user.sub],
-          );
-
-          if (conversationResult.rows.length === 0) {
-            return Response.json(
-              {
-                success: false,
-                message:
-                  "A conversa selecionada não existe ou não pertence ao usuário.",
-              },
-              { status: 404 },
-            );
-          }
-
-          /*
-           * =====================================================
-           * 6. VALIDA MENSAGENS
-           * =====================================================
-           */
+          const messages =
+            Array.isArray(
+              body?.messages,
+            )
+              ? body.messages
+              : [];
 
           const validMessages: ChatMessage[] =
             messages
               .filter(
-                (message: unknown): message is ChatMessage =>
+                (
+                  message: unknown,
+                ): message is ChatMessage =>
                   !!message &&
-                  typeof message === "object" &&
+                  typeof message ===
+                    "object" &&
                   "role" in message &&
                   "content" in message &&
-                  ((message as ChatMessage).role === "user" ||
-                    (message as ChatMessage).role === "assistant") &&
-                  typeof (message as ChatMessage).content ===
+                  (
+                    (
+                      message as ChatMessage
+                    ).role ===
+                      "user" ||
+                    (
+                      message as ChatMessage
+                    ).role ===
+                      "assistant"
+                  ) &&
+                  typeof (
+                    message as ChatMessage
+                  ).content ===
                     "string",
               )
               .map((message) => ({
                 role: message.role,
-                content: message.content.trim(),
+                content:
+                  message.content.trim(),
               }))
               .filter(
                 (message) =>
-                  message.content.length > 0,
+                  message.content
+                    .length > 0,
               );
 
-          if (validMessages.length === 0) {
+          if (
+            validMessages.length ===
+            0
+          ) {
             return Response.json(
               {
-                success: false,
                 message:
                   "Envie uma mensagem para começar a conversa.",
               },
@@ -441,17 +423,21 @@ export const Route = createFileRoute("/api/ai/chat")({
 
           /*
            * =====================================================
-           * 7. ÚLTIMA MENSAGEM
+           * 5. ÚLTIMA MENSAGEM
            * =====================================================
            */
 
           const lastMessage =
-            validMessages[validMessages.length - 1];
+            validMessages[
+              validMessages.length - 1
+            ];
 
-          if (lastMessage.role !== "user") {
+          if (
+            lastMessage.role !==
+            "user"
+          ) {
             return Response.json(
               {
-                success: false,
                 message:
                   "A última mensagem precisa ser do usuário.",
               },
@@ -461,7 +447,74 @@ export const Route = createFileRoute("/api/ai/chat")({
 
           /*
            * =====================================================
-           * 8. SALVA MENSAGEM DO USUÁRIO
+           * 6. CONVERSA
+           * =====================================================
+           */
+
+          let currentConversationId =
+            conversationId;
+
+          /*
+           * Se foi enviada uma conversa,
+           * verifica se pertence ao usuário.
+           */
+
+          if (currentConversationId) {
+            const existing =
+              await db.query(
+                `
+                  SELECT id
+                  FROM ai_conversations
+                  WHERE id = $1
+                    AND user_id = $2
+                  LIMIT 1
+                `,
+                [
+                  currentConversationId,
+                  user.sub,
+                ],
+              );
+
+            if (
+              existing.rows.length ===
+              0
+            ) {
+              return Response.json(
+                {
+                  success: false,
+                  message:
+                    "Conversa não encontrada.",
+                },
+                { status: 404 },
+              );
+            }
+          } else {
+            /*
+             * Caso não exista conversationId,
+             * cria uma nova conversa.
+             */
+
+            const created =
+              await db.query(
+                `
+                  INSERT INTO ai_conversations (
+                    user_id
+                  )
+                  VALUES ($1)
+                  RETURNING id
+                `,
+                [user.sub],
+              );
+
+            currentConversationId =
+              String(
+                created.rows[0].id,
+              );
+          }
+
+          /*
+           * =====================================================
+           * 7. SALVA USUÁRIO
            * =====================================================
            */
 
@@ -472,72 +525,98 @@ export const Route = createFileRoute("/api/ai/chat")({
                 role,
                 content
               )
-              VALUES ($1, 'user', $2)
+              VALUES (
+                $1,
+                'user',
+                $2
+              )
             `,
             [
-              conversationId,
+              currentConversationId,
               lastMessage.content,
             ],
           );
 
           /*
            * =====================================================
-           * 9. HISTÓRICO REAL DA CONVERSA
+           * 8. HISTÓRICO
            * =====================================================
            */
 
-          const historyResult = await db.query(
-            `
-              SELECT
-                role,
-                content
-              FROM ai_messages
-              WHERE conversation_id = $1
-              ORDER BY created_at ASC, id ASC
-            `,
-            [conversationId],
-          );
+          const historyResult =
+            await db.query(
+              `
+                SELECT
+                  role,
+                  content
+                FROM ai_messages
+                WHERE conversation_id = $1
+                ORDER BY created_at ASC, id ASC
+              `,
+              [
+                currentConversationId,
+              ],
+            );
 
           const history: ChatMessage[] =
-            historyResult.rows.map((row) => ({
-              role: row.role,
-              content: row.content,
-            }));
+            historyResult.rows.map(
+              (row) => ({
+                role:
+                  row.role ===
+                  "assistant"
+                    ? "assistant"
+                    : "user",
+
+                content:
+                  row.content,
+              }),
+            );
 
           /*
            * =====================================================
-           * 10. GEMINI
+           * 9. GEMINI
            * =====================================================
            */
 
-          const ai = new GoogleGenAI({
-            apiKey,
-          });
+          const ai =
+            new GoogleGenAI({
+              apiKey,
+            });
 
-          const contents = history.map(
-            (message) => ({
-              role:
-                message.role === "assistant"
-                  ? "model"
-                  : "user",
-              parts: [
-                {
-                  text: message.content,
-                },
-              ],
-            }),
-          );
+          const contents =
+            history.map(
+              (message) => ({
+                role:
+                  message.role ===
+                  "assistant"
+                    ? "model"
+                    : "user",
+
+                parts: [
+                  {
+                    text:
+                      message.content,
+                  },
+                ],
+              }),
+            );
 
           const response =
-            await ai.models.generateContent({
-              model: "gemini-3.5-flash",
-              contents,
-              config: {
-                systemInstruction:
-                  WATTIQ_AI_PROMPT,
-                maxOutputTokens: 1000,
+            await ai.models.generateContent(
+              {
+                model:
+                  "gemini-3.5-flash",
+
+                contents,
+
+                config: {
+                  systemInstruction:
+                    WATTIQ_AI_PROMPT,
+
+                  maxOutputTokens: 1000,
+                },
               },
-            });
+            );
 
           const text =
             response.text?.trim();
@@ -550,7 +629,7 @@ export const Route = createFileRoute("/api/ai/chat")({
 
           /*
            * =====================================================
-           * 11. SALVA RESPOSTA DA IA
+           * 10. SALVA IA
            * =====================================================
            */
 
@@ -561,17 +640,21 @@ export const Route = createFileRoute("/api/ai/chat")({
                 role,
                 content
               )
-              VALUES ($1, 'assistant', $2)
+              VALUES (
+                $1,
+                'assistant',
+                $2
+              )
             `,
             [
-              conversationId,
+              currentConversationId,
               text,
             ],
           );
 
           /*
            * =====================================================
-           * 12. ATUALIZA CONVERSA
+           * 11. ATUALIZA CONVERSA
            * =====================================================
            */
 
@@ -581,23 +664,28 @@ export const Route = createFileRoute("/api/ai/chat")({
               SET updated_at = NOW()
               WHERE id = $1
             `,
-            [conversationId],
+            [
+              currentConversationId,
+            ],
           );
 
           console.log(
-            `WattIQ AI: mensagem salva para ${user.email} na conversa ${conversationId}`,
+            `WattIQ AI: mensagem salva para ${user.email} na conversa ${currentConversationId}`,
           );
 
           /*
            * =====================================================
-           * 13. RESPOSTA
+           * 12. RESPOSTA
            * =====================================================
            */
 
           return Response.json({
             success: true,
+
             message: text,
-            conversationId,
+
+            conversationId:
+              currentConversationId,
           });
         } catch (error) {
           console.error(
