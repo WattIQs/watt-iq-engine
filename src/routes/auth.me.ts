@@ -5,33 +5,32 @@ export const Route = createFileRoute("/auth/me")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const cookie = request.headers.get("cookie");
         const user = getSessionUser(request);
 
         console.log("AUTH ME:", {
-          hasCookieHeader: !!cookie,
-          hasSessionCookie:
-            !!cookie?.includes("wattiq_session="),
+          hasCookie: !!request.headers.get("cookie"),
           authenticated: !!user,
           user: user
             ? {
                 email: user.email,
-                name: user.name,
+                sub: user.sub,
               }
             : null,
         });
 
-        if (!user) {
-          return Response.json({
-            authenticated: false,
-            user: null,
-          });
-        }
-
-        return Response.json({
-          authenticated: true,
-          user,
-        });
+        return Response.json(
+          {
+            authenticated: !!user,
+            user: user ?? null,
+          },
+          {
+            status: 200,
+            headers: {
+              "Cache-Control":
+                "no-store, no-cache, must-revalidate, proxy-revalidate",
+            },
+          },
+        );
       },
     },
   },
