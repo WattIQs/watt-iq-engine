@@ -1,21 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-
-import { VerifyPage } from "../../components/auth/VerifyPage";
-
-import {
-  verifyOtpChallenge,
-} from "../../lib/otp-store";
-
-import {
-  createSessionCookie,
-} from "../../lib/session";
+import { VerifyPage } from "../components/auth/VerifyPage";
+import { verifyOtpChallenge } from "../lib/otp-store";
+import { createSessionCookie } from "../lib/session";
 
 function readCookie(
   request: Request,
   name: string,
 ): string | null {
-  const header =
-    request.headers.get("cookie");
+  const header = request.headers.get("cookie");
 
   if (!header) {
     return null;
@@ -23,49 +15,65 @@ function readCookie(
 
   const cookies = header.split(";");
 
-  for (const cookie of cookies) {
-    const trimmed = cookie.trim();
+  for (const item of cookies) {
+    const separatorIndex = item.indexOf("=");
 
-    const separator =
-      trimmed.indexOf("=");
-
-    if (separator === -1) {
+    if (separatorIndex === -1) {
       continue;
     }
 
-    const key =
-      trimmed.substring(
-        0,
-        separator,
-      );
+    const key = item
+      .slice(0, separatorIndex)
+      .trim();
 
-    const value =
-      trimmed.substring(
-        separator + 1,
-      );
-
-    if (key === name) {
-      return value || null;
+    if (key !== name) {
+      continue;
     }
+
+    return item
+      .slice(separatorIndex + 1)
+      .trim();
   }
 
   return null;
 }
 
-export const Route = createFileRoute(
-  "/auth/verify",
-)({
+export const Route = createFileRoute("/auth/verify")({
   component: VerifyPage,
 
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          const body =
-            await request.json();
+          const rawBody = await request.text();
+
+          if (!rawBody.trim()) {
+            return Response.json(
+              {
+                message: "Código não informado.",
+              },
+              { status: 400 },
+            );
+          }
+
+          let body: {
+            code?: unknown;
+          };
+
+          try {
+            body = JSON.parse(rawBody);
+          } catch {
+            return Response.json(
+              {
+                message:
+                  "Dados de verificação inválidos.",
+              },
+              { status: 400 },
+            );
+          }
 
           const code =
-            typeof body?.code === "string"
+            typeof body.code === "string"
               ? body.code.trim()
               : "";
 
@@ -75,58 +83,41 @@ export const Route = createFileRoute(
                 message:
                   "Digite o código completo de 6 dígitos.",
               },
-              {
-                status: 400,
-              },
+              { status: 400 },
             );
           }
 
-          /*
-           * IMPORTANTE:
-           * readCookie NÃO é async.
-           * Portanto NÃO usamos await aqui.
-           */
-
-          const challengeId =
-            readCookie(
-              request,
-              "wattiq_otp",
-            );
-
-          const pendingUserRaw =
-            readCookie(
-              request,
-              "wattiq_pending_user",
-            );
-
-          console.log(
-            "VERIFY OTP:",
-            {
-              hasChallengeId:
-                Boolean(challengeId),
-
-              challengeId:
-                challengeId
-                  ? `${challengeId.substring(0, 8)}...`
-                  : null,
-
-              hasPendingUser:
-                Boolean(pendingUserRaw),
-
-              codeLength:
-                code.length,
-            },
+          const challengeId = readCookie(
+            request,
+            "wattiq_otp",
           );
 
-          if (!challengeId) {
+          const pendingUserRaw = readCookie(
+            request,
+            "wattiq_pending_user",
+          );
+
+          console.log("VERIFY OTP:", {
+            hasChallengeId: Boolean(challengeId),
+            challengeId,
+            hasPendingUser: Boolean(
+              pendingUserRaw,
+            ),
+            codeLength: code.length,
+          });
+
+          if (
+            !challengeId ||
+            !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+              challengeId,
+            )
+          ) {
             return Response.json(
               {
                 message:
-                  "Sessão de verificação expirada. Solicite um novo código.",
+                  "Sessão de verificação inválida ou expirada. Solicite um novo código.",
               },
-              {
-                status: 400,
-              },
+              { status: 400 },
             );
           }
 
@@ -142,32 +133,25 @@ export const Route = createFileRoute(
                 message:
                   "Código inválido ou expirado.",
               },
-              {
-                status: 400,
-              },
+              { status: 400 },
             );
           }
 
-          let pendingUser:
-            | {
-                sub?: string;
-                email?: string;
-                name?: string;
-                picture?: string;
-              }
-            | null = null;
+          let pendingUser: {
+            sub?: string;
+            email?: string;
+            name?: string;
+            picture?: string;
+          } | null = null;
 
           if (pendingUserRaw) {
             try {
-              pendingUser =
-                JSON.parse(
-                  Buffer.from(
-                    pendingUserRaw,
-                    "base64url",
-                  ).toString(
-                    "utf-8",
-                  ),
-                );
+              pendingUser = JSON.parse(
+                Buffer.from(
+                  pendingUserRaw,
+                  "base64url",
+                ).toString("utf8"),
+              );
             } catch (error) {
               console.error(
                 "Erro ao ler usuário pendente:",
@@ -182,20 +166,15 @@ export const Route = createFileRoute(
             sub:
               pendingUser?.sub ||
               email,
-
             email,
-
             name:
               pendingUser?.name ||
               email.split("@")[0],
-
             picture:
-              pendingUser?.picture ||
-              "",
+              pendingUser?.picture || "",
           };
 
-          const headers =
-            new Headers();
+          const headers = new Headers();
 
           headers.append(
             "Set-Cookie",
@@ -227,11 +206,8 @@ export const Route = createFileRoute(
           );
 
           console.log(
-            "SESSÃO CRIADA:",
-            {
-              email: user.email,
-              sub: user.sub,
-            },
+            "OTP VERIFICADO COM SUCESSO:",
+            email,
           );
 
           return Response.json(
