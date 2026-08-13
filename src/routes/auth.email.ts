@@ -37,7 +37,7 @@ export const Route = createFileRoute("/auth/email")({
 
           const code = generateOtp();
 
-          const challengeId = createOtpChallenge(
+          const challengeId = await createOtpChallenge(
             email,
             code,
           );
@@ -69,12 +69,6 @@ export const Route = createFileRoute("/auth/email")({
             "Set-Cookie",
             `wattiq_pending_user=${pendingUserData}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
           );
-
-          console.log("OTP criado:", {
-            challengeId,
-            email,
-            name,
-          });
 
           return Response.json(
             {
