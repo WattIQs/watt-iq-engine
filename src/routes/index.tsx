@@ -1,6 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useScrollProgress } from "@/hooks/use-scroll-progress";
-import { SiteHeader, SiteFooter } from "@/components/landing/SiteChrome";
+import {
+  createFileRoute,
+} from "@tanstack/react-router";
+
+import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
+
 import { Hero } from "@/components/landing/Hero";
 import {
   ProblemSection,
@@ -10,45 +13,46 @@ import {
   IndicatorsSection,
   IntelligenceSection,
   DashboardSection,
+  AccessSection,
   CtaSection,
 } from "@/components/landing/Sections";
 
-const title = "WattIQ — Energia medida. Inteligência aplicada.";
-const description =
-  "Plataforma de monitoramento e inteligência energética para empresas: transforme consumo em indicadores contextualizados e insights acionáveis.";
+import { SiteHeader } from "@/components/landing/SiteHeader";
+import { SiteFooter } from "@/components/landing/SiteFooter";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
   component: Index,
 });
 
 function Index() {
-  const progress = useScrollProgress();
+  useSmoothScroll();
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="scroll-progress" style={{ transform: `scaleX(${progress})` }} aria-hidden />
       <SiteHeader />
+
       <main>
         <Hero />
+
         <ProblemSection />
+
         <ContextSection />
+
         <SolutionSection />
+
         <HowSection />
+
         <IndicatorsSection />
+
         <IntelligenceSection />
+
         <DashboardSection />
+
+        <AccessSection />
+
         <CtaSection />
       </main>
+
       <SiteFooter />
     </div>
   );
