@@ -35,23 +35,30 @@ export const Route = createFileRoute("/auth/email")({
 
           const code = generateOtp();
 
-          const challengeId = await createOtpChallenge(
+          const challengeId =
+            await createOtpChallenge(
+              email,
+              code,
+            );
+
+          await sendOtpEmail(
             email,
             code,
           );
 
-          await sendOtpEmail(email, code);
-
           const pendingUser = {
             sub: email,
             email,
-            name: name || email.split("@")[0],
+            name:
+              name ||
+              email.split("@")[0],
             picture: "",
           };
 
-          const pendingUserData = Buffer.from(
-            JSON.stringify(pendingUser),
-          ).toString("base64url");
+          const pendingUserData =
+            Buffer.from(
+              JSON.stringify(pendingUser),
+            ).toString("base64url");
 
           const headers = new Headers();
 
