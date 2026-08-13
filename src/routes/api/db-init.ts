@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { initDatabase } from "../../../lib/db-init";
+import { initDatabase } from "../../lib/db-init";
 
 export const Route = createFileRoute("/api/db-init")({
   server: {
