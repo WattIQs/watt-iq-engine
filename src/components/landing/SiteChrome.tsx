@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const mark = "/wattiq-logo.png";
@@ -37,16 +38,10 @@ export function SiteHeader() {
       }
     }
 
-    document.addEventListener(
-      "mousedown",
-      handleClickOutside,
-    );
+    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside,
-      );
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -70,7 +65,6 @@ export function SiteHeader() {
             Watt<span className="text-primary">IQ</span>
           </span>
         </Link>
-
 
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
           <a
@@ -100,10 +94,33 @@ export function SiteHeader() {
           >
             Intelligence
           </a>
+
+          <Link
+            to="/planejar"
+            className="group relative inline-flex items-center gap-1.5 text-foreground transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5"
+          >
+            <span>Planejar</span>
+
+            <ArrowRight
+              className="h-3.5 w-3.5 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1"
+            />
+
+            <span className="absolute -bottom-1 left-0 h-px w-0 bg-primary transition-all duration-500 ease-out group-hover:w-full" />
+          </Link>
         </nav>
 
-
         <div className="flex items-center gap-2">
+
+          <Link
+            to="/planejar"
+            className="group hidden items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/10 px-3.5 py-2 text-sm font-medium text-primary transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-1 hover:border-primary/50 hover:bg-primary/15 hover:shadow-[0_16px_35px_-18px_rgba(180,255,80,0.5)] sm:inline-flex md:hidden"
+          >
+            Planejar
+
+            <ArrowRight
+              className="h-3.5 w-3.5 transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-1"
+            />
+          </Link>
 
           {user ? (
 
@@ -115,9 +132,7 @@ export function SiteHeader() {
               <button
                 type="button"
                 onClick={() =>
-                  setMenuOpen(
-                    (open) => !open,
-                  )
+                  setMenuOpen((open) => !open)
                 }
                 className="flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:bg-secondary"
               >
@@ -140,13 +155,11 @@ export function SiteHeader() {
 
                 )}
 
-
                 <span className="hidden max-w-48 truncate text-sm font-medium sm:block">
                   Olá, {user.name}
                 </span>
 
               </button>
-
 
               {menuOpen ? (
 
@@ -167,11 +180,27 @@ export function SiteHeader() {
 
                   </div>
 
+                  <Link
+                    to="/planejar"
+                    role="menuitem"
+                    onClick={() => setMenuOpen(false)}
+                    className="group mt-1 block rounded-lg px-3 py-2.5 text-sm transition-all duration-300 hover:bg-secondary"
+                  >
+                    <span className="flex items-center justify-between font-medium">
+                      Planejar
+
+                      <ArrowRight className="h-3.5 w-3.5 text-primary transition-transform duration-300 group-hover:translate-x-1" />
+                    </span>
+
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      Acessar planejamento energético
+                    </span>
+                  </Link>
 
                   <a
                     href="/auth/google"
                     role="menuitem"
-                    className="mt-1 block rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-secondary"
+                    className="block rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-secondary"
                   >
                     <span className="font-medium">
                       Trocar conta
@@ -180,9 +209,7 @@ export function SiteHeader() {
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       Entrar com outro Google
                     </span>
-
                   </a>
-
 
                   <a
                     href="/auth/logout"
@@ -192,11 +219,9 @@ export function SiteHeader() {
                     Sair
                   </a>
 
-
                 </div>
 
               ) : null}
-
 
             </div>
 
@@ -217,7 +242,6 @@ export function SiteHeader() {
     </header>
   );
 }
-
 
 export function SiteFooter() {
   return (
