@@ -4,7 +4,7 @@ import { db } from "./db";
 export async function createOtpChallenge(
   email: string,
   code: string,
-): Promise<string> {
+) {
   const challengeId = randomUUID();
 
   const expiresAt = new Date(
@@ -30,21 +30,18 @@ export async function createOtpChallenge(
     ],
   );
 
+  console.log("OTP CHALLENGE CRIADO:", {
+    challengeId,
+    expiresAt: expiresAt.toISOString(),
+  });
+
   return challengeId;
 }
 
 export async function verifyOtpChallenge(
   challengeId: string,
   code: string,
-): Promise<string | null> {
-  if (
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      challengeId,
-    )
-  ) {
-    return null;
-  }
-
+) {
   const client = await db.connect();
 
   try {
@@ -71,6 +68,11 @@ export async function verifyOtpChallenge(
 
     if (result.rowCount === 0) {
       await client.query("ROLLBACK");
+
+      console.log("OTP NÃO ENCONTRADO:", {
+        challengeId,
+      });
+
       return null;
     }
 
@@ -87,6 +89,13 @@ export async function verifyOtpChallenge(
 
       await client.query("COMMIT");
 
+      console.log("OTP EXPIRADO:", {
+        challengeId,
+        expiresAt: new Date(
+          entry.expires_at,
+        ).toISOString(),
+      });
+
       return null;
     }
 
@@ -100,6 +109,10 @@ export async function verifyOtpChallenge(
       );
 
       await client.query("COMMIT");
+
+      console.log("OTP BLOQUEADO POR TENTATIVAS:", {
+        challengeId,
+      });
 
       return null;
     }
@@ -116,6 +129,13 @@ export async function verifyOtpChallenge(
 
       await client.query("COMMIT");
 
+      console.log("OTP NÃO CONFERE:", {
+        challengeId,
+        attemptsBefore: entry.attempts,
+        receivedLength: code.length,
+        storedLength: entry.code.length,
+      });
+
       return null;
     }
 
@@ -129,9 +149,19 @@ export async function verifyOtpChallenge(
 
     await client.query("COMMIT");
 
+    console.log("OTP VERIFICADO COM SUCESSO:", {
+      challengeId,
+    });
+
     return entry.email;
   } catch (error) {
     await client.query("ROLLBACK");
+
+    console.error(
+      "Erro ao verificar OTP:",
+      error,
+    );
+
     throw error;
   } finally {
     client.release();
