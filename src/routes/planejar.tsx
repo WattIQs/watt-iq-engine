@@ -19,6 +19,7 @@ import {
   Send,
   Sparkles,
   Trash2,
+  X,
   Zap,
 } from "lucide-react";
 
@@ -34,7 +35,10 @@ type Conversation = {
 };
 
 const API_URL =
-  import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
+  import.meta.env.VITE_API_URL?.replace(
+    /\/$/,
+    "",
+  ) || "";
 
 const INITIAL_MESSAGE: ChatMessage = {
   role: "assistant",
@@ -42,7 +46,9 @@ const INITIAL_MESSAGE: ChatMessage = {
     "Olá. Sou a WattIQ AI, sua inteligência especializada em análise e planejamento energético. Como posso ajudar?",
 };
 
-export const Route = createFileRoute("/planejar")({
+export const Route = createFileRoute(
+  "/planejar",
+)({
   component: PlanejarPage,
 });
 
@@ -66,11 +72,15 @@ function PlanejarPage() {
 
     async function checkSession() {
       try {
-        const response = await fetch("/auth/me", {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-        });
+        const response =
+          await fetch(
+            "/auth/me",
+            {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+            },
+          );
 
         if (!response.ok) {
           throw new Error(
@@ -78,11 +88,15 @@ function PlanejarPage() {
           );
         }
 
-        const data = await response.json();
+        const data =
+          await response.json();
 
         if (!mounted) return;
 
-        if (data?.authenticated === true) {
+        if (
+          data?.authenticated ===
+          true
+        ) {
           setAuthenticated(true);
           setCheckingAuth(false);
           return;
@@ -91,7 +105,8 @@ function PlanejarPage() {
         navigate({
           to: "/auth",
           search: {
-            redirect: "/planejar",
+            redirect:
+              "/planejar",
           },
           replace: true,
         });
@@ -106,7 +121,8 @@ function PlanejarPage() {
         navigate({
           to: "/auth",
           search: {
-            redirect: "/planejar",
+            redirect:
+              "/planejar",
           },
           replace: true,
         });
@@ -132,9 +148,14 @@ function PlanejarPage() {
   const [
     activeConversationId,
     setActiveConversationId,
-  ] = useState<string | null>(null);
+  ] = useState<string | null>(
+    null,
+  );
 
   const [loadingHistory, setLoadingHistory] =
+    useState(false);
+
+  const [creatingConversation, setCreatingConversation] =
     useState(false);
 
   const [sidebarOpen, setSidebarOpen] =
@@ -146,10 +167,18 @@ function PlanejarPage() {
    * =========================================================
    */
 
-  const [input, setInput] = useState("");
+  const [input, setInput] =
+    useState("");
 
   const [loading, setLoading] =
     useState(false);
+
+  const [
+    deletingConversationId,
+    setDeletingConversationId,
+  ] = useState<string | null>(
+    null,
+  );
 
   const chatContainerRef =
     useRef<HTMLDivElement>(null);
@@ -173,18 +202,20 @@ function PlanejarPage() {
     setLoadingHistory(true);
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/ai/conversations`,
-        {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-        },
-      );
+      const response =
+        await fetch(
+          `${API_URL}/api/ai/conversations`,
+          {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+          },
+        );
 
-      const data = await response
-        .json()
-        .catch(() => ({}));
+      const data =
+        await response
+          .json()
+          .catch(() => ({}));
 
       if (!response.ok) {
         throw new Error(
@@ -194,10 +225,16 @@ function PlanejarPage() {
       }
 
       const loaded: Conversation[] =
-        Array.isArray(data?.conversations)
+        Array.isArray(
+          data?.conversations,
+        )
           ? data.conversations.map(
-              (conversation: any) => ({
-                id: String(conversation.id),
+              (
+                conversation: any,
+              ) => ({
+                id: String(
+                  conversation.id,
+                ),
 
                 title:
                   conversation.title ||
@@ -220,15 +257,13 @@ function PlanejarPage() {
           loaded[0].id,
         );
       } else {
-        createNewConversation();
+        await createNewConversation();
       }
     } catch (error) {
       console.error(
         "Erro ao carregar conversas:",
         error,
       );
-
-      createNewConversation();
     } finally {
       setLoadingHistory(false);
     }
@@ -240,30 +275,94 @@ function PlanejarPage() {
    * =========================================================
    */
 
-  function createNewConversation() {
-    const id =
-      `local-${Date.now()}-${Math.random()
-        .toString(36)
-        .slice(2)}`;
+  async function createNewConversation() {
+    if (
+      creatingConversation ||
+      loading
+    ) {
+      return;
+    }
 
-    const conversation: Conversation = {
-      id,
-      title: "Nova conversa",
-      messages: [INITIAL_MESSAGE],
-    };
+    setCreatingConversation(true);
 
-    setConversations((current) => [
-      conversation,
-      ...current,
-    ]);
+    try {
+      const response =
+        await fetch(
+          `${API_URL}/api/ai/conversations`,
+          {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+            body: JSON.stringify({}),
+          },
+        );
 
-    setActiveConversationId(id);
+      const data =
+        await response
+          .json()
+          .catch(() => ({}));
 
-    setInput("");
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            "Não foi possível criar uma nova conversa.",
+        );
+      }
 
-    setTimeout(() => {
-      textareaRef.current?.focus();
-    }, 50);
+      const serverConversation =
+        data?.conversation;
+
+      if (
+        !serverConversation?.id
+      ) {
+        throw new Error(
+          "O servidor não retornou o ID da conversa.",
+        );
+      }
+
+      const conversation: Conversation =
+        {
+          id: String(
+            serverConversation.id,
+          ),
+
+          title:
+            "Nova conversa",
+
+          messages: [
+            INITIAL_MESSAGE,
+          ],
+        };
+
+      setConversations(
+        (current) => [
+          conversation,
+          ...current,
+        ],
+      );
+
+      setActiveConversationId(
+        conversation.id,
+      );
+
+      setInput("");
+
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 50);
+    } catch (error) {
+      console.error(
+        "Erro ao criar conversa:",
+        error,
+      );
+    } finally {
+      setCreatingConversation(
+        false,
+      );
+    }
   }
 
   /*
@@ -281,27 +380,6 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * ATUALIZAR CONVERSA
-   * =========================================================
-   */
-
-  function updateConversation(
-    conversationId: string,
-    updater: (
-      conversation: Conversation,
-    ) => Conversation,
-  ) {
-    setConversations((current) =>
-      current.map((conversation) =>
-        conversation.id === conversationId
-          ? updater(conversation)
-          : conversation,
-      ),
-    );
-  }
-
-  /*
-   * =========================================================
    * SCROLL
    * =========================================================
    */
@@ -314,7 +392,8 @@ function PlanejarPage() {
 
     requestAnimationFrame(() => {
       container.scrollTo({
-        top: container.scrollHeight,
+        top:
+          container.scrollHeight,
         behavior: "smooth",
       });
     });
@@ -326,71 +405,80 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * ENVIAR MENSAGEM
+   * ATUALIZAR CONVERSA
+   * =========================================================
+   */
+
+  function updateConversation(
+    conversationId: string,
+    updater: (
+      conversation: Conversation,
+    ) => Conversation,
+  ) {
+    setConversations(
+      (current) =>
+        current.map(
+          (conversation) =>
+            conversation.id ===
+            conversationId
+              ? updater(
+                  conversation,
+                )
+              : conversation,
+        ),
+    );
+  }
+
+  /*
+   * =========================================================
+   * ENVIAR
    * =========================================================
    */
 
   async function sendMessage() {
-    const text = input.trim();
+    const text =
+      input.trim();
 
-    if (!text || loading) {
+    if (
+      !text ||
+      loading ||
+      !activeConversation
+    ) {
       return;
     }
 
-    /*
-     * Se não existir conversa ativa,
-     * cria uma antes de enviar.
-     */
+    const conversationId =
+      activeConversation.id;
 
-    let conversation =
-      activeConversation;
-
-    if (!conversation) {
-      const id =
-        `local-${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2)}`;
-
-      conversation = {
-        id,
-        title: "Nova conversa",
-        messages: [INITIAL_MESSAGE],
+    const userMessage: ChatMessage =
+      {
+        role: "user",
+        content: text,
       };
 
-      setConversations((current) => [
-        conversation!,
-        ...current,
-      ]);
-
-      setActiveConversationId(id);
-    }
-
-    const conversationId =
-      conversation.id;
-
-    const userMessage: ChatMessage = {
-      role: "user",
-      content: text,
-    };
-
     const nextMessages = [
-      ...conversation.messages,
+      ...activeConversation.messages,
       userMessage,
     ];
 
     updateConversation(
       conversationId,
-      (current) => ({
-        ...current,
+      (conversation) => ({
+        ...conversation,
 
         title:
-          current.title === "Nova conversa"
+          conversation.title ===
+          "Nova conversa"
             ? text.length > 35
-              ? `${text.slice(0, 35)}...`
+              ? `${text.slice(
+                  0,
+                  35,
+                )}...`
               : text
-            : current.title,
+            : conversation.title,
 
-        messages: nextMessages,
+        messages:
+          nextMessages,
       }),
     );
 
@@ -398,34 +486,30 @@ function PlanejarPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/ai/chat`,
-        {
-          method: "POST",
+      const response =
+        await fetch(
+          `${API_URL}/api/ai/chat`,
+          {
+            method: "POST",
+            credentials: "include",
 
-          credentials: "include",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
 
-          headers: {
-            "Content-Type":
-              "application/json",
+            body: JSON.stringify({
+              conversationId,
+              messages:
+                nextMessages,
+            }),
           },
+        );
 
-          body: JSON.stringify({
-            conversationId:
-              conversationId.startsWith(
-                "local-",
-              )
-                ? null
-                : conversationId,
-
-            messages: nextMessages,
-          }),
-        },
-      );
-
-      const data = await response
-        .json()
-        .catch(() => ({}));
+      const data =
+        await response
+          .json()
+          .catch(() => ({}));
 
       if (!response.ok) {
         throw new Error(
@@ -446,63 +530,28 @@ function PlanejarPage() {
         );
       }
 
-      const returnedConversationId =
-        data?.conversationId;
+      updateConversation(
+        conversationId,
+        (conversation) => ({
+          ...conversation,
+
+          messages: [
+            ...conversation.messages,
+            {
+              role: "assistant",
+              content: answer,
+            },
+          ],
+        }),
+      );
 
       /*
-       * Quando o servidor cria a conversa,
-       * substituímos o ID local pelo ID real.
+       * Atualiza a lista para pegar
+       * título e updated_at do banco.
        */
 
-      if (returnedConversationId) {
-        setConversations((current) =>
-          current.map(
-            (item) =>
-              item.id === conversationId
-                ? {
-                    ...item,
-                    id: String(
-                      returnedConversationId,
-                    ),
-                    messages: [
-                      ...item.messages,
-                      {
-                        role: "assistant",
-                        content: answer,
-                      },
-                    ],
-                  }
-                : item,
-          ),
-        );
-
-        setActiveConversationId(
-          String(returnedConversationId),
-        );
-      } else {
-        updateConversation(
-          conversationId,
-          (current) => ({
-            ...current,
-            messages: [
-              ...current.messages,
-              {
-                role: "assistant",
-                content: answer,
-              },
-            ],
-          }),
-        );
-      }
-
-      /*
-       * Atualiza a lista do servidor
-       * depois de salvar a conversa.
-       */
-
-      await loadConversationsAfterSend(
-        returnedConversationId ||
-          conversationId,
+      await refreshConversations(
+        conversationId,
       );
     } catch (error) {
       console.error(
@@ -512,15 +561,16 @@ function PlanejarPage() {
 
       updateConversation(
         conversationId,
-        (current) => ({
-          ...current,
+        (conversation) => ({
+          ...conversation,
 
           messages: [
-            ...current.messages,
+            ...conversation.messages,
             {
               role: "assistant",
               content:
-                error instanceof Error
+                error instanceof
+                Error
                   ? error.message
                   : "Não foi possível conectar à WattIQ AI neste momento.",
             },
@@ -538,37 +588,47 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * ATUALIZAR SIDEBAR APÓS ENVIO
+   * ATUALIZAR LISTA
    * =========================================================
    */
 
-  async function loadConversationsAfterSend(
-    conversationId: string,
+  async function refreshConversations(
+    keepConversationId: string,
   ) {
     try {
-      const response = await fetch(
-        `${API_URL}/api/ai/conversations`,
-        {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-        },
-      );
+      const response =
+        await fetch(
+          `${API_URL}/api/ai/conversations`,
+          {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+          },
+        );
 
-      const data = await response
-        .json()
-        .catch(() => ({}));
+      const data =
+        await response
+          .json()
+          .catch(() => ({}));
 
       if (!response.ok) return;
 
       const loaded: Conversation[] =
-        Array.isArray(data?.conversations)
+        Array.isArray(
+          data?.conversations,
+        )
           ? data.conversations.map(
-              (conversation: any) => ({
-                id: String(conversation.id),
+              (
+                conversation: any,
+              ) => ({
+                id: String(
+                  conversation.id,
+                ),
+
                 title:
                   conversation.title ||
                   "Nova conversa",
+
                 messages:
                   Array.isArray(
                     conversation.messages,
@@ -579,24 +639,50 @@ function PlanejarPage() {
             )
           : [];
 
-      if (loaded.length === 0) return;
+      setConversations(
+        (current) => {
+          return loaded.map(
+            (serverConversation) => {
+              const local =
+                current.find(
+                  (item) =>
+                    item.id ===
+                    serverConversation.id,
+                );
 
-      setConversations(loaded);
+              /*
+               * Mantém o conteúdo local imediatamente
+               * após o envio enquanto o servidor termina
+               * de sincronizar.
+               */
 
-      const target = loaded.find(
-        (conversation) =>
-          conversation.id ===
-          String(conversationId),
+              if (
+                serverConversation.id ===
+                  keepConversationId &&
+                local &&
+                local.messages.length >
+                  serverConversation
+                    .messages.length
+              ) {
+                return {
+                  ...serverConversation,
+                  messages:
+                    local.messages,
+                };
+              }
+
+              return serverConversation;
+            },
+          );
+        },
       );
 
-      if (target) {
-        setActiveConversationId(
-          target.id,
-        );
-      }
+      setActiveConversationId(
+        keepConversationId,
+      );
     } catch (error) {
       console.error(
-        "Erro ao atualizar lista de conversas:",
+        "Erro ao atualizar conversas:",
         error,
       );
     }
@@ -617,93 +703,13 @@ function PlanejarPage() {
     ) {
       event.preventDefault();
 
-      if (!loading) {
-        sendMessage();
-      }
+      sendMessage();
     }
   }
 
   /*
    * =========================================================
-   * EXCLUIR CONVERSA
-   * =========================================================
-   */
-
-  async function deleteConversation(
-    conversationId: string,
-  ) {
-    if (loading) return;
-
-    const confirmed =
-      window.confirm(
-        "Excluir esta conversa? Todas as mensagens dela serão apagadas.",
-      );
-
-    if (!confirmed) return;
-
-    try {
-      if (
-        !conversationId.startsWith(
-          "local-",
-        )
-      ) {
-        const response =
-          await fetch(
-            `${API_URL}/api/ai/reset`,
-            {
-              method: "POST",
-
-              credentials: "include",
-
-              headers: {
-                "Content-Type":
-                  "application/json",
-              },
-
-              body: JSON.stringify({
-                conversationId,
-              }),
-            },
-          );
-
-        if (!response.ok) {
-          const data =
-            await response
-              .json()
-              .catch(() => ({}));
-
-          throw new Error(
-            data?.message ||
-              "Não foi possível excluir a conversa.",
-          );
-        }
-      }
-
-      setConversations((current) =>
-        current.filter(
-          (conversation) =>
-            conversation.id !==
-            conversationId,
-        ),
-      );
-
-      if (
-        activeConversationId ===
-        conversationId
-      ) {
-        createNewConversation();
-      }
-    } catch (error) {
-      console.error(
-        "Erro ao excluir conversa:",
-        error,
-      );
-    }
-  }
-
-  /*
-   * =========================================================
-   * SELECIONAR CONVERSA
+   * ABRIR CONVERSA
    * =========================================================
    */
 
@@ -725,7 +731,110 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * TELA DE LOGIN
+   * PEDIR EXCLUSÃO
+   * =========================================================
+   */
+
+  function requestDeleteConversation(
+    conversationId: string,
+  ) {
+    if (loading) return;
+
+    setDeletingConversationId(
+      conversationId,
+    );
+  }
+
+  /*
+   * =========================================================
+   * CONFIRMAR EXCLUSÃO
+   * =========================================================
+   */
+
+  async function confirmDeleteConversation() {
+    if (
+      !deletingConversationId
+    ) {
+      return;
+    }
+
+    const conversationId =
+      deletingConversationId;
+
+    setDeletingConversationId(
+      null,
+    );
+
+    try {
+      const response =
+        await fetch(
+          `${API_URL}/api/ai/reset`,
+          {
+            method: "POST",
+
+            credentials: "include",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              conversationId,
+            }),
+          },
+        );
+
+      const data =
+        await response
+          .json()
+          .catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            "Não foi possível excluir a conversa.",
+        );
+      }
+
+      setConversations(
+        (current) =>
+          current.filter(
+            (conversation) =>
+              conversation.id !==
+              conversationId,
+          ),
+      );
+
+      if (
+        activeConversationId ===
+        conversationId
+      ) {
+        await createNewConversation();
+      }
+    } catch (error) {
+      console.error(
+        "Erro ao excluir conversa:",
+        error,
+      );
+    }
+  }
+
+  /*
+   * =========================================================
+   * CANCELAR EXCLUSÃO
+   * =========================================================
+   */
+
+  function cancelDeleteConversation() {
+    setDeletingConversationId(
+      null,
+    );
+  }
+
+  /*
+   * =========================================================
+   * VERIFICAÇÃO
    * =========================================================
    */
 
@@ -757,9 +866,7 @@ function PlanejarPage() {
 
   return (
     <main className="relative flex h-screen w-full overflow-hidden bg-background text-foreground">
-      {/* =====================================================
-          FUNDO
-          ===================================================== */}
+      {/* FUNDO */}
 
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
         <div className="absolute left-1/2 top-[-300px] h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-primary/5 blur-[150px]" />
@@ -778,7 +885,7 @@ function PlanejarPage() {
             : "w-0 overflow-hidden border-r-0"
         }`}
       >
-        <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-4">
+        <div className="flex h-16 shrink-0 items-center border-b border-border px-4">
           <a
             href="/"
             className="flex items-center gap-2.5"
@@ -801,9 +908,17 @@ function PlanejarPage() {
             onClick={
               createNewConversation
             }
-            className="relative z-30 flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium transition-all hover:border-primary/40 hover:bg-primary/5"
+            disabled={
+              creatingConversation ||
+              loading
+            }
+            className="flex w-full cursor-pointer items-center gap-3 rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium transition-all hover:border-primary/40 hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Plus className="h-4 w-4 text-primary" />
+            {creatingConversation ? (
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            ) : (
+              <Plus className="h-4 w-4 text-primary" />
+            )}
 
             Nova conversa
           </button>
@@ -815,9 +930,7 @@ function PlanejarPage() {
           </p>
         </div>
 
-        {/* LISTA */}
-
-        <div className="relative z-20 min-h-0 flex-1 overflow-y-auto px-2">
+        <div className="relative min-h-0 flex-1 overflow-y-auto px-2">
           {loadingHistory ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -853,7 +966,7 @@ function PlanejarPage() {
                             conversation.id,
                           )
                         }
-                        className={`relative z-30 flex min-w-0 flex-1 cursor-pointer items-center gap-3 px-3 py-3 text-left text-sm ${
+                        className={`flex min-w-0 flex-1 cursor-pointer items-center gap-3 px-3 py-3 text-left text-sm ${
                           active
                             ? "text-foreground"
                             : "text-muted-foreground hover:text-foreground"
@@ -877,13 +990,16 @@ function PlanejarPage() {
                       <button
                         type="button"
                         onClick={() =>
-                          deleteConversation(
+                          requestDeleteConversation(
                             conversation.id,
                           )
                         }
-                        className="relative z-30 mr-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground opacity-0 transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
-                        aria-label="Excluir conversa"
+                        disabled={
+                          loading
+                        }
+                        className="mr-1 flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted-foreground opacity-0 transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100 disabled:cursor-not-allowed"
                         title="Excluir conversa"
+                        aria-label="Excluir conversa"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -894,8 +1010,6 @@ function PlanejarPage() {
             </div>
           )}
         </div>
-
-        {/* STATUS */}
 
         <div className="shrink-0 border-t border-border p-3">
           <div className="rounded-lg border border-border bg-background/60 px-3 py-3">
@@ -911,13 +1025,11 @@ function PlanejarPage() {
       </aside>
 
       {/* =====================================================
-          ÁREA PRINCIPAL
+          CHAT
           ===================================================== */}
 
       <section className="relative z-10 flex min-w-0 flex-1 flex-col">
-        {/* ===================================================
-            HEADER
-            =================================================== */}
+        {/* HEADER */}
 
         <header className="relative z-40 flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur-xl sm:px-6">
           <div className="flex items-center gap-3">
@@ -928,7 +1040,7 @@ function PlanejarPage() {
                   (value) => !value,
                 )
               }
-              className="relative z-50 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:border-primary/30 hover:text-foreground"
+              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-border text-muted-foreground transition hover:border-primary/30 hover:text-foreground"
               aria-label="Abrir ou fechar menu"
             >
               {sidebarOpen ? (
@@ -962,71 +1074,86 @@ function PlanejarPage() {
           <Sparkles className="h-4 w-4 text-primary/50" />
         </header>
 
-        {/* ===================================================
-            MENSAGENS
-            =================================================== */}
+        {/* MENSAGENS */}
 
         <div
           ref={chatContainerRef}
           className="relative z-10 min-h-0 flex-1 overflow-y-auto"
         >
           <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
-            {activeConversation?.messages.map(
-              (message, index) => {
-                const isUser =
-                  message.role ===
-                  "user";
+            {activeConversation ? (
+              <>
+                {activeConversation.messages.map(
+                  (
+                    message,
+                    index,
+                  ) => {
+                    const isUser =
+                      message.role ===
+                      "user";
 
-                return (
-                  <div
-                    key={`${activeConversation.id}-${index}`}
-                    className={`mb-8 flex gap-4 ${
-                      isUser
-                        ? "justify-end"
-                        : "justify-start"
-                    }`}
-                  >
-                    {!isUser && (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
-                        <Bot className="h-4 w-4 text-primary" />
+                    return (
+                      <div
+                        key={`${activeConversation.id}-${index}`}
+                        className={`mb-8 flex gap-4 ${
+                          isUser
+                            ? "justify-end"
+                            : "justify-start"
+                        }`}
+                      >
+                        {!isUser && (
+                          <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
+                            <Bot className="h-4 w-4 text-primary" />
+                          </div>
+                        )}
+
+                        <div
+                          className={`max-w-[80%] whitespace-pre-wrap text-sm leading-7 ${
+                            isUser
+                              ? "rounded-2xl rounded-br-md bg-primary px-4 py-3 text-primary-foreground"
+                              : "pt-0.5 text-foreground"
+                          }`}
+                        >
+                          {
+                            message.content
+                          }
+                        </div>
                       </div>
-                    )}
+                    );
+                  },
+                )}
 
-                    <div
-                      className={`max-w-[80%] whitespace-pre-wrap text-sm leading-7 ${
-                        isUser
-                          ? "rounded-2xl rounded-br-md bg-primary px-4 py-3 text-primary-foreground"
-                          : "pt-0.5 text-foreground"
-                      }`}
-                    >
-                      {message.content}
+                {loading && (
+                  <div className="mb-8 flex gap-4">
+                    <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
+                      <Bot className="h-4 w-4 text-primary" />
+                    </div>
+
+                    <div className="flex items-center gap-1 pt-3">
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
+
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
+
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
                     </div>
                   </div>
-                );
-              },
-            )}
+                )}
+              </>
+            ) : (
+              <div className="flex min-h-[60vh] items-center justify-center">
+                <div className="text-center">
+                  <Bot className="mx-auto h-8 w-8 text-primary/50" />
 
-            {loading && (
-              <div className="mb-8 flex gap-4">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
-                  <Bot className="h-4 w-4 text-primary" />
-                </div>
-
-                <div className="flex items-center gap-1 pt-3">
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
-
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
-
-                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
+                  <p className="mt-4 text-sm text-muted-foreground">
+                    Criando conversa...
+                  </p>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* ===================================================
-            CAMPO DE MENSAGEM
-            =================================================== */}
+        {/* INPUT */}
 
         <div className="relative z-50 shrink-0 bg-gradient-to-t from-background via-background to-transparent px-4 pb-5 pt-3 sm:px-6">
           <div className="mx-auto w-full max-w-3xl">
@@ -1042,17 +1169,13 @@ function PlanejarPage() {
                 onKeyDown={
                   handleKeyDown
                 }
-                onFocus={() => {
-                  textareaRef.current?.focus();
-                }}
                 placeholder="Pergunte à WattIQ AI..."
                 rows={1}
-                disabled={false}
-                className="relative z-50 block min-h-[52px] w-full resize-none cursor-text bg-transparent px-4 py-4 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-text"
+                className="relative z-50 block min-h-[52px] w-full cursor-text resize-none bg-transparent px-4 py-4 text-sm outline-none placeholder:text-muted-foreground"
               />
 
               <div className="relative z-50 flex items-center justify-between px-3 pb-3">
-                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                <div className="hidden items-center gap-2 text-[10px] text-muted-foreground sm:flex">
                   <span>
                     Enter para enviar
                   </span>
@@ -1062,24 +1185,26 @@ function PlanejarPage() {
                   </span>
 
                   <span>
-                    Shift + Enter para nova
-                    linha
+                    Shift + Enter para
+                    nova linha
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="ml-auto flex items-center gap-2">
                   {activeConversation &&
                     activeConversation.messages
                       .length > 1 && (
                       <button
                         type="button"
                         onClick={() =>
-                          deleteConversation(
+                          requestDeleteConversation(
                             activeConversation.id,
                           )
                         }
-                        disabled={loading}
-                        className="relative z-50 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-40"
+                        disabled={
+                          loading
+                        }
+                        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-40"
                         title="Excluir conversa"
                         aria-label="Excluir conversa"
                       >
@@ -1094,9 +1219,10 @@ function PlanejarPage() {
                     }
                     disabled={
                       !input.trim() ||
-                      loading
+                      loading ||
+                      !activeConversation
                     }
-                    className="relative z-50 flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-primary text-primary-foreground transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-40"
+                    className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg bg-primary text-primary-foreground transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-40"
                     aria-label="Enviar mensagem"
                   >
                     {loading ? (
@@ -1110,12 +1236,96 @@ function PlanejarPage() {
             </div>
 
             <p className="mt-2 text-center text-[10px] text-muted-foreground">
-              A WattIQ AI pode cometer erros.
-              Verifique informações importantes.
+              A WattIQ AI pode cometer
+              erros. Verifique informações
+              importantes.
             </p>
           </div>
         </div>
       </section>
+
+      {/* =====================================================
+          MODAL DE EXCLUSÃO
+          ===================================================== */}
+
+      {deletingConversationId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+          <div
+            className="w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-conversation-title"
+          >
+            <div className="flex items-center justify-between border-b border-border px-5 py-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-destructive/20 bg-destructive/10">
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </div>
+
+                <div>
+                  <h2
+                    id="delete-conversation-title"
+                    className="text-sm font-semibold"
+                  >
+                    Excluir conversa
+                  </h2>
+
+                  <p className="text-[11px] text-muted-foreground">
+                    Esta ação não pode ser
+                    desfeita.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={
+                  cancelDeleteConversation
+                }
+                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition hover:bg-background hover:text-foreground"
+                aria-label="Fechar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="px-5 py-6">
+              <p className="text-sm leading-6 text-muted-foreground">
+                Tem certeza de que deseja
+                excluir esta conversa?
+              </p>
+
+              <p className="mt-2 text-xs leading-5 text-muted-foreground/70">
+                Todas as mensagens desta
+                conversa serão removidas
+                permanentemente.
+              </p>
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-border bg-background/30 px-5 py-4">
+              <button
+                type="button"
+                onClick={
+                  cancelDeleteConversation
+                }
+                className="cursor-pointer rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground transition hover:bg-background hover:text-foreground"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                onClick={
+                  confirmDeleteConversation
+                }
+                className="cursor-pointer rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition hover:opacity-90"
+              >
+                Excluir conversa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
