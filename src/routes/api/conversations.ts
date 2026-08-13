@@ -4,7 +4,7 @@ import { getSessionUser } from "@/lib/session";
 import { initDatabase } from "@/lib/db-init";
 
 export const Route = createFileRoute(
-  "/api/ai/conversations",
+  "/api/conversations",
 )({
   server: {
     handlers: {
@@ -27,40 +27,40 @@ export const Route = createFileRoute(
 
           await initDatabase();
 
-          const conversationsResult =
-            await db.query(
-              `
-                SELECT
-                  c.id,
-                  c.created_at,
-                  c.updated_at,
-                  (
-                    SELECT m.content
-                    FROM ai_messages m
-                    WHERE m.conversation_id = c.id
-                      AND m.role = 'user'
-                    ORDER BY m.created_at ASC, m.id ASC
-                    LIMIT 1
-                  ) AS title
-                FROM ai_conversations c
-                WHERE c.user_id = $1
-                ORDER BY c.updated_at DESC
-              `,
-              [user.sub],
-            );
+          const result = await db.query(
+            `
+              SELECT
+                c.id,
+                c.created_at,
+                c.updated_at,
+                (
+                  SELECT m.content
+                  FROM ai_messages m
+                  WHERE m.conversation_id = c.id
+                    AND m.role = 'user'
+                  ORDER BY m.created_at ASC, m.id ASC
+                  LIMIT 1
+                ) AS title
+              FROM ai_conversations c
+              WHERE c.user_id = $1
+              ORDER BY c.updated_at DESC
+            `,
+            [user.sub],
+          );
 
           const conversations =
-            conversationsResult.rows.map(
+            result.rows.map(
               (conversation) => ({
-                id: conversation.id,
+                id: String(
+                  conversation.id,
+                ),
                 title:
                   conversation.title ||
-                  "Conversa",
+                  "Nova conversa",
                 createdAt:
                   conversation.created_at,
                 updatedAt:
                   conversation.updated_at,
-                messages: [],
               }),
             );
 
