@@ -41,7 +41,7 @@ export function ProblemSection() {
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {gaps.map((g, i) => (
             <Reveal key={g.t} delay={i * 80}>
-              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6">
+              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.45)]">
                 <p className="text-xs tracking-widest text-primary uppercase">
                   {g.t}
                 </p>
@@ -99,9 +99,7 @@ export function ContextSection() {
             title={
               <>
                 Energia também é uma variável{" "}
-                <span className="text-gradient-energy">
-                  operacional.
-                </span>
+                <span className="text-gradient-energy">operacional.</span>
               </>
             }
             description="Os dados abaixo são referências públicas do mercado brasileiro. Eles não representam clientes, resultados ou métricas internas da WattIQ."
@@ -110,11 +108,8 @@ export function ContextSection() {
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {marketData.map((item, i) => (
-            <Reveal
-              key={item.value + item.label}
-              delay={i * 80}
-            >
-              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6">
+            <Reveal key={item.value + item.label} delay={i * 80}>
+              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.45)]">
                 <p className="text-4xl font-semibold tracking-tight text-gradient-energy">
                   {item.value}
                 </p>
@@ -164,10 +159,7 @@ export function SolutionSection() {
   ];
 
   return (
-    <section
-      id="solucao"
-      className="border-b border-border py-24"
-    >
+    <section id="solucao" className="border-b border-border py-24">
       <div className="mx-auto max-w-6xl px-5">
         <Reveal>
           <SectionHeading
@@ -180,7 +172,7 @@ export function SolutionSection() {
         <div className="mt-14 flex flex-wrap justify-center gap-3">
           {chain.map((c, i) => (
             <Reveal key={c} delay={i * 60}>
-              <span className="group inline-flex rounded-md border border-border bg-card px-5 py-2.5 text-sm font-medium transition-all duration-500 hover:-translate-y-0.5 hover:border-primary/50 hover:bg-card/80 hover:shadow-[0_12px_30px_-20px_rgba(180,255,80,0.5)]">
+              <span className="group inline-flex rounded-md border border-border bg-card px-5 py-2.5 text-sm font-medium transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/50 hover:bg-card/80 hover:shadow-[0_18px_40px_-20px_rgba(180,255,80,0.5)]">
                 {c}
               </span>
             </Reveal>
@@ -188,13 +180,12 @@ export function SolutionSection() {
         </div>
 
         <Reveal delay={200}>
-          <div className="surface-card mx-auto mt-14 max-w-3xl rounded-lg border border-primary/30 bg-card p-8 text-center">
+          <div className="surface-card mx-auto mt-14 max-w-3xl rounded-lg border border-primary/30 bg-card p-8 text-center transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.4)]">
             <p className="text-lg leading-relaxed">
-              Não existe um{" "}
-              <strong>consumo ideal universal</strong>.
-              Eficiência precisa ser avaliada dentro do
-              contexto da operação: atividade, porte, área,
-              horários, equipamentos, setores e histórico.
+              Não existe um <strong>consumo ideal universal</strong>.
+              Eficiência precisa ser avaliada dentro do contexto da operação:
+              atividade, porte, área, horários, equipamentos, setores e
+              histórico.
             </p>
           </div>
         </Reveal>
@@ -253,19 +244,13 @@ export function HowSection() {
 
         <ol className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {steps.map((s, i) => (
-            <Reveal
-              as="li"
-              key={s.n}
-              delay={i * 70}
-            >
-              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6">
+            <Reveal as="li" key={s.n} delay={i * 70}>
+              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.45)]">
                 <span className="text-sm font-mono text-primary">
                   {s.n}
                 </span>
 
-                <h3 className="mt-3 text-lg font-semibold">
-                  {s.t}
-                </h3>
+                <h3 className="mt-3 text-lg font-semibold">{s.t}</h3>
 
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {s.d}
@@ -324,10 +309,7 @@ export function IndicatorsSection() {
   ];
 
   return (
-    <section
-      id="indicadores"
-      className="border-b border-border py-24"
-    >
+    <section id="indicadores" className="border-b border-border py-24">
       <div className="mx-auto max-w-6xl px-5">
         <Reveal>
           <SectionHeading
@@ -339,11 +321,8 @@ export function IndicatorsSection() {
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((it, i) => (
-            <Reveal
-              key={it.t}
-              delay={(i % 3) * 80}
-            >
-              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6">
+            <Reveal key={it.t} delay={(i % 3) * 80}>
+              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.45)]">
                 <h3 className="text-base font-semibold text-primary">
                   {it.t}
                 </h3>
@@ -415,19 +394,14 @@ export function IntelligenceSection() {
         <div className="mt-14 grid gap-6 lg:grid-cols-[1fr_1.1fr]">
           <div className="space-y-3">
             {pipeline.map((item, i) => (
-              <Reveal
-                key={item.n}
-                delay={i * 70}
-              >
-                <div className="surface-card group flex items-center gap-4 rounded-lg border border-border bg-card px-5 py-4 transition-all duration-500 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_16px_40px_-25px_rgba(180,255,80,0.4)]">
+              <Reveal key={item.n} delay={i * 70}>
+                <div className="surface-card group flex items-center gap-4 rounded-lg border border-border bg-card px-5 py-4 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.45)]">
                   <span className="text-xs font-mono text-primary">
                     {item.n}
                   </span>
 
                   <div>
-                    <span className="font-medium">
-                      {item.t}
-                    </span>
+                    <span className="font-medium">{item.t}</span>
 
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {item.d}
@@ -439,44 +413,38 @@ export function IntelligenceSection() {
           </div>
 
           <Reveal delay={180}>
-            <div className="surface-card h-full rounded-lg border border-primary/30 bg-card p-7">
+            <div className="surface-card h-full rounded-lg border border-primary/30 bg-card p-7 transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_24px_50px_-24px_rgba(180,255,80,0.4)]">
               <span className="rounded border border-border px-2 py-0.5 text-[10px] tracking-widest text-muted-foreground uppercase">
                 Exemplo ilustrativo
               </span>
 
               <p className="mt-5 text-lg leading-relaxed">
-                O consumo aumentou{" "}
-                <strong>14%</strong> em relação ao
-                período anterior.
+                O consumo aumentou <strong>14%</strong> em relação ao período
+                anterior.
               </p>
 
               <div className="mt-6 grid grid-cols-2 gap-3">
-                <div className="rounded-md border border-border bg-background/40 p-4">
-                  <p className="text-xs text-muted-foreground">
-                    Variação
-                  </p>
+                <div className="rounded-md border border-border bg-background/40 p-4 transition-all duration-500 hover:-translate-y-1 hover:border-primary/30">
+                  <p className="text-xs text-muted-foreground">Variação</p>
 
                   <p className="mt-1 text-2xl font-semibold text-gradient-energy">
                     +14%
                   </p>
                 </div>
 
-                <div className="rounded-md border border-border bg-background/40 p-4">
+                <div className="rounded-md border border-border bg-background/40 p-4 transition-all duration-500 hover:-translate-y-1 hover:border-primary/30">
                   <p className="text-xs text-muted-foreground">
                     Próximo passo
                   </p>
 
-                  <p className="mt-1 text-sm font-semibold">
-                    Investigar
-                  </p>
+                  <p className="mt-1 text-sm font-semibold">Investigar</p>
                 </div>
               </div>
 
               <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
-                Exemplo conceitual de como a plataforma pode
-                apresentar uma variação e direcionar a
-                investigação. Os valores acima não são dados
-                de clientes da WattIQ.
+                Exemplo conceitual de como a plataforma pode apresentar uma
+                variação e direcionar a investigação. Os valores acima não são
+                dados de clientes da WattIQ.
               </p>
             </div>
           </Reveal>
@@ -511,11 +479,8 @@ export function DashboardSection() {
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {views.map((v, i) => (
-            <Reveal
-              key={v}
-              delay={(i % 4) * 70}
-            >
-              <div className="surface-card group rounded-lg border border-border bg-card px-5 py-4 text-sm font-medium">
+            <Reveal key={v} delay={(i % 4) * 70}>
+              <div className="surface-card group rounded-lg border border-border bg-card px-5 py-4 text-sm font-medium transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.45)]">
                 <div className="flex items-center justify-between gap-3">
                   <span>{v}</span>
 
@@ -527,22 +492,20 @@ export function DashboardSection() {
         </div>
 
         <Reveal delay={150}>
-          <div className="surface-card mt-8 rounded-lg border border-dashed border-border bg-card/50 p-10">
+          <div className="surface-card mt-8 rounded-lg border border-dashed border-border bg-card/50 p-10 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/30 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.3)]">
             <div className="mx-auto max-w-2xl text-center">
               <span className="inline-flex rounded-full border border-border bg-background/50 px-3 py-1 text-[10px] tracking-widest text-muted-foreground uppercase">
                 Dados da empresa
               </span>
 
               <p className="mt-5 text-lg font-medium">
-                Sem dados suficientes, não existe análise
-                confiável.
+                Sem dados suficientes, não existe análise confiável.
               </p>
 
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                A WattIQ deve informar o que está disponível,
-                indicar quais dados ainda precisam ser
-                coletados e evitar preencher o dashboard com
-                números artificiais.
+                A WattIQ deve informar o que está disponível, indicar quais
+                dados ainda precisam ser coletados e evitar preencher o
+                dashboard com números artificiais.
               </p>
             </div>
           </div>
@@ -550,36 +513,34 @@ export function DashboardSection() {
 
         <Reveal delay={240}>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
-            <div className="rounded-lg border border-border bg-card/40 p-5">
+            <div className="rounded-lg border border-border bg-card/40 p-5 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/30 hover:shadow-[0_18px_40px_-22px_rgba(180,255,80,0.3)]">
               <p className="text-xs tracking-widest text-muted-foreground uppercase">
                 Mercado
               </p>
 
               <p className="mt-2 text-sm leading-relaxed">
-                Referências públicas ajudam a contextualizar
-                o cenário energético.
+                Referências públicas ajudam a contextualizar o cenário
+                energético.
               </p>
             </div>
 
-            <div className="rounded-lg border border-border bg-card/40 p-5">
+            <div className="rounded-lg border border-border bg-card/40 p-5 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/30 hover:shadow-[0_18px_40px_-22px_rgba(180,255,80,0.3)]">
               <p className="text-xs tracking-widest text-muted-foreground uppercase">
                 Empresa
               </p>
 
               <p className="mt-2 text-sm leading-relaxed">
-                Dados próprios alimentam indicadores
-                específicos da operação.
+                Dados próprios alimentam indicadores específicos da operação.
               </p>
             </div>
 
-            <div className="rounded-lg border border-border bg-card/40 p-5">
+            <div className="rounded-lg border border-border bg-card/40 p-5 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/30 hover:shadow-[0_18px_40px_-22px_rgba(180,255,80,0.3)]">
               <p className="text-xs tracking-widest text-muted-foreground uppercase">
                 Inteligência
               </p>
 
               <p className="mt-2 text-sm leading-relaxed">
-                A IA interpreta resultados calculados pela
-                plataforma.
+                A IA interpreta resultados calculados pela plataforma.
               </p>
             </div>
           </div>
@@ -591,10 +552,7 @@ export function DashboardSection() {
 
 export function CtaSection() {
   return (
-    <section
-      id="cta"
-      className="relative overflow-hidden py-28"
-    >
+    <section id="cta" className="relative overflow-hidden py-28">
       <div
         className="pointer-events-none absolute inset-x-0 top-1/2 mx-auto h-[300px] w-[720px] -translate-y-1/2 rounded-full opacity-20 blur-3xl"
         style={{
@@ -613,9 +571,8 @@ export function CtaSection() {
           </h2>
 
           <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-            Transforme dados energéticos em uma visão mais
-            clara da operação — sem confundir referência de
-            mercado com resultado da sua empresa.
+            Transforme dados energéticos em uma visão mais clara da operação —
+            sem confundir referência de mercado com resultado da sua empresa.
           </p>
         </Reveal>
       </div>
