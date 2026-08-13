@@ -1,11 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-
-import { createOtpChallenge } from "../../lib/otp-store";
-
+import { createOtpChallenge } from "../lib/otp-store";
 import {
   generateOtp,
   sendOtpEmail,
-} from "../../lib/email.otp";
+} from "../lib/email.otp";
 
 export const Route = createFileRoute("/auth/email")({
   server: {
@@ -24,9 +22,10 @@ export const Route = createFileRoute("/auth/email")({
               ? body.name.trim()
               : "";
 
-          if (!email) {
+          if (!email || !email.includes("@")) {
             return Response.json(
               {
+                success: false,
                 message: "Digite um e-mail válido.",
               },
               {
@@ -37,30 +36,24 @@ export const Route = createFileRoute("/auth/email")({
 
           const code = generateOtp();
 
-          const challengeId =
-            await createOtpChallenge(
-              email,
-              code,
-            );
-
-          await sendOtpEmail(
+          const challengeId = await createOtpChallenge(
             email,
             code,
           );
 
+          await sendOtpEmail(email, code);
+
           const pendingUser = {
             sub: email,
             email,
-            name:
-              name ||
-              email.split("@")[0],
+            name: name || email.split("@")[0],
             picture: "",
           };
 
-          const pendingUserData =
-            Buffer.from(
-              JSON.stringify(pendingUser),
-            ).toString("base64url");
+          const pendingUserData = Buffer.from(
+            JSON.stringify(pendingUser),
+            "utf8",
+          ).toString("base64url");
 
           const headers = new Headers();
 
@@ -88,19 +81,14 @@ export const Route = createFileRoute("/auth/email")({
             ].join("; "),
           );
 
-          console.log(
-            "OTP criado:",
-            {
-              challengeId,
-              email,
-            },
-          );
+          console.log("OTP CHALLENGE CRIADO:", {
+            challengeId,
+          });
 
           return Response.json(
             {
               success: true,
-              message:
-                "Código enviado para seu e-mail.",
+              message: "Código enviado para seu e-mail.",
             },
             {
               status: 200,
@@ -115,6 +103,7 @@ export const Route = createFileRoute("/auth/email")({
 
           return Response.json(
             {
+              success: false,
               message:
                 "Não foi possível iniciar o login. Tente novamente.",
             },
