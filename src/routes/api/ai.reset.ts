@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
+import { initDatabase } from "@/lib/db-init";
 
 export const Route = createFileRoute("/api/ai/reset")({
   server: {
@@ -13,66 +14,67 @@ export const Route = createFileRoute("/api/ai/reset")({
             return Response.json(
               {
                 success: false,
-                message: "Usuário não autenticado.",
+                message: "Sessão expirada. Faça login novamente.",
               },
+              { status: 401 },
+            );
+          }
+
+          await initDatabase();
+
+          const body = await request.json().catch(() => ({}));
+
+          const conversationId =
+            typeof body?.conversationId === "string"
+              ? body.conversationId.trim()
+              : "";
+
+          if (!conversationId) {
+            return Response.json(
               {
-                status: 401,
+                success: false,
+                message: "Conversa não informada.",
               },
+              { status: 400 },
             );
           }
 
-          await db.query("BEGIN");
+          const result = await db.query(
+            `
+              DELETE FROM ai_conversations
+              WHERE id = $1
+                AND user_id = $2
+              RETURNING id
+            `,
+            [conversationId, user.sub],
+          );
 
-          try {
-            await db.query(
-              `
-                DELETE FROM ai_messages
-                WHERE conversation_id IN (
-                  SELECT id
-                  FROM ai_conversations
-                  WHERE user_id = $1
-                )
-              `,
-              [user.sub],
+          if (result.rows.length === 0) {
+            return Response.json(
+              {
+                success: false,
+                message: "Conversa não encontrada.",
+              },
+              { status: 404 },
             );
-
-            await db.query(
-              `
-                DELETE FROM ai_conversations
-                WHERE user_id = $1
-              `,
-              [user.sub],
-            );
-
-            await db.query("COMMIT");
-
-            console.log(
-              `WattIQ AI: histórico resetado para ${user.email}`,
-            );
-
-            return Response.json({
-              success: true,
-              message: "Conversa resetada com sucesso.",
-            });
-          } catch (error) {
-            await db.query("ROLLBACK");
-            throw error;
           }
+
+          return Response.json({
+            success: true,
+            conversationId,
+          });
         } catch (error) {
           console.error(
-            "Erro ao resetar histórico da WattIQ AI:",
+            "ERRO AO RESETAR CONVERSA DA WATTIQ AI:",
             error,
           );
 
           return Response.json(
             {
               success: false,
-              message:
-                "Não foi possível resetar a conversa.",
+              message: "Não foi possível excluir a conversa.",
             },
-            {
-              status: 500,
-            },
+            { status: 500 },
           );
         }
       },
