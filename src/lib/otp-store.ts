@@ -4,8 +4,9 @@ import { db } from "./db";
 export async function createOtpChallenge(
   email: string,
   code: string,
-) {
+): Promise<string> {
   const challengeId = randomUUID();
+
   const expiresAt = new Date(
     Date.now() + 10 * 60 * 1000,
   );
@@ -21,7 +22,12 @@ export async function createOtpChallenge(
       )
       VALUES ($1, $2, $3, $4, 0)
     `,
-    [challengeId, email, code, expiresAt],
+    [
+      challengeId,
+      email,
+      code,
+      expiresAt,
+    ],
   );
 
   return challengeId;
@@ -30,7 +36,15 @@ export async function createOtpChallenge(
 export async function verifyOtpChallenge(
   challengeId: string,
   code: string,
-) {
+): Promise<string | null> {
+  if (
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      challengeId,
+    )
+  ) {
+    return null;
+  }
+
   const client = await db.connect();
 
   try {
@@ -72,6 +86,7 @@ export async function verifyOtpChallenge(
       );
 
       await client.query("COMMIT");
+
       return null;
     }
 
@@ -85,6 +100,7 @@ export async function verifyOtpChallenge(
       );
 
       await client.query("COMMIT");
+
       return null;
     }
 
@@ -99,6 +115,7 @@ export async function verifyOtpChallenge(
       );
 
       await client.query("COMMIT");
+
       return null;
     }
 
