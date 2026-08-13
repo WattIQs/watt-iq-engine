@@ -5,12 +5,10 @@ import {
   Bot,
   Building2,
   Check,
-  ChevronRight,
   CircleGauge,
   Clock3,
   Database,
   Factory,
-  MessageCircle,
   Send,
   Sparkles,
   Zap,
@@ -21,8 +19,7 @@ type ChatMessage = {
   content: string;
 };
 
-const API_URL =
-  import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
+const API_URL = "https://watt-iq-engine.onrender.com";
 
 const WATTIQ_AI_PROMPT = `
 Você é a WattIQ AI, assistente virtual oficial da WattIQ.
@@ -242,11 +239,21 @@ function PlanejarPage() {
         },
       );
 
-      if (!response.ok) {
-        throw new Error("Falha ao conversar com a IA.");
-      }
+      const data = await response.json().catch(() => ({}));
 
-      const data = await response.json();
+      if (!response.ok) {
+        console.error(
+          "Erro da API WattIQ:",
+          response.status,
+          data,
+        );
+
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            `Erro HTTP ${response.status}`,
+        );
+      }
 
       const answer =
         data?.message ||
@@ -255,6 +262,11 @@ function PlanejarPage() {
         data?.content;
 
       if (!answer) {
+        console.error(
+          "Resposta inesperada da API:",
+          data,
+        );
+
         throw new Error("Resposta vazia.");
       }
 
@@ -262,16 +274,21 @@ function PlanejarPage() {
         ...current,
         {
           role: "assistant",
-          content: answer,
+          content: String(answer),
         },
       ]);
-    } catch {
+    } catch (error) {
+      console.error(
+        "Erro ao conectar com a WattIQ AI:",
+        error,
+      );
+
       setMessages((current) => [
         ...current,
         {
           role: "assistant",
           content:
-            "Não consegui conectar à inteligência da WattIQ neste momento. Verifique a conexão com o servidor e tente novamente.",
+            "Não consegui conectar à inteligência da WattIQ neste momento. Verifique se o servidor da IA está disponível e tente novamente.",
         },
       ]);
     } finally {
@@ -282,7 +299,10 @@ function PlanejarPage() {
   function handleKeyDown(
     event: React.KeyboardEvent<HTMLTextAreaElement>,
   ) {
-    if (event.key === "Enter" && !event.shiftKey) {
+    if (
+      event.key === "Enter" &&
+      !event.shiftKey
+    ) {
       event.preventDefault();
       sendMessage();
     }
@@ -415,7 +435,10 @@ function PlanejarPage() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/20">
+          <div
+            id="wattiq-ai"
+            className="relative overflow-hidden rounded-2xl border border-border bg-card shadow-2xl shadow-black/20"
+          >
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/70 to-transparent" />
 
             <div className="flex items-center justify-between border-b border-border px-5 py-4">
@@ -431,6 +454,7 @@ function PlanejarPage() {
 
                   <div className="mt-0.5 flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+
                     <span className="text-[10px] text-muted-foreground">
                       Assistente de planejamento
                     </span>
@@ -469,7 +493,9 @@ function PlanejarPage() {
                     <div className="rounded-2xl rounded-bl-md border border-border bg-background/70 px-4 py-3">
                       <div className="flex items-center gap-1.5">
                         <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
+
                         <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
+
                         <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
                       </div>
                     </div>
