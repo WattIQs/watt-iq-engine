@@ -1,6 +1,4 @@
-import {
-  createFileRoute,
-} from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
 import { useSmoothScroll } from "@/hooks/use-smooth-scroll";
 
@@ -17,9 +15,6 @@ import {
   CtaSection,
 } from "@/components/landing/Sections";
 
-import { SiteHeader } from "@/components/landing/SiteHeader";
-import { SiteFooter } from "@/components/landing/SiteFooter";
-
 export const Route = createFileRoute("/")({
   component: Index,
 });
@@ -29,8 +24,6 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SiteHeader />
-
       <main>
         <Hero />
 
@@ -52,8 +45,6 @@ function Index() {
 
         <CtaSection />
       </main>
-
-      <SiteFooter />
     </div>
   );
 }
