@@ -49,20 +49,16 @@ export const Route = createFileRoute(
           );
 
           const conversations =
-            result.rows.map(
-              (conversation) => ({
-                id: String(
-                  conversation.id,
-                ),
-                title:
-                  conversation.title ||
-                  "Nova conversa",
-                createdAt:
-                  conversation.created_at,
-                updatedAt:
-                  conversation.updated_at,
-              }),
-            );
+            result.rows.map((conversation) => ({
+              id: String(conversation.id),
+              title:
+                conversation.title ||
+                "Nova conversa",
+              createdAt:
+                conversation.created_at,
+              updatedAt:
+                conversation.updated_at,
+            }));
 
           return Response.json({
             success: true,
@@ -79,6 +75,76 @@ export const Route = createFileRoute(
               success: false,
               message:
                 "Não foi possível carregar as conversas.",
+            },
+            {
+              status: 500,
+            },
+          );
+        }
+      },
+
+      POST: async ({ request }) => {
+        try {
+          const user = getSessionUser(request);
+
+          if (!user) {
+            return Response.json(
+              {
+                success: false,
+                message:
+                  "Sessão expirada. Faça login novamente.",
+              },
+              {
+                status: 401,
+              },
+            );
+          }
+
+          await initDatabase();
+
+          const result = await db.query(
+            `
+              INSERT INTO ai_conversations (
+                user_id
+              )
+              VALUES ($1)
+              RETURNING
+                id,
+                created_at,
+                updated_at
+            `,
+            [user.sub],
+          );
+
+          const conversation = result.rows[0];
+
+          return Response.json(
+            {
+              success: true,
+              conversation: {
+                id: String(conversation.id),
+                title: "Nova conversa",
+                createdAt:
+                  conversation.created_at,
+                updatedAt:
+                  conversation.updated_at,
+              },
+            },
+            {
+              status: 201,
+            },
+          );
+        } catch (error) {
+          console.error(
+            "ERRO AO CRIAR CONVERSA DA WATTIQ AI:",
+            error,
+          );
+
+          return Response.json(
+            {
+              success: false,
+              message:
+                "Não foi possível criar uma nova conversa.",
             },
             {
               status: 500,
