@@ -11,4 +11,11 @@ export const db = new Pool({
   ssl: {
     rejectUnauthorized: false,
   },
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+});
+
+db.on("error", (error) => {
+  console.error("Erro inesperado no PostgreSQL:", error);
 });
