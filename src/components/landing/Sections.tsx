@@ -3,6 +3,22 @@ import { Reveal, SectionHeading } from "./primitives";
 const cardClass =
   "surface-card smooth-hover-card group rounded-lg border border-border bg-card";
 
+function HoverCard({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className="smooth-hover-card-wrapper">
+      <div className={`${cardClass} ${className}`}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function ProblemSection() {
   const gaps = [
     {
@@ -44,7 +60,7 @@ export function ProblemSection() {
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {gaps.map((g, i) => (
             <Reveal key={g.t} delay={i * 80}>
-              <div className={`${cardClass} h-full p-6`}>
+              <HoverCard className="h-full p-6">
                 <p className="text-xs tracking-widest text-primary uppercase">
                   {g.t}
                 </p>
@@ -56,7 +72,7 @@ export function ProblemSection() {
                 <div className="mt-6 h-px w-full overflow-hidden bg-border">
                   <div className="h-full w-0 bg-gradient-energy transition-all duration-700 ease-out group-hover:w-full" />
                 </div>
-              </div>
+              </HoverCard>
             </Reveal>
           ))}
         </div>
@@ -102,7 +118,9 @@ export function ContextSection() {
             title={
               <>
                 Energia também é uma variável{" "}
-                <span className="text-gradient-energy">operacional.</span>
+                <span className="text-gradient-energy">
+                  operacional.
+                </span>
               </>
             }
             description="Os dados abaixo são referências públicas do mercado brasileiro. Eles não representam clientes, resultados ou métricas internas da WattIQ."
@@ -112,7 +130,7 @@ export function ContextSection() {
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {marketData.map((item, i) => (
             <Reveal key={item.value + item.label} delay={i * 80}>
-              <div className={`${cardClass} h-full p-6`}>
+              <HoverCard className="h-full p-6">
                 <p className="text-4xl font-semibold tracking-tight text-gradient-energy">
                   {item.value}
                 </p>
@@ -128,13 +146,13 @@ export function ContextSection() {
                 <p className="mt-5 border-t border-border pt-4 text-[10px] leading-relaxed tracking-wide text-muted-foreground uppercase">
                   {item.source}
                 </p>
-              </div>
+              </HoverCard>
             </Reveal>
           ))}
         </div>
 
         <Reveal delay={180}>
-          <div className={`${cardClass} mt-8 p-5`}>
+          <HoverCard className="mt-8 p-5">
             <p className="text-sm font-medium">
               Referências de mercado, não resultados da WattIQ.
             </p>
@@ -144,7 +162,7 @@ export function ContextSection() {
               contextualizar o mercado. As análises da plataforma devem
               utilizar os dados efetivamente fornecidos pela empresa.
             </p>
-          </div>
+          </HoverCard>
         </Reveal>
       </div>
     </section>
@@ -175,26 +193,22 @@ export function SolutionSection() {
         <div className="mt-14 flex flex-wrap justify-center gap-3">
           {chain.map((c, i) => (
             <Reveal key={c} delay={i * 60}>
-              <span
-                className={`${cardClass} inline-flex px-5 py-2.5 text-sm font-medium`}
-              >
+              <HoverCard className="px-5 py-2.5 text-sm font-medium">
                 {c}
-              </span>
+              </HoverCard>
             </Reveal>
           ))}
         </div>
 
         <Reveal delay={200}>
-          <div
-            className={`${cardClass} mx-auto mt-14 max-w-3xl border-primary/30 p-8 text-center`}
-          >
+          <HoverCard className="mx-auto mt-14 max-w-3xl border-primary/30 p-8 text-center">
             <p className="text-lg leading-relaxed">
               Não existe um <strong>consumo ideal universal</strong>.
-              Eficiência precisa ser avaliada dentro do contexto da operação:
-              atividade, porte, área, horários, equipamentos, setores e
-              histórico.
+              Eficiência precisa ser avaliada dentro do contexto da
+              operação: atividade, porte, área, horários, equipamentos,
+              setores e histórico.
             </p>
-          </div>
+          </HoverCard>
         </Reveal>
       </div>
     </section>
@@ -252,12 +266,14 @@ export function HowSection() {
         <ol className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {steps.map((s, i) => (
             <Reveal as="li" key={s.n} delay={i * 70}>
-              <div className={`${cardClass} h-full p-6`}>
+              <HoverCard className="h-full p-6">
                 <span className="text-sm font-mono text-primary">
                   {s.n}
                 </span>
 
-                <h3 className="mt-3 text-lg font-semibold">{s.t}</h3>
+                <h3 className="mt-3 text-lg font-semibold">
+                  {s.t}
+                </h3>
 
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {s.d}
@@ -266,7 +282,7 @@ export function HowSection() {
                 <div className="mt-5 h-px w-full overflow-hidden bg-border">
                   <div className="h-full w-0 bg-gradient-energy transition-all duration-700 ease-out group-hover:w-full" />
                 </div>
-              </div>
+              </HoverCard>
             </Reveal>
           ))}
         </ol>
@@ -329,7 +345,7 @@ export function IndicatorsSection() {
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((it, i) => (
             <Reveal key={it.t} delay={(i % 3) * 80}>
-              <div className={`${cardClass} h-full p-6`}>
+              <HoverCard className="h-full p-6">
                 <h3 className="text-base font-semibold text-primary">
                   {it.t}
                 </h3>
@@ -337,7 +353,7 @@ export function IndicatorsSection() {
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {it.d}
                 </p>
-              </div>
+              </HoverCard>
             </Reveal>
           ))}
         </div>
@@ -402,60 +418,64 @@ export function IntelligenceSection() {
           <div className="space-y-3">
             {pipeline.map((item, i) => (
               <Reveal key={item.n} delay={i * 70}>
-                <div className={`${cardClass} flex items-center gap-4 px-5 py-4`}>
+                <HoverCard className="flex items-center gap-4 px-5 py-4">
                   <span className="text-xs font-mono text-primary">
                     {item.n}
                   </span>
 
                   <div>
-                    <span className="font-medium">{item.t}</span>
+                    <span className="font-medium">
+                      {item.t}
+                    </span>
 
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {item.d}
                     </p>
                   </div>
-                </div>
+                </HoverCard>
               </Reveal>
             ))}
           </div>
 
           <Reveal delay={180}>
-            <div
-              className={`${cardClass} h-full border-primary/30 p-7`}
-            >
+            <HoverCard className="h-full border-primary/30 p-7">
               <span className="rounded border border-border px-2 py-0.5 text-[10px] tracking-widest text-muted-foreground uppercase">
                 Exemplo ilustrativo
               </span>
 
               <p className="mt-5 text-lg leading-relaxed">
-                O consumo aumentou <strong>14%</strong> em relação ao período
-                anterior.
+                O consumo aumentou <strong>14%</strong> em relação ao
+                período anterior.
               </p>
 
               <div className="mt-6 grid grid-cols-2 gap-3">
-                <div className="rounded-md border border-border bg-background/40 p-4 transition-all duration-500 ease-out hover:-translate-y-1 hover:border-primary/30">
-                  <p className="text-xs text-muted-foreground">Variação</p>
+                <div className="smooth-mini-hover rounded-md border border-border bg-background/40 p-4">
+                  <p className="text-xs text-muted-foreground">
+                    Variação
+                  </p>
 
                   <p className="mt-1 text-2xl font-semibold text-gradient-energy">
                     +14%
                   </p>
                 </div>
 
-                <div className="rounded-md border border-border bg-background/40 p-4 transition-all duration-500 ease-out hover:-translate-y-1 hover:border-primary/30">
+                <div className="smooth-mini-hover rounded-md border border-border bg-background/40 p-4">
                   <p className="text-xs text-muted-foreground">
                     Próximo passo
                   </p>
 
-                  <p className="mt-1 text-sm font-semibold">Investigar</p>
+                  <p className="mt-1 text-sm font-semibold">
+                    Investigar
+                  </p>
                 </div>
               </div>
 
               <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
-                Exemplo conceitual de como a plataforma pode apresentar uma
-                variação e direcionar a investigação. Os valores acima não são
-                dados de clientes da WattIQ.
+                Exemplo conceitual de como a plataforma pode apresentar
+                uma variação e direcionar a investigação. Os valores
+                acima não são dados de clientes da WattIQ.
               </p>
-            </div>
+            </HoverCard>
           </Reveal>
         </div>
       </div>
@@ -489,42 +509,71 @@ export function DashboardSection() {
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {views.map((v, i) => (
             <Reveal key={v} delay={(i % 4) * 70}>
-              <div className={`${cardClass} px-5 py-4 text-sm font-medium`}>
+              <HoverCard className="px-5 py-4 text-sm font-medium">
                 <div className="flex items-center justify-between gap-3">
                   <span>{v}</span>
 
                   <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/30 transition-all duration-500 group-hover:bg-primary group-hover:shadow-[0_0_12px_rgba(180,255,80,0.65)]" />
                 </div>
-              </div>
+              </HoverCard>
             </Reveal>
           ))}
         </div>
 
+        {/* =====================================================
+            WATTIQ — BLOCO INSTITUCIONAL
+            ===================================================== */}
+
         <Reveal delay={150}>
-          <div
-            className={`${cardClass} mt-8 border-dashed bg-card/50 p-10`}
-          >
-            <div className="mx-auto max-w-2xl text-center">
-              <span className="inline-flex rounded-full border border-border bg-background/50 px-3 py-1 text-[10px] tracking-widest text-muted-foreground uppercase">
-                Dados da empresa
+          <HoverCard className="mt-8 border-primary/20 bg-card/50 p-10">
+            <div className="mx-auto max-w-3xl text-center">
+              <span className="inline-flex rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[10px] tracking-widest text-primary uppercase">
+                WattIQ
               </span>
 
-              <p className="mt-5 text-lg font-medium">
-                Sem dados suficientes, não existe análise confiável.
+              <h3 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">
+                Monitoramento energético{" "}
+                <span className="text-gradient-energy">
+                  inteligente.
+                </span>
+              </h3>
+
+              <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+                A WattIQ é uma plataforma inteligente de monitoramento
+                energético criada para transformar dados de consumo em
+                informações claras, indicadores e insights para a operação
+                da sua empresa.
               </p>
 
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                A WattIQ deve informar o que está disponível, indicar quais
-                dados ainda precisam ser coletados e evitar preencher o
-                dashboard com números artificiais.
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                Nossa tecnologia organiza, monitora e analisa dados
+                energéticos, ajudando empresas a compreender melhor seu
+                consumo, identificar variações e tomar decisões com mais
+                segurança e eficiência.
               </p>
+
+              <div className="mt-7 flex flex-wrap justify-center gap-2">
+                {[
+                  "Monitoramento",
+                  "Indicadores",
+                  "Análise de consumo",
+                  "Inteligência",
+                ].map((item) => (
+                  <span
+                    key={item}
+                    className="smooth-mini-hover rounded-full border border-border bg-background/40 px-3 py-1.5 text-xs text-muted-foreground"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          </HoverCard>
         </Reveal>
 
         <Reveal delay={240}>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
-            <div className={`${cardClass} bg-card/40 p-5`}>
+            <HoverCard className="bg-card/40 p-5">
               <p className="text-xs tracking-widest text-muted-foreground uppercase">
                 Mercado
               </p>
@@ -533,19 +582,20 @@ export function DashboardSection() {
                 Referências públicas ajudam a contextualizar o cenário
                 energético.
               </p>
-            </div>
+            </HoverCard>
 
-            <div className={`${cardClass} bg-card/40 p-5`}>
+            <HoverCard className="bg-card/40 p-5">
               <p className="text-xs tracking-widest text-muted-foreground uppercase">
                 Empresa
               </p>
 
               <p className="mt-2 text-sm leading-relaxed">
-                Dados próprios alimentam indicadores específicos da operação.
+                Dados próprios alimentam indicadores específicos da
+                operação.
               </p>
-            </div>
+            </HoverCard>
 
-            <div className={`${cardClass} bg-card/40 p-5`}>
+            <HoverCard className="bg-card/40 p-5">
               <p className="text-xs tracking-widest text-muted-foreground uppercase">
                 Inteligência
               </p>
@@ -553,7 +603,7 @@ export function DashboardSection() {
               <p className="mt-2 text-sm leading-relaxed">
                 A IA interpreta resultados calculados pela plataforma.
               </p>
-            </div>
+            </HoverCard>
           </div>
         </Reveal>
       </div>
@@ -582,8 +632,9 @@ export function CtaSection() {
           </h2>
 
           <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-            Transforme dados energéticos em uma visão mais clara da operação —
-            sem confundir referência de mercado com resultado da sua empresa.
+            Transforme dados energéticos em uma visão mais clara da
+            operação — sem confundir referência de mercado com resultado
+            da sua empresa.
           </p>
         </Reveal>
       </div>
