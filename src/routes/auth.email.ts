@@ -1,34 +1,69 @@
 import { createFileRoute } from "@tanstack/react-router";
+
 import {
   createOtpChallenge,
 } from "../lib/otp-store";
+
 import {
   generateOtp,
   sendOtpEmail,
 } from "../lib/email.otp";
 
-export const Route = createFileRoute("/auth/email")({
+function createCookie(
+  name: string,
+  value: string,
+  maxAge: number,
+): string {
+  return [
+    `${name}=${value}`,
+    "Path=/",
+    "HttpOnly",
+    "Secure",
+    "SameSite=Lax",
+    `Max-Age=${maxAge}`,
+  ].join("; ");
+}
+
+export const Route = createFileRoute(
+  "/auth/email",
+)({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          const body = await request.json();
+          const body =
+            await request.json();
 
           const email =
-            typeof body.email === "string"
-              ? body.email.trim().toLowerCase()
+            typeof body?.email === "string"
+              ? body.email
+                  .trim()
+                  .toLowerCase()
               : "";
 
-          if (!email) {
+          const name =
+            typeof body?.name === "string"
+              ? body.name.trim()
+              : "";
+
+          if (
+            !email ||
+            !email.includes("@")
+          ) {
             return Response.json(
               {
-                message: "Digite um e-mail válido.",
+                success: false,
+                message:
+                  "Digite um e-mail válido.",
               },
-              { status: 400 },
+              {
+                status: 400,
+              },
             );
           }
 
-          const code = generateOtp();
+          const code =
+            generateOtp();
 
           const challengeId =
             await createOtpChallenge(
@@ -44,44 +79,50 @@ export const Route = createFileRoute("/auth/email")({
           const pendingUser = {
             sub: email,
             email,
-            name: email.split("@")[0],
+            name:
+              name ||
+              email.split("@")[0],
             picture: "",
           };
 
           const pendingUserData =
             Buffer.from(
-              JSON.stringify(pendingUser),
+              JSON.stringify(
+                pendingUser,
+              ),
+              "utf8",
             ).toString("base64url");
 
-          const headers = new Headers();
+          const headers =
+            new Headers();
 
           headers.append(
             "Set-Cookie",
-            [
-              `wattiq_otp=${challengeId}`,
-              "Path=/",
-              "HttpOnly",
-              "Secure",
-              "SameSite=Lax",
-              "Max-Age=600",
-            ].join("; "),
+            createCookie(
+              "wattiq_otp",
+              challengeId,
+              600,
+            ),
           );
 
           headers.append(
             "Set-Cookie",
-            [
-              `wattiq_pending_user=${pendingUserData}`,
-              "Path=/",
-              "HttpOnly",
-              "Secure",
-              "SameSite=Lax",
-              "Max-Age=600",
-            ].join("; "),
+            createCookie(
+              "wattiq_pending_user",
+              pendingUserData,
+              600,
+            ),
+          );
+
+          headers.set(
+            "Cache-Control",
+            "no-store",
           );
 
           console.log(
-            "OTP CHALLENGE CRIADO:",
+            "AUTH EMAIL: OTP criado",
             {
+              email,
               challengeId,
             },
           );
@@ -99,16 +140,19 @@ export const Route = createFileRoute("/auth/email")({
           );
         } catch (error) {
           console.error(
-            "Erro ao iniciar login:",
+            "AUTH EMAIL: erro ao iniciar login:",
             error,
           );
 
           return Response.json(
             {
+              success: false,
               message:
                 "Não foi possível iniciar o login. Tente novamente.",
             },
-            { status: 500 },
+            {
+              status: 500,
+            },
           );
         }
       },
