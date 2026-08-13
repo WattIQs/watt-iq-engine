@@ -6,7 +6,9 @@ export async function createOtpChallenge(
   code: string,
 ) {
   const challengeId = randomUUID();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+  const expiresAt = new Date(
+    Date.now() + 10 * 60 * 1000,
+  );
 
   await db.query(
     `
