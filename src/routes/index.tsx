@@ -11,7 +11,6 @@ import {
   IndicatorsSection,
   IntelligenceSection,
   DashboardSection,
-  AccessSection,
   CtaSection,
 } from "@/components/landing/Sections";
 
@@ -26,23 +25,13 @@ function Index() {
     <div className="min-h-screen bg-background">
       <main>
         <Hero />
-
         <ProblemSection />
-
         <ContextSection />
-
         <SolutionSection />
-
         <HowSection />
-
         <IndicatorsSection />
-
         <IntelligenceSection />
-
         <DashboardSection />
-
-        <AccessSection />
-
         <CtaSection />
       </main>
     </div>
