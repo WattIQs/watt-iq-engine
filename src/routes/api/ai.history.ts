@@ -7,6 +7,12 @@ export const Route = createFileRoute("/api/ai/history")({
     handlers: {
       GET: async ({ request }) => {
         try {
+          /*
+           * =====================================================
+           * 1. AUTENTICAÇÃO
+           * =====================================================
+           */
+
           const user = getSessionUser(request);
 
           if (!user) {
@@ -20,6 +26,12 @@ export const Route = createFileRoute("/api/ai/history")({
             );
           }
 
+          /*
+           * =====================================================
+           * 2. BUSCAR CONVERSA DO USUÁRIO
+           * =====================================================
+           */
+
           const conversationResult = await db.query(
             `
               SELECT id
@@ -31,9 +43,12 @@ export const Route = createFileRoute("/api/ai/history")({
             [user.sub],
           );
 
+          /*
+           * Usuário ainda não possui conversa.
+           */
+
           if (conversationResult.rows.length === 0) {
             return Response.json({
-              conversationId: null,
               messages: [],
             });
           }
@@ -41,7 +56,13 @@ export const Route = createFileRoute("/api/ai/history")({
           const conversationId =
             conversationResult.rows[0].id;
 
-          const result = await db.query(
+          /*
+           * =====================================================
+           * 3. BUSCAR MENSAGENS
+           * =====================================================
+           */
+
+          const messagesResult = await db.query(
             `
               SELECT
                 role,
@@ -54,13 +75,20 @@ export const Route = createFileRoute("/api/ai/history")({
             [conversationId],
           );
 
+          /*
+           * =====================================================
+           * 4. RETORNO
+           * =====================================================
+           */
+
           return Response.json({
-            conversationId,
-            messages: result.rows.map((row) => ({
-              role: row.role,
-              content: row.content,
-              createdAt: row.created_at,
-            })),
+            messages: messagesResult.rows.map(
+              (row) => ({
+                role: row.role,
+                content: row.content,
+                createdAt: row.created_at,
+              }),
+            ),
           });
         } catch (error) {
           console.error(
