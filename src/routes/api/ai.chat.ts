@@ -290,19 +290,14 @@ export const Route = createFileRoute("/api/ai/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        let user:
-          | ReturnType<typeof getSessionUser>
-          | null = null;
-
         try {
-          user = getSessionUser(request);
+          const user = getSessionUser(request);
 
           if (!user) {
             return Response.json(
               {
                 success: false,
-                message:
-                  "Sessão expirada. Faça login novamente.",
+                message: "Sessão expirada. Faça login novamente.",
               },
               { status: 401 },
             );
@@ -313,9 +308,7 @@ export const Route = createFileRoute("/api/ai/chat")({
           const apiKey = process.env.GEMINI_API_KEY;
 
           if (!apiKey) {
-            console.error(
-              "GEMINI_API_KEY não configurada.",
-            );
+            console.error("GEMINI_API_KEY não configurada.");
 
             return Response.json(
               {
@@ -327,9 +320,7 @@ export const Route = createFileRoute("/api/ai/chat")({
             );
           }
 
-          const body = await request
-            .json()
-            .catch(() => ({}));
+          const body = await request.json().catch(() => ({}));
 
           const conversationId =
             typeof body?.conversationId === "string"
@@ -340,41 +331,30 @@ export const Route = createFileRoute("/api/ai/chat")({
             ? body.messages
             : [];
 
-          const validMessages: ChatMessage[] =
-            messages
-              .filter(
-                (
-                  message: unknown,
-                ): message is ChatMessage =>
-                  !!message &&
-                  typeof message === "object" &&
-                  "role" in message &&
-                  "content" in message &&
-                  (
-                    (message as ChatMessage).role ===
-                      "user" ||
-                    (message as ChatMessage).role ===
-                      "assistant"
-                  ) &&
-                  typeof (
-                    message as ChatMessage
-                  ).content === "string",
-              )
-              .map((message) => ({
-                role: message.role,
-                content: message.content.trim(),
-              }))
-              .filter(
-                (message) =>
-                  message.content.length > 0,
-              );
+          const validMessages: ChatMessage[] = messages
+            .filter(
+              (
+                message: unknown,
+              ): message is ChatMessage =>
+                !!message &&
+                typeof message === "object" &&
+                "role" in message &&
+                "content" in message &&
+                ((message as ChatMessage).role === "user" ||
+                  (message as ChatMessage).role === "assistant") &&
+                typeof (message as ChatMessage).content === "string",
+            )
+            .map((message) => ({
+              role: message.role,
+              content: message.content.trim(),
+            }))
+            .filter((message) => message.content.length > 0);
 
           if (validMessages.length === 0) {
             return Response.json(
               {
                 success: false,
-                message:
-                  "Envie uma mensagem para começar a conversa.",
+                message: "Envie uma mensagem para começar a conversa.",
               },
               { status: 400 },
             );
@@ -387,20 +367,13 @@ export const Route = createFileRoute("/api/ai/chat")({
             return Response.json(
               {
                 success: false,
-                message:
-                  "A última mensagem precisa ser do usuário.",
+                message: "A última mensagem precisa ser do usuário.",
               },
               { status: 400 },
             );
           }
 
-          let currentConversationId =
-            conversationId;
-
-          /*
-           * Se o frontend enviou uma conversa,
-           * verifica se ela pertence ao usuário.
-           */
+          let currentConversationId = conversationId;
 
           if (currentConversationId) {
             const existing = await db.query(
@@ -411,28 +384,19 @@ export const Route = createFileRoute("/api/ai/chat")({
                   AND user_id = $2
                 LIMIT 1
               `,
-              [
-                currentConversationId,
-                user.sub,
-              ],
+              [currentConversationId, user.sub],
             );
 
             if (existing.rows.length === 0) {
               return Response.json(
                 {
                   success: false,
-                  message:
-                    "Conversa não encontrada.",
+                  message: "Conversa não encontrada.",
                 },
                 { status: 404 },
               );
             }
           } else {
-            /*
-             * Nenhuma conversa foi informada.
-             * Cria uma nova conversa.
-             */
-
             const created = await db.query(
               `
                 INSERT INTO ai_conversations (
@@ -444,14 +408,8 @@ export const Route = createFileRoute("/api/ai/chat")({
               [user.sub],
             );
 
-            currentConversationId = String(
-              created.rows[0].id,
-            );
+            currentConversationId = String(created.rows[0].id);
           }
-
-          /*
-           * Salva a mensagem do usuário.
-           */
 
           await db.query(
             `
@@ -466,15 +424,8 @@ export const Route = createFileRoute("/api/ai/chat")({
                 $2
               )
             `,
-            [
-              currentConversationId,
-              lastMessage.content,
-            ],
+            [currentConversationId, lastMessage.content],
           );
-
-          /*
-           * Carrega a memória da conversa atual.
-           */
 
           const historyResult = await db.query(
             `
@@ -501,30 +452,26 @@ export const Route = createFileRoute("/api/ai/chat")({
             apiKey,
           });
 
-          const contents = history.map(
-            (message) => ({
-              role:
-                message.role === "assistant"
-                  ? "model"
-                  : "user",
-              parts: [
-                {
-                  text: message.content,
-                },
-              ],
-            }),
-          );
-
-          const response =
-            await ai.models.generateContent({
-              model: "gemini-3.5-flash",
-              contents,
-              config: {
-                systemInstruction:
-                  WATTIQ_AI_PROMPT,
-                maxOutputTokens: 1000,
+          const contents = history.map((message) => ({
+            role:
+              message.role === "assistant"
+                ? "model"
+                : "user",
+            parts: [
+              {
+                text: message.content,
               },
-            });
+            ],
+          }));
+
+          const response = await ai.models.generateContent({
+            model: "gemini-3.5-flash",
+            contents,
+            config: {
+              systemInstruction: WATTIQ_AI_PROMPT,
+              maxOutputTokens: 1000,
+            },
+          });
 
           const text = response.text?.trim();
 
@@ -533,10 +480,6 @@ export const Route = createFileRoute("/api/ai/chat")({
               "Gemini retornou uma resposta vazia.",
             );
           }
-
-          /*
-           * Salva a resposta da IA.
-           */
 
           await db.query(
             `
@@ -551,15 +494,8 @@ export const Route = createFileRoute("/api/ai/chat")({
                 $2
               )
             `,
-            [
-              currentConversationId,
-              text,
-            ],
+            [currentConversationId, text],
           );
-
-          /*
-           * Atualiza a conversa.
-           */
 
           await db.query(
             `
@@ -577,8 +513,7 @@ export const Route = createFileRoute("/api/ai/chat")({
           return Response.json({
             success: true,
             message: text,
-            conversationId:
-              currentConversationId,
+            conversationId: currentConversationId,
           });
         } catch (error) {
           console.error(
