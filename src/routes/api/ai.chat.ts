@@ -96,30 +96,6 @@ NUNCA elogie o usuário sem necessidade.
 Demonstre cordialidade através de clareza, precisão e qualidade
 da orientação.
 
-Em vez de:
-
-"Fico feliz em saber que sua empresa possui esses dados."
-
-Utilize:
-
-"Esses dados já fornecem uma base relevante para iniciar a análise."
-
-Em vez de:
-
-"Ótimo! Podemos começar."
-
-Utilize:
-
-"Podemos iniciar a partir dessas informações."
-
-Em vez de:
-
-"Perfeito, entendi!"
-
-Utilize:
-
-"Entendido. Nesse cenário, o próximo ponto relevante é..."
-
 ============================================================
 OBJETIVO
 ============================================================
@@ -261,13 +237,29 @@ Não utilize excesso de exclamações.
 Não utilize linguagem promocional exagerada.
 
 ============================================================
+MEMÓRIA DA CONVERSA
+============================================================
+
+A conversa atual possui memória própria.
+
+Utilize as mensagens anteriores desta mesma conversa como contexto.
+
+Não misture informações de outras conversas.
+
+Se uma informação foi fornecida anteriormente nesta conversa,
+não pergunte novamente sem necessidade.
+
+Se o usuário iniciar uma nova conversa, considere que o contexto
+da conversa anterior não deve ser utilizado como contexto direto.
+
+============================================================
 REGRA FINAL
 ============================================================
 
 Antes de responder:
 
 1. Entenda o que foi perguntado.
-2. Verifique o que já foi informado.
+2. Verifique o que já foi informado nesta conversa.
 3. Não repita perguntas.
 4. Verifique se existem dados suficientes.
 5. Não faça suposições sem evidência.
@@ -290,41 +282,20 @@ export const Route = createFileRoute("/api/ai/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        let user:
-          | ReturnType<typeof getSessionUser>
-          | null = null;
-
         try {
-          /*
-           * =====================================================
-           * 1. AUTENTICAÇÃO
-           * =====================================================
-           */
-
-          user = getSessionUser(request);
+          const user = getSessionUser(request);
 
           if (!user) {
             return Response.json(
               {
+                success: false,
                 message: "Sessão expirada. Faça login novamente.",
               },
               { status: 401 },
             );
           }
 
-          /*
-           * =====================================================
-           * 2. BANCO
-           * =====================================================
-           */
-
           await initDatabase();
-
-          /*
-           * =====================================================
-           * 3. GEMINI
-           * =====================================================
-           */
 
           const apiKey = process.env.GEMINI_API_KEY;
 
@@ -333,6 +304,7 @@ export const Route = createFileRoute("/api/ai/chat")({
 
             return Response.json(
               {
+                success: false,
                 message:
                   "A inteligência da WattIQ não está configurada no servidor.",
               },
@@ -340,13 +312,12 @@ export const Route = createFileRoute("/api/ai/chat")({
             );
           }
 
-          /*
-           * =====================================================
-           * 4. BODY
-           * =====================================================
-           */
-
           const body = await request.json();
+
+          const conversationId =
+            typeof body?.conversationId === "string"
+              ? body.conversationId.trim()
+              : "";
 
           const messages = Array.isArray(body?.messages)
             ? body.messages
@@ -367,25 +338,28 @@ export const Route = createFileRoute("/api/ai/chat")({
               role: message.role,
               content: message.content.trim(),
             }))
-            .filter(
-              (message) => message.content.length > 0,
-            );
+            .filter((message) => message.content.length > 0);
 
-          if (validMessages.length === 0) {
+          if (!conversationId) {
             return Response.json(
               {
+                success: false,
                 message:
-                  "Envie uma mensagem para começar a conversa.",
+                  "Nenhuma conversa foi selecionada. Crie ou selecione uma conversa.",
               },
               { status: 400 },
             );
           }
 
-          /*
-           * =====================================================
-           * 5. ÚLTIMA MENSAGEM
-           * =====================================================
-           */
+          if (validMessages.length === 0) {
+            return Response.json(
+              {
+                success: false,
+                message: "Envie uma mensagem para começar a conversa.",
+              },
+              { status: 400 },
+            );
+          }
 
           const lastMessage =
             validMessages[validMessages.length - 1];
@@ -393,6 +367,7 @@ export const Route = createFileRoute("/api/ai/chat")({
           if (lastMessage.role !== "user") {
             return Response.json(
               {
+                success: false,
                 message:
                   "A última mensagem precisa ser do usuário.",
               },
@@ -400,45 +375,26 @@ export const Route = createFileRoute("/api/ai/chat")({
             );
           }
 
-          /*
-           * =====================================================
-           * 6. CONVERSA
-           * =====================================================
-           */
-
           const conversationResult = await db.query(
             `
               SELECT id
               FROM ai_conversations
-              WHERE user_id = $1
-              ORDER BY updated_at DESC
+              WHERE id = $1
+                AND user_id = $2
               LIMIT 1
             `,
-            [user.sub],
+            [conversationId, user.sub],
           );
 
-          let conversationId: string;
-
-          if (conversationResult.rows.length > 0) {
-            conversationId = conversationResult.rows[0].id;
-          } else {
-            const created = await db.query(
-              `
-                INSERT INTO ai_conversations (user_id)
-                VALUES ($1)
-                RETURNING id
-              `,
-              [user.sub],
+          if (conversationResult.rows.length === 0) {
+            return Response.json(
+              {
+                success: false,
+                message: "Conversa não encontrada.",
+              },
+              { status: 404 },
             );
-
-            conversationId = created.rows[0].id;
           }
-
-          /*
-           * =====================================================
-           * 7. SALVA USUÁRIO
-           * =====================================================
-           */
 
           await db.query(
             `
@@ -449,21 +405,14 @@ export const Route = createFileRoute("/api/ai/chat")({
               )
               VALUES ($1, 'user', $2)
             `,
-            [
-              conversationId,
-              lastMessage.content,
-            ],
+            [conversationId, lastMessage.content],
           );
-
-          /*
-           * =====================================================
-           * 8. HISTÓRICO
-           * =====================================================
-           */
 
           const historyResult = await db.query(
             `
-              SELECT role, content
+              SELECT
+                role,
+                content
               FROM ai_messages
               WHERE conversation_id = $1
               ORDER BY created_at ASC, id ASC
@@ -476,12 +425,6 @@ export const Route = createFileRoute("/api/ai/chat")({
               role: row.role,
               content: row.content,
             }));
-
-          /*
-           * =====================================================
-           * 9. GEMINI
-           * =====================================================
-           */
 
           const ai = new GoogleGenAI({
             apiKey,
@@ -516,12 +459,6 @@ export const Route = createFileRoute("/api/ai/chat")({
             );
           }
 
-          /*
-           * =====================================================
-           * 10. SALVA RESPOSTA DA IA
-           * =====================================================
-           */
-
           await db.query(
             `
               INSERT INTO ai_messages (
@@ -531,36 +468,22 @@ export const Route = createFileRoute("/api/ai/chat")({
               )
               VALUES ($1, 'assistant', $2)
             `,
-            [
-              conversationId,
-              text,
-            ],
+            [conversationId, text],
           );
-
-          /*
-           * =====================================================
-           * 11. ATUALIZA CONVERSA
-           * =====================================================
-           */
 
           await db.query(
             `
               UPDATE ai_conversations
               SET updated_at = NOW()
               WHERE id = $1
+                AND user_id = $2
             `,
-            [conversationId],
+            [conversationId, user.sub],
           );
 
           console.log(
-            `WattIQ AI: mensagem salva para ${user.email}`,
+            `WattIQ AI: mensagem salva para ${user.email} na conversa ${conversationId}`,
           );
-
-          /*
-           * =====================================================
-           * 12. RESPOSTA
-           * =====================================================
-           */
 
           return Response.json({
             success: true,
