@@ -14,6 +14,7 @@ import {
   Clock3,
   Database,
   Factory,
+  RotateCcw,
   Send,
   Sparkles,
   Zap,
@@ -40,17 +41,34 @@ export const Route = createFileRoute("/planejar")({
 function PlanejarPage() {
   const navigate = useNavigate();
 
-  /*
-   * =========================================================
-   * AUTENTICAÇÃO
-   * =========================================================
-   */
-
   const [authenticated, setAuthenticated] =
     useState(false);
 
   const [checkingAuth, setCheckingAuth] =
     useState(true);
+
+  const [messages, setMessages] =
+    useState<ChatMessage[]>([]);
+
+  const [input, setInput] = useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [loadingHistory, setLoadingHistory] =
+    useState(true);
+
+  const [resetting, setResetting] =
+    useState(false);
+
+  const chatContainerRef =
+    useRef<HTMLDivElement>(null);
+
+  /*
+   * =========================================================
+   * AUTENTICAÇÃO
+   * =========================================================
+   */
 
   useEffect(() => {
     let mounted = true;
@@ -113,26 +131,6 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * CHAT
-   * =========================================================
-   */
-
-  const [messages, setMessages] =
-    useState<ChatMessage[]>([]);
-
-  const [input, setInput] = useState("");
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [loadingHistory, setLoadingHistory] =
-    useState(true);
-
-  const chatContainerRef =
-    useRef<HTMLDivElement>(null);
-
-  /*
-   * =========================================================
    * CARREGAR HISTÓRICO
    * =========================================================
    */
@@ -187,11 +185,11 @@ function PlanejarPage() {
                 }),
               );
 
-          if (history.length > 0) {
-            setMessages(history);
-          } else {
-            setMessages([INITIAL_MESSAGE]);
-          }
+          setMessages(
+            history.length > 0
+              ? history
+              : [INITIAL_MESSAGE],
+          );
         } else {
           setMessages([INITIAL_MESSAGE]);
         }
@@ -248,7 +246,8 @@ function PlanejarPage() {
     if (
       !text ||
       loading ||
-      loadingHistory
+      loadingHistory ||
+      resetting
     ) {
       return;
     }
@@ -335,6 +334,70 @@ function PlanejarPage() {
 
   /*
    * =========================================================
+   * RESETAR CONVERSA
+   * =========================================================
+   */
+
+  async function resetConversation() {
+    if (
+      resetting ||
+      loading ||
+      loadingHistory
+    ) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Deseja realmente iniciar uma nova conversa? Todo o histórico desta conversa será apagado.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setResetting(true);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/ai/history`,
+        {
+          method: "DELETE",
+          credentials: "include",
+          cache: "no-store",
+        },
+      );
+
+      const data = await response
+        .json()
+        .catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            "Não foi possível resetar a conversa.",
+        );
+      }
+
+      setMessages([INITIAL_MESSAGE]);
+      setInput("");
+    } catch (error) {
+      console.error(
+        "Erro ao resetar conversa:",
+        error,
+      );
+
+      window.alert(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível resetar a conversa.",
+      );
+    } finally {
+      setResetting(false);
+    }
+  }
+
+  /*
+   * =========================================================
    * ENTER
    * =========================================================
    */
@@ -396,9 +459,7 @@ function PlanejarPage() {
 
       </div>
 
-      {/* =====================================================
-          HEADER
-          ===================================================== */}
+      {/* HEADER */}
 
       <header className="border-b border-border/60 backdrop-blur-xl">
 
@@ -433,9 +494,7 @@ function PlanejarPage() {
 
       </header>
 
-      {/* =====================================================
-          HERO
-          ===================================================== */}
+      {/* HERO */}
 
       <section className="mx-auto max-w-7xl px-5 pb-20 pt-20">
 
@@ -506,9 +565,7 @@ function PlanejarPage() {
 
       </section>
 
-      {/* =====================================================
-          WATTIQ AI
-          ===================================================== */}
+      {/* WATTIQ AI */}
 
       <section
         id="wattiq-ai"
@@ -606,7 +663,34 @@ function PlanejarPage() {
 
               </div>
 
-              <Sparkles className="h-4 w-4 text-primary/60" />
+              <div className="flex items-center gap-2">
+
+                <button
+                  type="button"
+                  onClick={resetConversation}
+                  disabled={
+                    resetting ||
+                    loading ||
+                    loadingHistory
+                  }
+                  title="Nova conversa"
+                  aria-label="Nova conversa"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-300 hover:border-primary/40 hover:bg-primary/5 hover:text-primary disabled:pointer-events-none disabled:opacity-40"
+                >
+
+                  <RotateCcw
+                    className={`h-3.5 w-3.5 ${
+                      resetting
+                        ? "animate-spin"
+                        : ""
+                    }`}
+                  />
+
+                </button>
+
+                <Sparkles className="h-4 w-4 text-primary/60" />
+
+              </div>
 
             </div>
 
@@ -706,7 +790,10 @@ function PlanejarPage() {
                         : "Conte sobre sua empresa..."
                     }
                     rows={1}
-                    disabled={loadingHistory}
+                    disabled={
+                      loadingHistory ||
+                      resetting
+                    }
                     className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
                   />
 
@@ -716,7 +803,8 @@ function PlanejarPage() {
                     disabled={
                       !input.trim() ||
                       loading ||
-                      loadingHistory
+                      loadingHistory ||
+                      resetting
                     }
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-[0_10px_25px_-10px_rgba(180,255,80,0.6)] disabled:pointer-events-none disabled:opacity-40"
                     aria-label="Enviar mensagem"
@@ -746,9 +834,7 @@ function PlanejarPage() {
 
       </section>
 
-      {/* =====================================================
-          INFORMAÇÕES
-          ===================================================== */}
+      {/* INFORMAÇÕES */}
 
       <section className="mx-auto max-w-6xl px-5 py-20">
 
@@ -820,9 +906,7 @@ function PlanejarPage() {
 
       </section>
 
-      {/* =====================================================
-          FOOTER
-          ===================================================== */}
+      {/* FOOTER */}
 
       <footer className="border-t border-border/60 py-8">
 
