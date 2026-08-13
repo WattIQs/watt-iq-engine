@@ -4,19 +4,19 @@ export function ProblemSection() {
   const gaps = [
     {
       t: "Onde",
-      d: "Qual setor, processo ou equipamento concentra o consumo.",
+      d: "Identifique quais setores, processos ou equipamentos concentram o consumo registrado.",
     },
     {
       t: "Quando",
-      d: "Em quais horários e períodos o consumo apresenta mudanças relevantes.",
+      d: "Compare horários e períodos para localizar mudanças relevantes no comportamento energético.",
     },
     {
       t: "Como",
-      d: "Como a operação, os equipamentos e a rotina influenciam a curva de consumo.",
+      d: "Relacione consumo, operação, equipamentos e rotina para entender o comportamento da demanda.",
     },
     {
       t: "Por que",
-      d: "Quais fatores podem explicar uma variação entre períodos comparáveis.",
+      d: "Investigue variações entre períodos comparáveis com base nos dados disponíveis.",
     },
   ];
 
@@ -28,20 +28,20 @@ export function ProblemSection() {
             eyebrow="O problema"
             title={
               <>
-                Sua empresa sabe quanto gasta.{" "}
+                Sua empresa sabe quanto consome.{" "}
                 <span className="text-gradient-energy">
-                  Mas sabe onde está consumindo?
+                  Mas consegue explicar esse consumo?
                 </span>
               </>
             }
-            description="O desafio não é apenas conhecer a conta de energia. É transformar consumo bruto em informação operacional: entender variações, comparar períodos, identificar pontos de atenção e priorizar investigações."
+            description="Conhecer o valor da fatura é apenas o ponto de partida. A gestão energética exige visibilidade sobre variações, períodos, setores, equipamentos e contexto operacional."
           />
         </Reveal>
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {gaps.map((g, i) => (
             <Reveal key={g.t} delay={i * 80}>
-              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6 transition-all duration-500 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_18px_50px_-28px_rgba(180,255,80,0.45)]">
+              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6">
                 <p className="text-xs tracking-widest text-primary uppercase">
                   {g.t}
                 </p>
@@ -98,18 +98,24 @@ export function ContextSection() {
             eyebrow="Contexto de mercado"
             title={
               <>
-                Energia é um indicador importante da operação.
+                Energia também é uma variável{" "}
+                <span className="text-gradient-energy">
+                  operacional.
+                </span>
               </>
             }
-            description="Os números abaixo não representam clientes da WattIQ. São dados oficiais do mercado brasileiro usados como contexto para mostrar a escala e a dinâmica do consumo de eletricidade."
+            description="Os dados abaixo são referências públicas do mercado brasileiro. Eles não representam clientes, resultados ou métricas internas da WattIQ."
           />
         </Reveal>
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {marketData.map((item, i) => (
-            <Reveal key={item.value + item.label} delay={i * 80}>
-              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6 transition-all duration-500 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_22px_60px_-30px_rgba(180,255,80,0.4)]">
-                <p className="text-4xl font-semibold tracking-tight text-gradient-energy transition-transform duration-500 group-hover:scale-[1.02]">
+            <Reveal
+              key={item.value + item.label}
+              delay={i * 80}
+            >
+              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6">
+                <p className="text-4xl font-semibold tracking-tight text-gradient-energy">
                   {item.value}
                 </p>
 
@@ -130,26 +136,16 @@ export function ContextSection() {
         </div>
 
         <Reveal delay={180}>
-          <div className="mt-8 flex flex-col gap-3 rounded-lg border border-border bg-card/40 p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-medium">
-                Dados de referência, não dados de clientes.
-              </p>
+          <div className="mt-8 rounded-lg border border-border bg-card/40 p-5">
+            <p className="text-sm font-medium">
+              Referências de mercado, não resultados da WattIQ.
+            </p>
 
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                A WattIQ utiliza dados próprios da empresa para gerar análises
-                individualizadas. Dados públicos servem apenas como contexto.
-              </p>
-            </div>
-
-            <a
-              href="https://www.epe.gov.br/pt/areas-de-atuacao/energia-eletrica/consumo-de-energia-eletrica"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="shrink-0 text-xs font-medium text-primary transition-colors hover:text-foreground"
-            >
-              Ver dados da EPE ↗
-            </a>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              Os indicadores públicos são apresentados apenas para
+              contextualizar o mercado. As análises da plataforma devem
+              utilizar os dados efetivamente fornecidos pela empresa.
+            </p>
           </div>
         </Reveal>
       </div>
@@ -168,13 +164,16 @@ export function SolutionSection() {
   ];
 
   return (
-    <section id="solucao" className="border-b border-border py-24">
+    <section
+      id="solucao"
+      className="border-b border-border py-24"
+    >
       <div className="mx-auto max-w-6xl px-5">
         <Reveal>
           <SectionHeading
             eyebrow="A solução"
             title="Conheça a WattIQ."
-            description="A WattIQ organiza dados energéticos, transforma medições em indicadores e utiliza inteligência artificial para ajudar a interpretar padrões, variações e oportunidades de investigação."
+            description="Uma plataforma para organizar dados energéticos, acompanhar indicadores e transformar medições em contexto para decisões operacionais."
           />
         </Reveal>
 
@@ -192,9 +191,10 @@ export function SolutionSection() {
           <div className="surface-card mx-auto mt-14 max-w-3xl rounded-lg border border-primary/30 bg-card p-8 text-center">
             <p className="text-lg leading-relaxed">
               Não existe um{" "}
-              <strong>consumo ideal universal</strong>. Eficiência energética
-              precisa ser analisada dentro do contexto da empresa: atividade,
-              porte, área, horários, equipamentos, setores e histórico.
+              <strong>consumo ideal universal</strong>.
+              Eficiência precisa ser avaliada dentro do
+              contexto da operação: atividade, porte, área,
+              horários, equipamentos, setores e histórico.
             </p>
           </div>
         </Reveal>
@@ -208,55 +208,64 @@ export function HowSection() {
     {
       n: "01",
       t: "Colete",
-      d: "Dados energéticos da operação.",
+      d: "Registre os dados energéticos disponíveis da operação.",
     },
     {
       n: "02",
       t: "Organize",
-      d: "Informações e perfil da empresa.",
+      d: "Estruture informações sobre a empresa e seu contexto operacional.",
     },
     {
       n: "03",
       t: "Monitore",
-      d: "Indicadores acompanhados por período.",
+      d: "Acompanhe indicadores e sua evolução ao longo dos períodos.",
     },
     {
       n: "04",
       t: "Analise",
-      d: "Variações, comparações e padrões.",
+      d: "Compare períodos, variações, setores e padrões identificados.",
     },
     {
       n: "05",
       t: "Interprete",
-      d: "Inteligência artificial aplicada aos indicadores.",
+      d: "Use inteligência artificial para transformar resultados em uma leitura compreensível.",
     },
     {
       n: "06",
       t: "Decida",
-      d: "Ações mais informadas e priorizadas.",
+      d: "Priorize investigações e ações com base nas informações disponíveis.",
     },
   ];
 
   return (
-    <section id="como-funciona" className="border-b border-border py-24">
+    <section
+      id="como-funciona"
+      className="border-b border-border py-24"
+    >
       <div className="mx-auto max-w-6xl px-5">
         <Reveal>
           <SectionHeading
             eyebrow="Como funciona"
             title="Do dado bruto à decisão"
-            description="A plataforma separa cálculo, análise e interpretação para que cada etapa tenha uma função clara."
+            description="Cada etapa possui uma função clara: coletar, estruturar, calcular, analisar e interpretar."
           />
         </Reveal>
 
         <ol className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {steps.map((s, i) => (
-            <Reveal as="li" key={s.n} delay={i * 70}>
-              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6 transition-all duration-500 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_20px_50px_-30px_rgba(180,255,80,0.45)]">
+            <Reveal
+              as="li"
+              key={s.n}
+              delay={i * 70}
+            >
+              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6">
                 <span className="text-sm font-mono text-primary">
                   {s.n}
                 </span>
 
-                <h3 className="mt-3 text-lg font-semibold">{s.t}</h3>
+                <h3 className="mt-3 text-lg font-semibold">
+                  {s.t}
+                </h3>
 
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {s.d}
@@ -278,27 +287,27 @@ export function IndicatorsSection() {
   const items = [
     {
       t: "kWh",
-      d: "Consumo total de energia no período analisado.",
+      d: "Consumo total registrado no período analisado.",
     },
     {
       t: "Custo",
-      d: "Custo energético associado ao consumo registrado.",
+      d: "Custo energético calculado a partir dos dados disponíveis.",
     },
     {
       t: "kWh / funcionário",
-      d: "Consumo relativo ao número de colaboradores.",
+      d: "Indicador relativo ao número de colaboradores informado.",
     },
     {
       t: "kWh / m²",
-      d: "Consumo relativo à área ocupada pela operação.",
+      d: "Indicador relativo à área ocupada pela operação.",
     },
     {
       t: "Equipamentos",
-      d: "Consumo distribuído entre os equipamentos cadastrados.",
+      d: "Distribuição do consumo entre equipamentos cadastrados.",
     },
     {
       t: "Setores",
-      d: "Consumo distribuído entre os setores da empresa.",
+      d: "Distribuição do consumo entre setores da empresa.",
     },
     {
       t: "Variação",
@@ -306,30 +315,36 @@ export function IndicatorsSection() {
     },
     {
       t: "CO₂ estimado",
-      d: "Emissão estimada a partir do consumo registrado e do fator adotado.",
+      d: "Estimativa calculada conforme o fator de emissão adotado.",
     },
     {
       t: "Eficiência",
-      d: "Evolução dos indicadores dentro do contexto da empresa.",
+      d: "Evolução dos indicadores dentro do contexto operacional.",
     },
   ];
 
   return (
-    <section id="indicadores" className="border-b border-border py-24">
+    <section
+      id="indicadores"
+      className="border-b border-border py-24"
+    >
       <div className="mx-auto max-w-6xl px-5">
         <Reveal>
           <SectionHeading
             eyebrow="Indicadores"
-            title="Todo número acompanhado de contexto"
-            description="Um indicador isolado não diz muita coisa. A WattIQ apresenta cada métrica junto do que ela significa para o perfil da empresa."
+            title="Números precisam de contexto."
+            description="A plataforma não trata um indicador isolado como uma conclusão. Cada métrica precisa ser interpretada considerando os dados e o perfil da operação."
           />
         </Reveal>
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((it, i) => (
-            <Reveal key={it.t} delay={(i % 3) * 80}>
-              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6 transition-all duration-500 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_18px_50px_-28px_rgba(180,255,80,0.4)]">
-                <h3 className="text-base font-semibold text-primary transition-transform duration-300 group-hover:translate-x-0.5">
+            <Reveal
+              key={it.t}
+              delay={(i % 3) * 80}
+            >
+              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6">
+                <h3 className="text-base font-semibold text-primary">
                   {it.t}
                 </h3>
 
@@ -350,27 +365,27 @@ export function IntelligenceSection() {
     {
       n: "01",
       t: "Dados",
-      d: "Medições e informações da empresa.",
+      d: "Medições e informações fornecidas pela empresa.",
     },
     {
       n: "02",
       t: "Cálculo",
-      d: "Indicadores calculados de forma determinística.",
+      d: "Indicadores calculados pela aplicação.",
     },
     {
       n: "03",
       t: "Análise",
-      d: "Comparações, variações e padrões.",
+      d: "Comparações, variações e padrões identificáveis.",
     },
     {
       n: "04",
       t: "IA",
-      d: "Interpretação dos resultados.",
+      d: "Interpretação dos resultados disponíveis.",
     },
     {
       n: "05",
       t: "Insight",
-      d: "Leitura clara para apoiar a investigação.",
+      d: "Uma leitura clara para apoiar a investigação.",
     },
   ];
 
@@ -393,21 +408,27 @@ export function IntelligenceSection() {
                 A aplicação calcula. A IA interpreta.
               </span>
             }
-            description="Os cálculos de consumo, custo, médias, variações e indicadores são realizados pela plataforma. A inteligência artificial recebe esses resultados e ajuda a transformá-los em uma leitura compreensível."
+            description="Os cálculos permanecem determinísticos. A inteligência artificial recebe os resultados disponíveis e ajuda a transformá-los em uma leitura mais clara."
           />
         </Reveal>
 
         <div className="mt-14 grid gap-6 lg:grid-cols-[1fr_1.1fr]">
           <div className="space-y-3">
             {pipeline.map((item, i) => (
-              <Reveal key={item.n} delay={i * 70}>
+              <Reveal
+                key={item.n}
+                delay={i * 70}
+              >
                 <div className="surface-card group flex items-center gap-4 rounded-lg border border-border bg-card px-5 py-4 transition-all duration-500 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_16px_40px_-25px_rgba(180,255,80,0.4)]">
                   <span className="text-xs font-mono text-primary">
                     {item.n}
                   </span>
 
                   <div>
-                    <span className="font-medium">{item.t}</span>
+                    <span className="font-medium">
+                      {item.t}
+                    </span>
+
                     <p className="mt-0.5 text-xs text-muted-foreground">
                       {item.d}
                     </p>
@@ -420,52 +441,43 @@ export function IntelligenceSection() {
           <Reveal delay={180}>
             <div className="surface-card h-full rounded-lg border border-primary/30 bg-card p-7">
               <span className="rounded border border-border px-2 py-0.5 text-[10px] tracking-widest text-muted-foreground uppercase">
-                Exemplo baseado em dado público
+                Exemplo ilustrativo
               </span>
 
               <p className="mt-5 text-lg leading-relaxed">
-                A EPE registrou{" "}
-                <strong>50,4 TWh de consumo industrial</strong> no Brasil no
-                terceiro trimestre de 2025, uma variação de{" "}
-                <strong>-1,2%</strong> em relação ao mesmo trimestre de 2024.
+                O consumo aumentou{" "}
+                <strong>14%</strong> em relação ao
+                período anterior.
               </p>
 
               <div className="mt-6 grid grid-cols-2 gap-3">
                 <div className="rounded-md border border-border bg-background/40 p-4">
                   <p className="text-xs text-muted-foreground">
-                    Consumo industrial
+                    Variação
                   </p>
 
                   <p className="mt-1 text-2xl font-semibold text-gradient-energy">
-                    50,4 TWh
+                    +14%
                   </p>
                 </div>
 
                 <div className="rounded-md border border-border bg-background/40 p-4">
                   <p className="text-xs text-muted-foreground">
-                    Variação anual
+                    Próximo passo
                   </p>
 
-                  <p className="mt-1 text-2xl font-semibold">
-                    -1,2%
+                  <p className="mt-1 text-sm font-semibold">
+                    Investigar
                   </p>
                 </div>
               </div>
 
               <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
-                Este exemplo utiliza dados públicos da EPE para demonstrar o
-                tipo de contexto que uma análise pode apresentar. Não é um
-                resultado de cliente da WattIQ.
+                Exemplo conceitual de como a plataforma pode
+                apresentar uma variação e direcionar a
+                investigação. Os valores acima não são dados
+                de clientes da WattIQ.
               </p>
-
-              <a
-                href="https://www.epe.gov.br/pt/imprensa/noticias/epe-divulga-o-boletim-do-consumo-de-eletricidade-n-23-consumo-de-energia-eletrica-registrou-uma-leve-queda-de-0-3-no-3-trimestre-de-2025-puxado-pela-industria-e-pelo-comercio"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-5 inline-flex text-xs font-medium text-primary transition-colors hover:text-foreground"
-              >
-                Fonte: EPE · Boletim nº 23 ↗
-              </a>
             </div>
           </Reveal>
         </div>
@@ -493,14 +505,17 @@ export function DashboardSection() {
           <SectionHeading
             eyebrow="Dashboard"
             title="O núcleo da plataforma"
-            description="Uma interface orientada a dados, preparada para separar informações reais da empresa de referências externas de mercado."
+            description="Uma interface orientada a dados, construída para diferenciar métricas próprias da empresa de referências externas."
           />
         </Reveal>
 
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {views.map((v, i) => (
-            <Reveal key={v} delay={(i % 4) * 70}>
-              <div className="surface-card group rounded-lg border border-border bg-card px-5 py-4 text-sm font-medium transition-all duration-500 hover:-translate-y-1 hover:border-primary/50 hover:shadow-[0_16px_40px_-25px_rgba(180,255,80,0.4)]">
+            <Reveal
+              key={v}
+              delay={(i % 4) * 70}
+            >
+              <div className="surface-card group rounded-lg border border-border bg-card px-5 py-4 text-sm font-medium">
                 <div className="flex items-center justify-between gap-3">
                   <span>{v}</span>
 
@@ -519,14 +534,15 @@ export function DashboardSection() {
               </span>
 
               <p className="mt-5 text-lg font-medium">
-                O dashboard só apresenta análises quando existem dados
-                suficientes para sustentá-las.
+                Sem dados suficientes, não existe análise
+                confiável.
               </p>
 
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                Enquanto uma empresa ainda não possui histórico suficiente, a
-                WattIQ não inventa consumo, economia ou eficiência. O sistema
-                informa o que está disponível e o que precisa ser coletado.
+                A WattIQ deve informar o que está disponível,
+                indicar quais dados ainda precisam ser
+                coletados e evitar preencher o dashboard com
+                números artificiais.
               </p>
             </div>
           </div>
@@ -540,7 +556,8 @@ export function DashboardSection() {
               </p>
 
               <p className="mt-2 text-sm leading-relaxed">
-                Dados públicos podem contextualizar a operação.
+                Referências públicas ajudam a contextualizar
+                o cenário energético.
               </p>
             </div>
 
@@ -550,7 +567,8 @@ export function DashboardSection() {
               </p>
 
               <p className="mt-2 text-sm leading-relaxed">
-                Dados próprios alimentam os indicadores personalizados.
+                Dados próprios alimentam indicadores
+                específicos da operação.
               </p>
             </div>
 
@@ -560,7 +578,8 @@ export function DashboardSection() {
               </p>
 
               <p className="mt-2 text-sm leading-relaxed">
-                A IA interpreta resultados calculados pela plataforma.
+                A IA interpreta resultados calculados pela
+                plataforma.
               </p>
             </div>
           </div>
@@ -572,10 +591,15 @@ export function DashboardSection() {
 
 export function CtaSection() {
   return (
-    <section id="cta" className="relative overflow-hidden py-28">
+    <section
+      id="cta"
+      className="relative overflow-hidden py-28"
+    >
       <div
         className="pointer-events-none absolute inset-x-0 top-1/2 mx-auto h-[300px] w-[720px] -translate-y-1/2 rounded-full opacity-20 blur-3xl"
-        style={{ background: "var(--gradient-energy)" }}
+        style={{
+          background: "var(--gradient-energy)",
+        }}
         aria-hidden
       />
 
@@ -589,9 +613,9 @@ export function CtaSection() {
           </h2>
 
           <p className="mt-5 text-lg leading-relaxed text-muted-foreground">
-            A WattIQ não responde apenas “quanto você consumiu?”. Ela ajuda a
-            transformar dados energéticos em contexto para entender o que está
-            acontecendo na operação.
+            Transforme dados energéticos em uma visão mais
+            clara da operação — sem confundir referência de
+            mercado com resultado da sua empresa.
           </p>
         </Reveal>
       </div>
