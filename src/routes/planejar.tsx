@@ -66,10 +66,16 @@ function PlanejarPage() {
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({
+    const container = chatContainerRef.current;
+
+    if (!container) return;
+
+    container.scrollTo({
+      top: container.scrollHeight,
       behavior: "smooth",
     });
   }, [messages, loading]);
@@ -132,7 +138,10 @@ function PlanejarPage() {
         },
       ]);
     } catch (error) {
-      console.error("Erro ao conversar com a WattIQ AI:", error);
+      console.error(
+        "Erro ao conversar com a WattIQ AI:",
+        error,
+      );
 
       setMessages((current) => [
         ...current,
@@ -315,7 +324,10 @@ function PlanejarPage() {
             </div>
 
             <div className="flex h-[520px] flex-col">
-              <div className="flex-1 space-y-5 overflow-y-auto p-5">
+              <div
+                ref={chatContainerRef}
+                className="flex-1 space-y-5 overflow-y-auto p-5"
+              >
                 {messages.map((message, index) => (
                   <div
                     key={`${message.role}-${index}`}
@@ -348,8 +360,6 @@ function PlanejarPage() {
                     </div>
                   </div>
                 )}
-
-                <div ref={chatEndRef} />
               </div>
 
               <div className="border-t border-border p-4">
