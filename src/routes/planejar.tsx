@@ -27,6 +27,12 @@ type ChatMessage = {
 const API_URL =
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
 
+const INITIAL_MESSAGE: ChatMessage = {
+  role: "assistant",
+  content:
+    "Olá! Sou a WattIQ AI. Posso ajudar a estruturar o planejamento energético da sua empresa. Para começar, me conte um pouco sobre a operação e o que você gostaria de entender melhor.",
+};
+
 export const Route = createFileRoute("/planejar")({
   component: PlanejarPage,
 });
@@ -67,21 +73,12 @@ function PlanejarPage() {
 
         if (!mounted) return;
 
-        /*
-         * USUÁRIO JÁ ESTÁ LOGADO
-         *
-         * Não manda para /auth.
-         * Permanece no /planejar.
-         */
         if (data?.authenticated === true) {
           setAuthenticated(true);
           setCheckingAuth(false);
           return;
         }
 
-        /*
-         * USUÁRIO NÃO ESTÁ LOGADO
-         */
         navigate({
           to: "/auth",
           search: {
@@ -121,21 +118,111 @@ function PlanejarPage() {
    */
 
   const [messages, setMessages] =
-    useState<ChatMessage[]>([
-      {
-        role: "assistant",
-        content:
-          "Olá! Sou a WattIQ AI. Posso ajudar a estruturar o planejamento energético da sua empresa. Para começar, me conte um pouco sobre a operação e o que você gostaria de entender melhor.",
-      },
-    ]);
+    useState<ChatMessage[]>([]);
 
   const [input, setInput] = useState("");
 
   const [loading, setLoading] =
     useState(false);
 
+  const [loadingHistory, setLoadingHistory] =
+    useState(true);
+
   const chatContainerRef =
     useRef<HTMLDivElement>(null);
+
+  /*
+   * =========================================================
+   * CARREGAR HISTÓRICO
+   * =========================================================
+   */
+
+  useEffect(() => {
+    if (!authenticated) return;
+
+    let mounted = true;
+
+    async function loadHistory() {
+      try {
+        const response = await fetch(
+          `${API_URL}/api/ai/history`,
+          {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+          },
+        );
+
+        const data = await response
+          .json()
+          .catch(() => ({}));
+
+        if (!mounted) return;
+
+        if (
+          response.ok &&
+          Array.isArray(data?.messages) &&
+          data.messages.length > 0
+        ) {
+          const history: ChatMessage[] =
+            data.messages
+              .filter(
+                (message: unknown) =>
+                  !!message &&
+                  typeof message === "object" &&
+                  "role" in message &&
+                  "content" in message &&
+                  ((message as ChatMessage).role ===
+                    "user" ||
+                    (message as ChatMessage).role ===
+                      "assistant") &&
+                  typeof (
+                    message as ChatMessage
+                  ).content === "string",
+              )
+              .map(
+                (message: ChatMessage) => ({
+                  role: message.role,
+                  content: message.content,
+                }),
+              );
+
+          if (history.length > 0) {
+            setMessages(history);
+          } else {
+            setMessages([INITIAL_MESSAGE]);
+          }
+        } else {
+          setMessages([INITIAL_MESSAGE]);
+        }
+      } catch (error) {
+        console.error(
+          "Erro ao carregar histórico da WattIQ AI:",
+          error,
+        );
+
+        if (!mounted) return;
+
+        setMessages([INITIAL_MESSAGE]);
+      } finally {
+        if (mounted) {
+          setLoadingHistory(false);
+        }
+      }
+    }
+
+    loadHistory();
+
+    return () => {
+      mounted = false;
+    };
+  }, [authenticated]);
+
+  /*
+   * =========================================================
+   * SCROLL
+   * =========================================================
+   */
 
   useEffect(() => {
     const container =
@@ -149,10 +236,22 @@ function PlanejarPage() {
     });
   }, [messages, loading]);
 
+  /*
+   * =========================================================
+   * ENVIAR MENSAGEM
+   * =========================================================
+   */
+
   async function sendMessage() {
     const text = input.trim();
 
-    if (!text || loading) return;
+    if (
+      !text ||
+      loading ||
+      loadingHistory
+    ) {
+      return;
+    }
 
     const userMessage: ChatMessage = {
       role: "user",
@@ -234,6 +333,12 @@ function PlanejarPage() {
     }
   }
 
+  /*
+   * =========================================================
+   * ENTER
+   * =========================================================
+   */
+
   function handleKeyDown(
     event: React.KeyboardEvent<HTMLTextAreaElement>,
   ) {
@@ -268,12 +373,6 @@ function PlanejarPage() {
     );
   }
 
-  /*
-   * Se não estiver autenticado,
-   * o navigate acima já vai levar para /auth.
-   *
-   * Não renderiza o conteúdo enquanto isso.
-   */
   if (!authenticated) {
     return null;
   }
@@ -518,52 +617,74 @@ function PlanejarPage() {
                 className="flex-1 space-y-5 overflow-y-auto p-5"
               >
 
-                {messages.map(
-                  (message, index) => (
+                {loadingHistory ? (
 
-                    <div
-                      key={`${message.role}-${index}`}
-                      className={`flex ${
-                        message.role === "user"
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
-                    >
+                  <div className="flex h-full items-center justify-center">
 
-                      <div
-                        className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                          message.role === "user"
-                            ? "rounded-br-md bg-primary text-primary-foreground"
-                            : "rounded-bl-md border border-border bg-background/70 text-foreground"
-                        }`}
-                      >
-                        {message.content}
-                      </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
 
-                    </div>
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
 
-                  ),
-                )}
-
-                {loading && (
-
-                  <div className="flex justify-start">
-
-                    <div className="rounded-2xl rounded-bl-md border border-border bg-background/70 px-4 py-3">
-
-                      <div className="flex items-center gap-1.5">
-
-                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
-
-                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
-
-                        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
-
-                      </div>
+                      Carregando conversa...
 
                     </div>
 
                   </div>
+
+                ) : (
+
+                  <>
+
+                    {messages.map(
+                      (message, index) => (
+
+                        <div
+                          key={`${message.role}-${index}`}
+                          className={`flex ${
+                            message.role === "user"
+                              ? "justify-end"
+                              : "justify-start"
+                          }`}
+                        >
+
+                          <div
+                            className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                              message.role === "user"
+                                ? "rounded-br-md bg-primary text-primary-foreground"
+                                : "rounded-bl-md border border-border bg-background/70 text-foreground"
+                            }`}
+                          >
+                            {message.content}
+                          </div>
+
+                        </div>
+
+                      ),
+                    )}
+
+                    {loading && (
+
+                      <div className="flex justify-start">
+
+                        <div className="rounded-2xl rounded-bl-md border border-border bg-background/70 px-4 py-3">
+
+                          <div className="flex items-center gap-1.5">
+
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
+
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
+
+                            <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-primary" />
+
+                          </div>
+
+                        </div>
+
+                      </div>
+
+                    )}
+
+                  </>
 
                 )}
 
@@ -579,9 +700,14 @@ function PlanejarPage() {
                       setInput(event.target.value)
                     }
                     onKeyDown={handleKeyDown}
-                    placeholder="Conte sobre sua empresa..."
+                    placeholder={
+                      loadingHistory
+                        ? "Carregando conversa..."
+                        : "Conte sobre sua empresa..."
+                    }
                     rows={1}
-                    className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm outline-none placeholder:text-muted-foreground"
+                    disabled={loadingHistory}
+                    className="max-h-32 min-h-10 flex-1 resize-none bg-transparent px-2 py-2 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
                   />
 
                   <button
@@ -589,7 +715,8 @@ function PlanejarPage() {
                     onClick={sendMessage}
                     disabled={
                       !input.trim() ||
-                      loading
+                      loading ||
+                      loadingHistory
                     }
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:shadow-[0_10px_25px_-10px_rgba(180,255,80,0.6)] disabled:pointer-events-none disabled:opacity-40"
                     aria-label="Enviar mensagem"
