@@ -520,52 +520,69 @@ export function DashboardSection() {
           ))}
         </div>
 
-        {/* =====================================================
-            WATTIQ — BLOCO INSTITUCIONAL
-            ===================================================== */}
-
         <Reveal delay={150}>
           <HoverCard className="mt-8 border-primary/20 bg-card/50 p-10">
             <div className="mx-auto max-w-3xl text-center">
-              <span className="inline-flex rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-[10px] tracking-widest text-primary uppercase">
-                WattIQ
+              <span className="inline-flex rounded-full border border-border bg-background/50 px-3 py-1 text-[10px] tracking-widest text-muted-foreground uppercase">
+                Dentro da plataforma
               </span>
 
               <h3 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">
-                Monitoramento energético{" "}
+                Transforme dados dispersos em{" "}
                 <span className="text-gradient-energy">
-                  inteligente.
+                  uma visão única.
                 </span>
               </h3>
 
               <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-                A WattIQ é uma plataforma inteligente de monitoramento
-                energético criada para transformar dados de consumo em
-                informações claras, indicadores e insights para a operação
-                da sua empresa.
+                Dados de consumo, custos, setores e equipamentos podem ser
+                organizados em um único ambiente, facilitando a comparação
+                entre períodos e a identificação de mudanças no comportamento
+                energético.
               </p>
 
-              <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                Nossa tecnologia organiza, monitora e analisa dados
-                energéticos, ajudando empresas a compreender melhor seu
-                consumo, identificar variações e tomar decisões com mais
-                segurança e eficiência.
-              </p>
+              <div className="mt-8 grid gap-3 sm:grid-cols-3">
+                <div className="smooth-mini-hover rounded-lg border border-border bg-background/40 p-4 text-left">
+                  <p className="text-xs tracking-widest text-muted-foreground uppercase">
+                    01
+                  </p>
 
-              <div className="mt-7 flex flex-wrap justify-center gap-2">
-                {[
-                  "Monitoramento",
-                  "Indicadores",
-                  "Análise de consumo",
-                  "Inteligência",
-                ].map((item) => (
-                  <span
-                    key={item}
-                    className="smooth-mini-hover rounded-full border border-border bg-background/40 px-3 py-1.5 text-xs text-muted-foreground"
-                  >
-                    {item}
-                  </span>
-                ))}
+                  <p className="mt-2 text-sm font-medium">
+                    Centralização
+                  </p>
+
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    Informações reunidas em um único ambiente.
+                  </p>
+                </div>
+
+                <div className="smooth-mini-hover rounded-lg border border-border bg-background/40 p-4 text-left">
+                  <p className="text-xs tracking-widest text-muted-foreground uppercase">
+                    02
+                  </p>
+
+                  <p className="mt-2 text-sm font-medium">
+                    Comparação
+                  </p>
+
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    Períodos e comportamentos analisados lado a lado.
+                  </p>
+                </div>
+
+                <div className="smooth-mini-hover rounded-lg border border-border bg-background/40 p-4 text-left">
+                  <p className="text-xs tracking-widest text-muted-foreground uppercase">
+                    03
+                  </p>
+
+                  <p className="mt-2 text-sm font-medium">
+                    Contexto
+                  </p>
+
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                    Números apresentados dentro da realidade da operação.
+                  </p>
+                </div>
               </div>
             </div>
           </HoverCard>
@@ -590,8 +607,7 @@ export function DashboardSection() {
               </p>
 
               <p className="mt-2 text-sm leading-relaxed">
-                Dados próprios alimentam indicadores específicos da
-                operação.
+                Dados próprios alimentam indicadores específicos da operação.
               </p>
             </HoverCard>
 
