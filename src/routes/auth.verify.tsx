@@ -1,65 +1,122 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { VerifyPage } from "../components/auth/VerifyPage";
-import { verifyOtpChallenge } from "../lib/otp-store";
-import { createSessionCookie } from "../lib/session";
 
-function readCookie(request: Request, name: string) {
-  const header = request.headers.get("cookie");
+import { VerifyPage } from "../../components/auth/VerifyPage";
 
-  if (!header) return null;
+import {
+  verifyOtpChallenge,
+} from "../../lib/otp-store";
 
-  const cookie = header
-    .split(";")
-    .map((c) => c.trim())
-    .find((c) => c.startsWith(`${name}=`));
+import {
+  createSessionCookie,
+} from "../../lib/session";
 
-  if (!cookie) return null;
+function readCookie(
+  request: Request,
+  name: string,
+): string | null {
+  const header =
+    request.headers.get("cookie");
 
-  return cookie.substring(name.length + 1);
+  if (!header) {
+    return null;
+  }
+
+  const cookies = header.split(";");
+
+  for (const cookie of cookies) {
+    const trimmed = cookie.trim();
+
+    const separator =
+      trimmed.indexOf("=");
+
+    if (separator === -1) {
+      continue;
+    }
+
+    const key =
+      trimmed.substring(
+        0,
+        separator,
+      );
+
+    const value =
+      trimmed.substring(
+        separator + 1,
+      );
+
+    if (key === name) {
+      return value || null;
+    }
+  }
+
+  return null;
 }
 
-export const Route = createFileRoute("/auth/verify")({
+export const Route = createFileRoute(
+  "/auth/verify",
+)({
   component: VerifyPage,
 
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          const body = await request.json();
+          const body =
+            await request.json();
 
           const code =
-            typeof body.code === "string"
+            typeof body?.code === "string"
               ? body.code.trim()
               : "";
 
-          if (code.length !== 6) {
+          if (!/^\d{6}$/.test(code)) {
             return Response.json(
               {
                 message:
                   "Digite o código completo de 6 dígitos.",
               },
-              { status: 400 },
+              {
+                status: 400,
+              },
             );
           }
 
-          const challengeId = readCookie(
-            request,
-            "wattiq_otp",
-          );
+          /*
+           * IMPORTANTE:
+           * readCookie NÃO é async.
+           * Portanto NÃO usamos await aqui.
+           */
 
-          const pendingUserRaw = readCookie(
-            request,
-            "wattiq_pending_user",
-          );
+          const challengeId =
+            readCookie(
+              request,
+              "wattiq_otp",
+            );
 
-          // Diagnóstico temporário:
-          // não registra o código OTP nem o e-mail.
-          console.log("VERIFY OTP:", {
-            hasChallengeId: Boolean(challengeId),
-            challengeId,
-            hasPendingUser: Boolean(pendingUserRaw),
-            codeLength: code.length,
-          });
+          const pendingUserRaw =
+            readCookie(
+              request,
+              "wattiq_pending_user",
+            );
+
+          console.log(
+            "VERIFY OTP:",
+            {
+              hasChallengeId:
+                Boolean(challengeId),
+
+              challengeId:
+                challengeId
+                  ? `${challengeId.substring(0, 8)}...`
+                  : null,
+
+              hasPendingUser:
+                Boolean(pendingUserRaw),
+
+              codeLength:
+                code.length,
+            },
+          );
 
           if (!challengeId) {
             return Response.json(
@@ -67,14 +124,17 @@ export const Route = createFileRoute("/auth/verify")({
                 message:
                   "Sessão de verificação expirada. Solicite um novo código.",
               },
-              { status: 400 },
+              {
+                status: 400,
+              },
             );
           }
 
-          const email = await verifyOtpChallenge(
-            challengeId,
-            code,
-          );
+          const email =
+            await verifyOtpChallenge(
+              challengeId,
+              code,
+            );
 
           if (!email) {
             return Response.json(
@@ -82,46 +142,60 @@ export const Route = createFileRoute("/auth/verify")({
                 message:
                   "Código inválido ou expirado.",
               },
-              { status: 400 },
+              {
+                status: 400,
+              },
             );
           }
 
-          let pendingUser: {
-            sub?: string;
-            email?: string;
-            name?: string;
-            picture?: string;
-          } | null = null;
+          let pendingUser:
+            | {
+                sub?: string;
+                email?: string;
+                name?: string;
+                picture?: string;
+              }
+            | null = null;
 
           if (pendingUserRaw) {
             try {
-              pendingUser = JSON.parse(
-                Buffer.from(
-                  pendingUserRaw,
-                  "base64url",
-                ).toString("utf-8"),
+              pendingUser =
+                JSON.parse(
+                  Buffer.from(
+                    pendingUserRaw,
+                    "base64url",
+                  ).toString(
+                    "utf-8",
+                  ),
+                );
+            } catch (error) {
+              console.error(
+                "Erro ao ler usuário pendente:",
+                error,
               );
-            } catch {
+
               pendingUser = null;
             }
           }
 
           const user = {
             sub:
-              pendingUser?.sub ??
+              pendingUser?.sub ||
               email,
 
             email,
 
             name:
-              pendingUser?.name ??
+              pendingUser?.name ||
               email.split("@")[0],
 
             picture:
-              pendingUser?.picture ?? "",
+              pendingUser?.picture ||
+              "",
           };
 
-          const headers = new Headers();
+          const headers =
+            new Headers();
 
           headers.append(
             "Set-Cookie",
@@ -130,12 +204,34 @@ export const Route = createFileRoute("/auth/verify")({
 
           headers.append(
             "Set-Cookie",
-            "wattiq_otp=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+            [
+              "wattiq_otp=",
+              "Path=/",
+              "HttpOnly",
+              "Secure",
+              "SameSite=Lax",
+              "Max-Age=0",
+            ].join("; "),
           );
 
           headers.append(
             "Set-Cookie",
-            "wattiq_pending_user=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+            [
+              "wattiq_pending_user=",
+              "Path=/",
+              "HttpOnly",
+              "Secure",
+              "SameSite=Lax",
+              "Max-Age=0",
+            ].join("; "),
+          );
+
+          console.log(
+            "SESSÃO CRIADA:",
+            {
+              email: user.email,
+              sub: user.sub,
+            },
           );
 
           return Response.json(
@@ -150,7 +246,7 @@ export const Route = createFileRoute("/auth/verify")({
           );
         } catch (error) {
           console.error(
-            "Erro verify:",
+            "Erro ao verificar OTP:",
             error,
           );
 
