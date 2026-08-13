@@ -3,75 +3,63 @@ import { VerifyPage } from "../components/auth/VerifyPage";
 import { verifyOtpChallenge } from "../lib/otp-store";
 import { createSessionCookie } from "../lib/session";
 
-function readCookie(
-  request: Request,
-  name: string,
-): string | null {
-  const header =
-    request.headers.get("cookie");
+function readCookie(request: Request, name: string) {
+  const header = request.headers.get("cookie");
 
-  if (!header) {
-    return null;
-  }
+  if (!header) return null;
 
   const cookie = header
     .split(";")
     .map((c) => c.trim())
-    .find((c) =>
-      c.startsWith(`${name}=`),
-    );
+    .find((c) => c.startsWith(`${name}=`));
 
-  if (!cookie) {
-    return null;
-  }
+  if (!cookie) return null;
 
-  return cookie.substring(
-    name.length + 1,
-  );
+  return cookie.substring(name.length + 1);
 }
 
-export const Route = createFileRoute(
-  "/auth/verify",
-)({
+export const Route = createFileRoute("/auth/verify")({
   component: VerifyPage,
 
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          const body =
-            await request.json();
+          const body = await request.json();
 
           const code =
             typeof body.code === "string"
               ? body.code.trim()
               : "";
 
-          if (
-            !/^\d{6}$/.test(code)
-          ) {
+          if (code.length !== 6) {
             return Response.json(
               {
                 message:
                   "Digite o código completo de 6 dígitos.",
               },
-              {
-                status: 400,
-              },
+              { status: 400 },
             );
           }
 
-          const challengeId =
-            readCookie(
-              request,
-              "wattiq_otp",
-            );
+          const challengeId = readCookie(
+            request,
+            "wattiq_otp",
+          );
 
-          const pendingUserRaw =
-            readCookie(
-              request,
-              "wattiq_pending_user",
-            );
+          const pendingUserRaw = readCookie(
+            request,
+            "wattiq_pending_user",
+          );
+
+          // Diagnóstico temporário:
+          // não registra o código OTP nem o e-mail.
+          console.log("VERIFY OTP:", {
+            hasChallengeId: Boolean(challengeId),
+            challengeId,
+            hasPendingUser: Boolean(pendingUserRaw),
+            codeLength: code.length,
+          });
 
           if (!challengeId) {
             return Response.json(
@@ -79,17 +67,14 @@ export const Route = createFileRoute(
                 message:
                   "Sessão de verificação expirada. Solicite um novo código.",
               },
-              {
-                status: 400,
-              },
+              { status: 400 },
             );
           }
 
-          const email =
-            await verifyOtpChallenge(
-              String(challengeId),
-              code,
-            );
+          const email = await verifyOtpChallenge(
+            challengeId,
+            code,
+          );
 
           if (!email) {
             return Response.json(
@@ -97,32 +82,25 @@ export const Route = createFileRoute(
                 message:
                   "Código inválido ou expirado.",
               },
-              {
-                status: 400,
-              },
+              { status: 400 },
             );
           }
 
-          let pendingUser:
-            | {
-                sub?: string;
-                email?: string;
-                name?: string;
-                picture?: string;
-              }
-            | null = null;
+          let pendingUser: {
+            sub?: string;
+            email?: string;
+            name?: string;
+            picture?: string;
+          } | null = null;
 
           if (pendingUserRaw) {
             try {
-              pendingUser =
-                JSON.parse(
-                  Buffer.from(
-                    pendingUserRaw,
-                    "base64url",
-                  ).toString(
-                    "utf-8",
-                  ),
-                );
+              pendingUser = JSON.parse(
+                Buffer.from(
+                  pendingUserRaw,
+                  "base64url",
+                ).toString("utf-8"),
+              );
             } catch {
               pendingUser = null;
             }
@@ -132,17 +110,18 @@ export const Route = createFileRoute(
             sub:
               pendingUser?.sub ??
               email,
+
             email,
+
             name:
               pendingUser?.name ??
               email.split("@")[0],
+
             picture:
-              pendingUser?.picture ??
-              "",
+              pendingUser?.picture ?? "",
           };
 
-          const headers =
-            new Headers();
+          const headers = new Headers();
 
           headers.append(
             "Set-Cookie",
