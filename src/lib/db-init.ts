@@ -53,6 +53,21 @@ export async function initDatabase() {
       ON ai_messages(conversation_id, created_at);
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS otp_challenges (
+        id UUID PRIMARY KEY,
+        email TEXT NOT NULL,
+        code TEXT NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        attempts INTEGER NOT NULL DEFAULT 0
+      );
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_otp_challenges_expires
+      ON otp_challenges(expires_at);
+    `);
+
     await client.query("COMMIT");
 
     initialized = true;
