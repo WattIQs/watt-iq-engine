@@ -1,6 +1,15 @@
-import type { CSSProperties, ReactNode } from "react";
-import { useCountUp, useReveal } from "@/hooks/use-reveal";
+import type {
+  CSSProperties,
+  ReactNode,
+} from "react";
+
+import {
+  useCountUp,
+  useReveal,
+} from "@/hooks/use-reveal";
+
 import { useTilt } from "@/hooks/use-tilt";
+
 import { cn } from "@/lib/utils";
 
 export function Reveal({
@@ -14,25 +23,22 @@ export function Reveal({
   delay?: number;
   as?: "div" | "section" | "li" | "article";
 }) {
-  const { ref, shown } = useReveal<HTMLElement>();
-  const style = { "--reveal-delay": `${delay}ms`, transitionDelay: `${delay}ms` } as CSSProperties;
+  const { ref, shown } =
+    useReveal<HTMLElement>();
+
+  const style = {
+    "--reveal-delay": `${delay}ms`,
+  } as CSSProperties;
 
   return (
     <Tag
       ref={ref as never}
       style={style}
-      onPointerMove={(event) => {
-        const rect = event.currentTarget.getBoundingClientRect();
-        const mx = ((event.clientX - rect.left) / Math.max(rect.width, 1)) * 100;
-        const my = ((event.clientY - rect.top) / Math.max(rect.height, 1)) * 100;
-        event.currentTarget.style.setProperty("--mx", `${mx}%`);
-        event.currentTarget.style.setProperty("--my", `${my}%`);
-      }}
-      onPointerLeave={(event) => {
-        event.currentTarget.style.setProperty("--mx", "50%");
-        event.currentTarget.style.setProperty("--my", "50%");
-      }}
-      className={cn("reveal", shown && "reveal-in", className)}
+      className={cn(
+        "reveal",
+        shown && "reveal-in",
+        className,
+      )}
     >
       {children}
     </Tag>
@@ -48,11 +54,26 @@ export function TiltCard({
   className?: string;
   max?: number;
 }) {
-  const ref = useTilt<HTMLDivElement>({ max });
+  const ref = useTilt<HTMLDivElement>({
+    max,
+  });
+
   return (
-    <div ref={ref} className={cn("tilt-card", className)}>
-      <div className="tilt-card-shine" aria-hidden />
-      <div className="tilt-card-content">{children}</div>
+    <div
+      ref={ref}
+      className={cn(
+        "tilt-card",
+        className,
+      )}
+    >
+      <div
+        className="tilt-card-shine"
+        aria-hidden
+      />
+
+      <div className="tilt-card-content">
+        {children}
+      </div>
     </div>
   );
 }
@@ -69,16 +90,32 @@ export function SectionHeading({
   align?: "center" | "left";
 }) {
   return (
-    <div className={cn("max-w-3xl", align === "center" && "mx-auto text-center")}>
+    <div
+      className={cn(
+        "max-w-3xl",
+        align === "center" &&
+          "mx-auto text-center",
+      )}
+    >
       {eyebrow ? (
         <span className="section-eyebrow">
-          <span className="section-eyebrow-dot" aria-hidden />
+          <span
+            className="section-eyebrow-dot"
+            aria-hidden
+          />
+
           {eyebrow}
         </span>
       ) : null}
-      <h2 className="mt-5 text-3xl leading-tight font-semibold text-balance sm:text-4xl">{title}</h2>
+
+      <h2 className="mt-5 text-3xl leading-tight font-semibold text-balance sm:text-4xl">
+        {title}
+      </h2>
+
       {description ? (
-        <p className="mt-5 text-base leading-relaxed text-muted-foreground sm:text-lg">{description}</p>
+        <p className="mt-5 text-base leading-relaxed text-muted-foreground sm:text-lg">
+          {description}
+        </p>
       ) : null}
     </div>
   );
@@ -91,10 +128,12 @@ export function CountUp({
   target: number;
   suffix?: string;
 }) {
-  const { ref, value } = useCountUp(target);
+  const { ref, value } =
+    useCountUp(target);
+
   return (
     <span ref={ref}>
-      {value}
+      {Math.round(value)}
       {suffix}
     </span>
   );
