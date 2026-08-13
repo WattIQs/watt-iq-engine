@@ -47,15 +47,15 @@ export const Route = createFileRoute("/auth/email")({
             code,
           );
 
-          const userData = Buffer.from(
-            JSON.stringify({
-              sub: email,
-              email,
-              name:
-                name ||
-                email.split("@")[0],
-              picture: "",
-            }),
+          const pendingUser = {
+            sub: email,
+            email,
+            name: name || email.split("@")[0],
+            picture: "",
+          };
+
+          const pendingUserData = Buffer.from(
+            JSON.stringify(pendingUser),
           ).toString("base64url");
 
           const headers = new Headers();
@@ -67,16 +67,14 @@ export const Route = createFileRoute("/auth/email")({
 
           headers.append(
             "Set-Cookie",
-            `wattiq_pending_user=${userData}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+            `wattiq_pending_user=${pendingUserData}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
           );
 
-          console.log(
-            "OTP criado:",
-            {
-              challengeId,
-              email,
-            },
-          );
+          console.log("OTP criado:", {
+            challengeId,
+            email,
+            name,
+          });
 
           return Response.json(
             {
