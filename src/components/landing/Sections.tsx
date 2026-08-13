@@ -1,5 +1,8 @@
 import { Reveal, SectionHeading } from "./primitives";
 
+const cardTransition =
+  "transition-all duration-[650ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-3 hover:border-primary/40 hover:shadow-[0_24px_50px_-22px_rgba(180,255,80,0.45)]";
+
 export function ProblemSection() {
   const gaps = [
     {
@@ -41,7 +44,9 @@ export function ProblemSection() {
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {gaps.map((g, i) => (
             <Reveal key={g.t} delay={i * 80}>
-              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.45)]">
+              <div
+                className={`surface-card group h-full rounded-lg border border-border bg-card p-6 ${cardTransition}`}
+              >
                 <p className="text-xs tracking-widest text-primary uppercase">
                   {g.t}
                 </p>
@@ -109,7 +114,9 @@ export function ContextSection() {
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {marketData.map((item, i) => (
             <Reveal key={item.value + item.label} delay={i * 80}>
-              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.45)]">
+              <div
+                className={`surface-card group h-full rounded-lg border border-border bg-card p-6 ${cardTransition}`}
+              >
                 <p className="text-4xl font-semibold tracking-tight text-gradient-energy">
                   {item.value}
                 </p>
@@ -131,7 +138,9 @@ export function ContextSection() {
         </div>
 
         <Reveal delay={180}>
-          <div className="mt-8 rounded-lg border border-border bg-card/40 p-5">
+          <div
+            className={`mt-8 rounded-lg border border-border bg-card/40 p-5 ${cardTransition}`}
+          >
             <p className="text-sm font-medium">
               Referências de mercado, não resultados da WattIQ.
             </p>
@@ -172,7 +181,9 @@ export function SolutionSection() {
         <div className="mt-14 flex flex-wrap justify-center gap-3">
           {chain.map((c, i) => (
             <Reveal key={c} delay={i * 60}>
-              <span className="group inline-flex rounded-md border border-border bg-card px-5 py-2.5 text-sm font-medium transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/50 hover:bg-card/80 hover:shadow-[0_18px_40px_-20px_rgba(180,255,80,0.5)]">
+              <span
+                className={`group inline-flex rounded-md border border-border bg-card px-5 py-2.5 text-sm font-medium ${cardTransition} hover:border-primary/50 hover:bg-card/80`}
+              >
                 {c}
               </span>
             </Reveal>
@@ -180,7 +191,9 @@ export function SolutionSection() {
         </div>
 
         <Reveal delay={200}>
-          <div className="surface-card mx-auto mt-14 max-w-3xl rounded-lg border border-primary/30 bg-card p-8 text-center transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.4)]">
+          <div
+            className={`surface-card mx-auto mt-14 max-w-3xl rounded-lg border border-primary/30 bg-card p-8 text-center ${cardTransition}`}
+          >
             <p className="text-lg leading-relaxed">
               Não existe um <strong>consumo ideal universal</strong>.
               Eficiência precisa ser avaliada dentro do contexto da operação:
@@ -245,7 +258,9 @@ export function HowSection() {
         <ol className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {steps.map((s, i) => (
             <Reveal as="li" key={s.n} delay={i * 70}>
-              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.45)]">
+              <div
+                className={`surface-card group h-full rounded-lg border border-border bg-card p-6 ${cardTransition}`}
+              >
                 <span className="text-sm font-mono text-primary">
                   {s.n}
                 </span>
@@ -322,7 +337,9 @@ export function IndicatorsSection() {
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((it, i) => (
             <Reveal key={it.t} delay={(i % 3) * 80}>
-              <div className="surface-card group h-full rounded-lg border border-border bg-card p-6 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.45)]">
+              <div
+                className={`surface-card group h-full rounded-lg border border-border bg-card p-6 ${cardTransition}`}
+              >
                 <h3 className="text-base font-semibold text-primary">
                   {it.t}
                 </h3>
@@ -395,7 +412,9 @@ export function IntelligenceSection() {
           <div className="space-y-3">
             {pipeline.map((item, i) => (
               <Reveal key={item.n} delay={i * 70}>
-                <div className="surface-card group flex items-center gap-4 rounded-lg border border-border bg-card px-5 py-4 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.45)]">
+                <div
+                  className={`surface-card group flex items-center gap-4 rounded-lg border border-border bg-card px-5 py-4 ${cardTransition}`}
+                >
                   <span className="text-xs font-mono text-primary">
                     {item.n}
                   </span>
@@ -413,7 +432,9 @@ export function IntelligenceSection() {
           </div>
 
           <Reveal delay={180}>
-            <div className="surface-card h-full rounded-lg border border-primary/30 bg-card p-7 transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_24px_50px_-24px_rgba(180,255,80,0.4)]">
+            <div
+              className={`surface-card h-full rounded-lg border border-primary/30 bg-card p-7 ${cardTransition}`}
+            >
               <span className="rounded border border-border px-2 py-0.5 text-[10px] tracking-widest text-muted-foreground uppercase">
                 Exemplo ilustrativo
               </span>
@@ -424,7 +445,7 @@ export function IntelligenceSection() {
               </p>
 
               <div className="mt-6 grid grid-cols-2 gap-3">
-                <div className="rounded-md border border-border bg-background/40 p-4 transition-all duration-500 hover:-translate-y-1 hover:border-primary/30">
+                <div className="rounded-md border border-border bg-background/40 p-4 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-primary/30">
                   <p className="text-xs text-muted-foreground">Variação</p>
 
                   <p className="mt-1 text-2xl font-semibold text-gradient-energy">
@@ -432,7 +453,7 @@ export function IntelligenceSection() {
                   </p>
                 </div>
 
-                <div className="rounded-md border border-border bg-background/40 p-4 transition-all duration-500 hover:-translate-y-1 hover:border-primary/30">
+                <div className="rounded-md border border-border bg-background/40 p-4 transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-primary/30">
                   <p className="text-xs text-muted-foreground">
                     Próximo passo
                   </p>
@@ -480,7 +501,9 @@ export function DashboardSection() {
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {views.map((v, i) => (
             <Reveal key={v} delay={(i % 4) * 70}>
-              <div className="surface-card group rounded-lg border border-border bg-card px-5 py-4 text-sm font-medium transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.45)]">
+              <div
+                className={`surface-card group rounded-lg border border-border bg-card px-5 py-4 text-sm font-medium ${cardTransition}`}
+              >
                 <div className="flex items-center justify-between gap-3">
                   <span>{v}</span>
 
@@ -492,7 +515,9 @@ export function DashboardSection() {
         </div>
 
         <Reveal delay={150}>
-          <div className="surface-card mt-8 rounded-lg border border-dashed border-border bg-card/50 p-10 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/30 hover:shadow-[0_22px_45px_-22px_rgba(180,255,80,0.3)]">
+          <div
+            className={`surface-card mt-8 rounded-lg border border-dashed border-border bg-card/50 p-10 ${cardTransition}`}
+          >
             <div className="mx-auto max-w-2xl text-center">
               <span className="inline-flex rounded-full border border-border bg-background/50 px-3 py-1 text-[10px] tracking-widest text-muted-foreground uppercase">
                 Dados da empresa
@@ -513,7 +538,12 @@ export function DashboardSection() {
 
         <Reveal delay={240}>
           <div className="mt-5 grid gap-4 md:grid-cols-3">
-            <div className="rounded-lg border border-border bg-card/40 p-5 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/30 hover:shadow-[0_18px_40px_-22px_rgba(180,255,80,0.3)]">
+            <div
+              className={`rounded-lg border border-border bg-card/40 p-5 ${cardTransition.replace(
+                "hover:-translate-y-3",
+                "hover:-translate-y-2"
+              )}`}
+            >
               <p className="text-xs tracking-widest text-muted-foreground uppercase">
                 Mercado
               </p>
@@ -524,7 +554,12 @@ export function DashboardSection() {
               </p>
             </div>
 
-            <div className="rounded-lg border border-border bg-card/40 p-5 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/30 hover:shadow-[0_18px_40px_-22px_rgba(180,255,80,0.3)]">
+            <div
+              className={`rounded-lg border border-border bg-card/40 p-5 ${cardTransition.replace(
+                "hover:-translate-y-3",
+                "hover:-translate-y-2"
+              )}`}
+            >
               <p className="text-xs tracking-widest text-muted-foreground uppercase">
                 Empresa
               </p>
@@ -534,7 +569,12 @@ export function DashboardSection() {
               </p>
             </div>
 
-            <div className="rounded-lg border border-border bg-card/40 p-5 transition-all duration-500 ease-out hover:-translate-y-2 hover:border-primary/30 hover:shadow-[0_18px_40px_-22px_rgba(180,255,80,0.3)]">
+            <div
+              className={`rounded-lg border border-border bg-card/40 p-5 ${cardTransition.replace(
+                "hover:-translate-y-3",
+                "hover:-translate-y-2"
+              )}`}
+            >
               <p className="text-xs tracking-widest text-muted-foreground uppercase">
                 Inteligência
               </p>
