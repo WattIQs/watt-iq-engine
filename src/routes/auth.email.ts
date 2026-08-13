@@ -1,120 +1,99 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  createOtpChallenge,
-} from "../lib/otp-store";
-
+import { createOtpChallenge } from "../lib/otp-store";
 import {
   generateOtp,
   sendOtpEmail,
 } from "../lib/email.otp";
 
-
 export const Route = createFileRoute("/auth/email")({
-
   server: {
-
     handlers: {
-
       POST: async ({ request }) => {
-
         try {
-
           const body = await request.json();
-
 
           const email =
             typeof body.email === "string"
               ? body.email.trim().toLowerCase()
               : "";
 
+          const name =
+            typeof body.name === "string"
+              ? body.name.trim()
+              : "";
 
           if (!email) {
-
             return Response.json(
               {
                 message: "Digite um e-mail válido.",
               },
               {
-                status:400,
+                status: 400,
               },
             );
-
           }
-
 
           const code = generateOtp();
 
-
-          const challengeId =
-            createOtpChallenge(
-              email,
-              code,
-            );
-
-
-          await sendOtpEmail(
+          const challengeId = createOtpChallenge(
             email,
             code,
           );
 
+          await sendOtpEmail(email, code);
 
-          const headers =
-            new Headers();
+          const userData = Buffer.from(
+            JSON.stringify({
+              sub: email,
+              email,
+              name: name || email.split("@")[0],
+            }),
+          ).toString("base64url");
 
+          const headers = new Headers();
 
           headers.append(
             "Set-Cookie",
-            `wattiq_otp=${challengeId}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=600`,
+            `wattiq_otp=${challengeId}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
           );
 
-
-          console.log(
-            "OTP criado:",
-            {
-              challengeId,
-              email,
-            },
+          headers.append(
+            "Set-Cookie",
+            `wattiq_pending_user=${userData}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
           );
 
+          console.log("OTP criado:", {
+            challengeId,
+            email,
+          });
 
           return Response.json(
             {
-              success:true,
-              message:"Código enviado para seu e-mail.",
+              success: true,
+              message: "Código enviado para seu e-mail.",
             },
             {
-              status:200,
+              status: 200,
               headers,
             },
           );
-
-
-        } catch(error) {
-
-
+        } catch (error) {
           console.error(
             "Erro ao iniciar login:",
             error,
           );
 
-
           return Response.json(
             {
               message:
-              "Não foi possível iniciar o login. Tente novamente.",
+                "Não foi possível iniciar o login. Tente novamente.",
             },
             {
-              status:500,
+              status: 500,
             },
           );
-
-
         }
-
       },
-
     },
-
   },
-
 });
