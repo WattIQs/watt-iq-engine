@@ -10,22 +10,86 @@ export const Route = createFileRoute("/auth/email")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const body = await request.json();
+          const contentType =
+            request.headers.get("content-type") || "";
+
+          if (!contentType.includes("application/json")) {
+            return Response.json(
+              {
+                message:
+                  "Requisição inválida.",
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
+          const rawBody = await request.text();
+
+          if (!rawBody.trim()) {
+            return Response.json(
+              {
+                message:
+                  "Dados de login não enviados.",
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
+          let body: unknown;
+
+          try {
+            body = JSON.parse(rawBody);
+          } catch {
+            return Response.json(
+              {
+                message:
+                  "Dados de login inválidos.",
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
+          if (
+            typeof body !== "object" ||
+            body === null
+          ) {
+            return Response.json(
+              {
+                message:
+                  "Dados de login inválidos.",
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
+          const data = body as {
+            email?: unknown;
+            name?: unknown;
+          };
 
           const email =
-            typeof body.email === "string"
-              ? body.email.trim().toLowerCase()
+            typeof data.email === "string"
+              ? data.email.trim().toLowerCase()
               : "";
 
           const name =
-            typeof body.name === "string"
-              ? body.name.trim()
+            typeof data.name === "string"
+              ? data.name.trim()
               : "";
 
           if (!email) {
             return Response.json(
               {
-                message: "Digite um e-mail válido.",
+                message:
+                  "Digite um e-mail válido.",
               },
               {
                 status: 400,
@@ -40,6 +104,25 @@ export const Route = createFileRoute("/auth/email")({
               email,
               code,
             );
+
+          if (
+            typeof challengeId !== "string" ||
+            !challengeId
+          ) {
+            console.error(
+              "createOtpChallenge não retornou um UUID válido.",
+            );
+
+            return Response.json(
+              {
+                message:
+                  "Não foi possível criar a verificação.",
+              },
+              {
+                status: 500,
+              },
+            );
+          }
 
           await sendOtpEmail(
             email,
@@ -57,10 +140,13 @@ export const Route = createFileRoute("/auth/email")({
 
           const pendingUserData =
             Buffer.from(
-              JSON.stringify(pendingUser),
+              JSON.stringify(
+                pendingUser,
+              ),
             ).toString("base64url");
 
-          const headers = new Headers();
+          const headers =
+            new Headers();
 
           headers.append(
             "Set-Cookie",
@@ -70,6 +156,15 @@ export const Route = createFileRoute("/auth/email")({
           headers.append(
             "Set-Cookie",
             `wattiq_pending_user=${pendingUserData}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`,
+          );
+
+          console.log(
+            "OTP enviado e desafio criado:",
+            {
+              challengeId,
+              emailDomain:
+                email.split("@")[1] || "",
+            },
           );
 
           return Response.json(
