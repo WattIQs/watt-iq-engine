@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useScrollProgress } from "@/hooks/use-scroll-progress";
 import { SiteHeader, SiteFooter } from "@/components/landing/SiteChrome";
 import { Hero } from "@/components/landing/Hero";
-import { ScrollProgress } from "@/components/landing/primitives";
 import {
   ProblemSection,
   ContextSection,
@@ -32,9 +32,11 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const progress = useScrollProgress();
+
   return (
     <div className="min-h-screen bg-background">
-      <ScrollProgress />
+      <div className="scroll-progress" style={{ transform: `scaleX(${progress})` }} aria-hidden />
       <SiteHeader />
       <main>
         <Hero />
@@ -50,4 +52,4 @@ function Index() {
       <SiteFooter />
     </div>
   );
-} 
+}
