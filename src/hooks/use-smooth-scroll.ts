@@ -8,7 +8,7 @@ export function useSmoothScroll() {
       if (!target) return;
 
       const link = target.closest(
-        'a[href^="#"]',
+        'a[href^="#"]'
       ) as HTMLAnchorElement | null;
 
       if (!link) return;
@@ -17,10 +17,6 @@ export function useSmoothScroll() {
 
       if (!href || href === "#") return;
 
-      /*
-       * Não interfere em links que tenham
-       * comportamento especial.
-       */
       if (
         link.hasAttribute("download") ||
         link.target === "_blank" ||
@@ -32,49 +28,37 @@ export function useSmoothScroll() {
         return;
       }
 
-      const element =
-        document.querySelector(href);
+      const element = document.querySelector(href);
 
       if (!element) return;
 
       event.preventDefault();
 
-      const reducedMotion =
-        window.matchMedia(
-          "(prefers-reduced-motion: reduce)",
-        ).matches;
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches;
 
-      if (reducedMotion) {
-        element.scrollIntoView({
-          behavior: "auto",
-          block: "start",
-        });
-      } else {
-        element.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }
+      element.scrollIntoView({
+        behavior: reducedMotion ? "auto" : "smooth",
+        block: "start",
+      });
 
-      /*
-       * Atualiza a URL sem recarregar a página.
-       */
       window.history.pushState(
         null,
         "",
-        href,
+        href
       );
     };
 
     document.addEventListener(
       "click",
-      handleClick,
+      handleClick
     );
 
     return () => {
       document.removeEventListener(
         "click",
-        handleClick,
+        handleClick
       );
     };
   }, []);
