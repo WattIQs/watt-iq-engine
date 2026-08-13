@@ -13,9 +13,7 @@ function readCookie(
     return null;
   }
 
-  const cookies = header.split(";");
-
-  for (const item of cookies) {
+  for (const item of header.split(";")) {
     const separatorIndex = item.indexOf("=");
 
     if (separatorIndex === -1) {
@@ -30,12 +28,30 @@ function readCookie(
       continue;
     }
 
-    return item
+    const value = item
       .slice(separatorIndex + 1)
       .trim();
+
+    if (!value) {
+      return null;
+    }
+
+    try {
+      return decodeURIComponent(value);
+    } catch {
+      return value;
+    }
   }
 
   return null;
+}
+
+function isValidUuid(
+  value: string,
+): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
+  );
 }
 
 export const Route = createFileRoute("/auth/verify")({
@@ -50,9 +66,13 @@ export const Route = createFileRoute("/auth/verify")({
           if (!rawBody.trim()) {
             return Response.json(
               {
-                message: "Código não informado.",
+                success: false,
+                message:
+                  "Código não informado.",
               },
-              { status: 400 },
+              {
+                status: 400,
+              },
             );
           }
 
@@ -65,10 +85,13 @@ export const Route = createFileRoute("/auth/verify")({
           } catch {
             return Response.json(
               {
+                success: false,
                 message:
                   "Dados de verificação inválidos.",
               },
-              { status: 400 },
+              {
+                status: 400,
+              },
             );
           }
 
@@ -80,13 +103,21 @@ export const Route = createFileRoute("/auth/verify")({
           if (!/^\d{6}$/.test(code)) {
             return Response.json(
               {
+                success: false,
                 message:
                   "Digite o código completo de 6 dígitos.",
               },
-              { status: 400 },
+              {
+                status: 400,
+              },
             );
           }
 
+          /*
+           * IMPORTANTE:
+           * readCookie é síncrona.
+           * Não usar await aqui.
+           */
           const challengeId = readCookie(
             request,
             "wattiq_otp",
@@ -98,29 +129,54 @@ export const Route = createFileRoute("/auth/verify")({
           );
 
           console.log("VERIFY OTP:", {
-            hasChallengeId: Boolean(challengeId),
+            hasChallengeId:
+              Boolean(challengeId),
             challengeId,
-            hasPendingUser: Boolean(
-              pendingUserRaw,
-            ),
+            challengeIdType:
+              typeof challengeId,
+            hasPendingUser:
+              Boolean(pendingUserRaw),
             codeLength: code.length,
           });
 
-          if (
-            !challengeId ||
-            !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-              challengeId,
-            )
-          ) {
+          /*
+           * Nunca enviar Promise para o PostgreSQL.
+           */
+          if (!challengeId) {
             return Response.json(
               {
+                success: false,
                 message:
                   "Sessão de verificação inválida ou expirada. Solicite um novo código.",
               },
-              { status: 400 },
+              {
+                status: 400,
+              },
             );
           }
 
+          if (!isValidUuid(challengeId)) {
+            console.error(
+              "Challenge ID inválido:",
+              challengeId,
+            );
+
+            return Response.json(
+              {
+                success: false,
+                message:
+                  "Sessão de verificação inválida ou expirada. Solicite um novo código.",
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
+          /*
+           * Aqui challengeId é definitivamente
+           * uma string UUID.
+           */
           const email =
             await verifyOtpChallenge(
               challengeId,
@@ -130,10 +186,13 @@ export const Route = createFileRoute("/auth/verify")({
           if (!email) {
             return Response.json(
               {
+                success: false,
                 message:
                   "Código inválido ou expirado.",
               },
-              { status: 400 },
+              {
+                status: 400,
+              },
             );
           }
 
@@ -146,12 +205,22 @@ export const Route = createFileRoute("/auth/verify")({
 
           if (pendingUserRaw) {
             try {
-              pendingUser = JSON.parse(
+              const decodedUser =
                 Buffer.from(
                   pendingUserRaw,
                   "base64url",
-                ).toString("utf8"),
-              );
+                ).toString("utf8");
+
+              const parsedUser =
+                JSON.parse(decodedUser);
+
+              if (
+                parsedUser &&
+                typeof parsedUser ===
+                  "object"
+              ) {
+                pendingUser = parsedUser;
+              }
             } catch (error) {
               console.error(
                 "Erro ao ler usuário pendente:",
@@ -171,16 +240,23 @@ export const Route = createFileRoute("/auth/verify")({
               pendingUser?.name ||
               email.split("@")[0],
             picture:
-              pendingUser?.picture || "",
+              pendingUser?.picture ||
+              "",
           };
 
           const headers = new Headers();
 
+          /*
+           * Cria a sessão definitiva.
+           */
           headers.append(
             "Set-Cookie",
             createSessionCookie(user),
           );
 
+          /*
+           * Remove o desafio OTP usado.
+           */
           headers.append(
             "Set-Cookie",
             [
@@ -193,6 +269,9 @@ export const Route = createFileRoute("/auth/verify")({
             ].join("; "),
           );
 
+          /*
+           * Remove o usuário pendente.
+           */
           headers.append(
             "Set-Cookie",
             [
@@ -207,7 +286,13 @@ export const Route = createFileRoute("/auth/verify")({
 
           console.log(
             "OTP VERIFICADO COM SUCESSO:",
-            email,
+            {
+              email,
+              user: {
+                sub: user.sub,
+                email: user.email,
+              },
+            },
           );
 
           return Response.json(
@@ -228,6 +313,7 @@ export const Route = createFileRoute("/auth/verify")({
 
           return Response.json(
             {
+              success: false,
               message:
                 "Não foi possível verificar o código.",
             },
