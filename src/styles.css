@@ -159,7 +159,6 @@
   }
 
   html {
-    scroll-behavior: smooth;
     color-scheme: dark;
     text-rendering: optimizeLegibility;
   }
