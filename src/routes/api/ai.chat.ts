@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { GoogleGenAI } from "@google/genai";
 import { db } from "@/lib/db";
+import { getSessionUser } from "@/lib/session";
 
 const WATTIQ_AI_PROMPT = `
 Você é a WattIQ AI, assistente virtual oficial da WattIQ.
@@ -146,22 +147,59 @@ export const Route = createFileRoute("/api/ai/chat")({
     handlers: {
       POST: async ({ request }) => {
         try {
+          /*
+           * 1. Verificar sessão
+           */
+
+          const user = getSessionUser(request);
+
+          if (!user) {
+            return Response.json(
+              {
+                message: "Usuário não autenticado.",
+              },
+              {
+                status: 401,
+              },
+            );
+          }
+
+          /*
+           * 2. Verificar banco
+           */
+
           await db.query("SELECT NOW()");
-          console.log("PostgreSQL conectado com sucesso.");
+
+          console.log(
+            "PostgreSQL conectado:",
+            user.email,
+          );
+
+          /*
+           * 3. Verificar Gemini
+           */
 
           const apiKey = process.env.GEMINI_API_KEY;
 
           if (!apiKey) {
-            console.error("GEMINI_API_KEY não configurada no servidor.");
+            console.error(
+              "GEMINI_API_KEY não configurada no servidor.",
+            );
 
             return Response.json(
               {
                 message:
                   "A inteligência da WattIQ não está configurada no servidor.",
               },
-              { status: 500 },
+              {
+                status: 500,
+              },
             );
           }
+
+          /*
+           * 4. Ler mensagem
+           */
 
           const body = await request.json();
 
@@ -178,71 +216,165 @@ export const Route = createFileRoute("/api/ai/chat")({
                 "content" in message &&
                 ((message as ChatMessage).role === "user" ||
                   (message as ChatMessage).role === "assistant") &&
-                typeof (message as ChatMessage).content === "string",
+                typeof (message as ChatMessage).content ===
+                  "string",
             )
             .map((message) => ({
               role: message.role,
               content: message.content.trim(),
             }))
-            .filter((message) => message.content.length > 0);
+            .filter(
+              (message) =>
+                message.content.length > 0,
+            );
 
           if (validMessages.length === 0) {
             return Response.json(
               {
-                message: "Envie uma mensagem para começar a conversa.",
+                message:
+                  "Envie uma mensagem para começar a conversa.",
               },
-              { status: 400 },
+              {
+                status: 400,
+              },
             );
           }
+
+          /*
+           * 5. Descobrir qual é a última mensagem do usuário
+           */
+
+          const lastMessage =
+            validMessages[validMessages.length - 1];
+
+          if (lastMessage.role !== "user") {
+            return Response.json(
+              {
+                message:
+                  "A última mensagem precisa ser do usuário.",
+              },
+              {
+                status: 400,
+              },
+            );
+          }
+
+          /*
+           * 6. Salvar mensagem do usuário
+           */
+
+          await db.query(
+            `
+            INSERT INTO ai_conversations
+              (user_email, role, content)
+            VALUES
+              ($1, 'user', $2)
+            `,
+            [
+              user.email,
+              lastMessage.content,
+            ],
+          );
+
+          /*
+           * 7. Preparar conversa para Gemini
+           */
 
           const ai = new GoogleGenAI({
             apiKey,
           });
 
-          const contents = validMessages.map((message) => ({
-            role: message.role === "assistant" ? "model" : "user",
-            parts: [
-              {
-                text: message.content,
+          const contents = validMessages.map(
+            (message) => ({
+              role:
+                message.role === "assistant"
+                  ? "model"
+                  : "user",
+
+              parts: [
+                {
+                  text: message.content,
+                },
+              ],
+            }),
+          );
+
+          /*
+           * 8. Chamar Gemini
+           */
+
+          const response =
+            await ai.models.generateContent({
+              model: "gemini-3.5-flash",
+
+              contents,
+
+              config: {
+                systemInstruction:
+                  WATTIQ_AI_PROMPT,
+
+                maxOutputTokens: 1000,
               },
-            ],
-          }));
+            });
 
-          const response = await ai.models.generateContent({
-            model: "gemini-3.5-flash",
-            contents,
-            config: {
-              systemInstruction: WATTIQ_AI_PROMPT,
-              maxOutputTokens: 1000,
-            },
-          });
-
-          const text = response.text?.trim();
+          const text =
+            response.text?.trim();
 
           if (!text) {
-            console.error("Gemini retornou resposta vazia.");
+            console.error(
+              "Gemini retornou resposta vazia.",
+            );
 
             return Response.json(
               {
                 message:
                   "A inteligência da WattIQ não retornou uma resposta. Tente novamente.",
               },
-              { status: 502 },
+              {
+                status: 502,
+              },
             );
           }
+
+          /*
+           * 9. Salvar resposta da IA
+           */
+
+          await db.query(
+            `
+            INSERT INTO ai_conversations
+              (user_email, role, content)
+            VALUES
+              ($1, 'assistant', $2)
+            `,
+            [
+              user.email,
+              text,
+            ],
+          );
+
+          /*
+           * 10. Retornar resposta
+           */
 
           return Response.json({
             message: text,
           });
+
         } catch (error) {
-          console.error("Erro na API de IA da WattIQ:", error);
+          console.error(
+            "Erro na API de IA da WattIQ:",
+            error,
+          );
 
           return Response.json(
             {
               message:
                 "Não foi possível processar sua mensagem agora. Tente novamente em instantes.",
             },
-            { status: 500 },
+            {
+              status: 500,
+            },
           );
         }
       },
