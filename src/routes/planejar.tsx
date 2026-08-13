@@ -27,6 +27,7 @@ export const Route = createFileRoute("/planejar")({
     try {
       const response = await fetch("/auth/me", {
         credentials: "include",
+        cache: "no-store",
       });
 
       if (!response.ok) {
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/planejar")({
 
       const data = await response.json();
 
-      if (!data?.authenticated) {
+      if (!data?.authenticated || !data?.user) {
         throw new Error("Não autenticado");
       }
 
@@ -97,19 +98,17 @@ function PlanejarPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/ai/chat`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            messages: nextMessages,
-          }),
+      const response = await fetch(`${API_URL}/api/ai/chat`, {
+        method: "POST",
+        credentials: "include",
+        cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          messages: nextMessages,
+        }),
+      });
 
       const data = await response.json().catch(() => ({}));
 
@@ -150,7 +149,7 @@ function PlanejarPage() {
           content:
             error instanceof Error
               ? error.message
-              : "Não consegui conectar à inteligência da WattIQ neste momento. Verifique se o servidor está ativo e tente novamente.",
+              : "Não consegui conectar à inteligência da WattIQ neste momento.",
         },
       ]);
     } finally {
