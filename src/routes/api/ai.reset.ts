@@ -3,7 +3,9 @@ import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { initDatabase } from "@/lib/db-init";
 
-export const Route = createFileRoute("/api/ai/reset")({
+export const Route = createFileRoute(
+  "/api/ai/reset",
+)({
   server: {
     handlers: {
       POST: async ({ request }) => {
@@ -14,18 +16,24 @@ export const Route = createFileRoute("/api/ai/reset")({
             return Response.json(
               {
                 success: false,
-                message: "Sessão expirada. Faça login novamente.",
+                message:
+                  "Sessão expirada. Faça login novamente.",
               },
-              { status: 401 },
+              {
+                status: 401,
+              },
             );
           }
 
           await initDatabase();
 
-          const body = await request.json().catch(() => ({}));
+          const body = await request
+            .json()
+            .catch(() => ({}));
 
           const conversationId =
-            typeof body?.conversationId === "string"
+            typeof body?.conversationId ===
+            "string"
               ? body.conversationId.trim()
               : "";
 
@@ -33,9 +41,12 @@ export const Route = createFileRoute("/api/ai/reset")({
             return Response.json(
               {
                 success: false,
-                message: "Conversa não informada.",
+                message:
+                  "Conversa não informada.",
               },
-              { status: 400 },
+              {
+                status: 400,
+              },
             );
           }
 
@@ -46,16 +57,22 @@ export const Route = createFileRoute("/api/ai/reset")({
                 AND user_id = $2
               RETURNING id
             `,
-            [conversationId, user.sub],
+            [
+              conversationId,
+              user.sub,
+            ],
           );
 
           if (result.rows.length === 0) {
             return Response.json(
               {
                 success: false,
-                message: "Conversa não encontrada.",
+                message:
+                  "Conversa não encontrada.",
               },
-              { status: 404 },
+              {
+                status: 404,
+              },
             );
           }
 
@@ -72,9 +89,12 @@ export const Route = createFileRoute("/api/ai/reset")({
           return Response.json(
             {
               success: false,
-              message: "Não foi possível excluir a conversa.",
+              message:
+                "Não foi possível excluir a conversa.",
             },
-            { status: 500 },
+            {
+              status: 500,
+            },
           );
         }
       },
