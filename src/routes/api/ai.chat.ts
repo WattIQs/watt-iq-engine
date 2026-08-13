@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { GoogleGenAI } from "@google/genai";
 import { db } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
+import { initDatabase } from "@/lib/db-init";
 
 const WATTIQ_AI_PROMPT = `
 Você é a WattIQ AI, assistente virtual oficial da WattIQ.
@@ -124,74 +125,32 @@ export const Route = createFileRoute("/api/ai/chat")({
 
           /*
            * =====================================================
-           * 2. GARANTE QUE AS TABELAS EXISTEM
+           * 2. INICIALIZA O BANCO
            * =====================================================
            */
 
-          await db.query(`
-            CREATE TABLE IF NOT EXISTS ai_conversations (
-              id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-              user_id TEXT NOT NULL,
-              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-              updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            );
-
-            CREATE TABLE IF NOT EXISTS ai_messages (
-              id BIGSERIAL PRIMARY KEY,
-              conversation_id UUID NOT NULL
-                REFERENCES ai_conversations(id)
-                ON DELETE CASCADE,
-              role TEXT NOT NULL
-                CHECK (role IN ('user', 'assistant')),
-              content TEXT NOT NULL,
-              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-            );
-
-            CREATE INDEX IF NOT EXISTS idx_ai_conversations_user
-              ON ai_conversations(user_id);
-
-            CREATE INDEX IF NOT EXISTS idx_ai_messages_conversation
-              ON ai_messages(conversation_id);
-          `);
-
-          console.log(
-            "Banco pronto para usuário:",
-            user.email,
-          );
+          await initDatabase();
 
           /*
            * =====================================================
-           * 3. PEGA OU CRIA A CONVERSA DO USUÁRIO
+           * 3. VERIFICA GEMINI
            * =====================================================
            */
 
-          let conversationResult = await db.query(
-            `
-              SELECT id
-              FROM ai_conversations
-              WHERE user_id = $1
-              ORDER BY updated_at DESC
-              LIMIT 1
-            `,
-            [user.sub],
-          );
+          const apiKey = process.env.GEMINI_API_KEY;
 
-          let conversationId: string;
-
-          if (conversationResult.rows.length > 0) {
-            conversationId =
-              conversationResult.rows[0].id;
-          } else {
-            const created = await db.query(
-              `
-                INSERT INTO ai_conversations (user_id)
-                VALUES ($1)
-                RETURNING id
-              `,
-              [user.sub],
+          if (!apiKey) {
+            console.error(
+              "GEMINI_API_KEY não configurada.",
             );
 
-            conversationId = created.rows[0].id;
+            return Response.json(
+              {
+                message:
+                  "A inteligência da WattIQ não está configurada no servidor.",
+              },
+              { status: 500 },
+            );
           }
 
           /*
@@ -206,27 +165,24 @@ export const Route = createFileRoute("/api/ai/chat")({
             ? body.messages
             : [];
 
-          const validMessages: ChatMessage[] =
-            messages
-              .filter(
-                (message: unknown): message is ChatMessage =>
-                  !!message &&
-                  typeof message === "object" &&
-                  "role" in message &&
-                  "content" in message &&
-                  ((message as ChatMessage).role === "user" ||
-                    (message as ChatMessage).role ===
-                      "assistant") &&
-                  typeof (message as ChatMessage).content ===
-                    "string",
-              )
-              .map((message) => ({
-                role: message.role,
-                content: message.content.trim(),
-              }))
-              .filter(
-                (message) => message.content.length > 0,
-              );
+          const validMessages: ChatMessage[] = messages
+            .filter(
+              (message: unknown): message is ChatMessage =>
+                !!message &&
+                typeof message === "object" &&
+                "role" in message &&
+                "content" in message &&
+                ((message as ChatMessage).role === "user" ||
+                  (message as ChatMessage).role === "assistant") &&
+                typeof (message as ChatMessage).content === "string",
+            )
+            .map((message) => ({
+              role: message.role,
+              content: message.content.trim(),
+            }))
+            .filter(
+              (message) => message.content.length > 0,
+            );
 
           if (validMessages.length === 0) {
             return Response.json(
@@ -240,7 +196,7 @@ export const Route = createFileRoute("/api/ai/chat")({
 
           /*
            * =====================================================
-           * 5. PEGA A ÚLTIMA MENSAGEM DO USUÁRIO
+           * 5. ÚLTIMA MENSAGEM
            * =====================================================
            */
 
@@ -259,7 +215,41 @@ export const Route = createFileRoute("/api/ai/chat")({
 
           /*
            * =====================================================
-           * 6. SALVA A MENSAGEM DO USUÁRIO
+           * 6. PEGA OU CRIA A CONVERSA DO USUÁRIO
+           * =====================================================
+           */
+
+          let conversationResult = await db.query(
+            `
+              SELECT id
+              FROM ai_conversations
+              WHERE user_id = $1
+              ORDER BY updated_at DESC
+              LIMIT 1
+            `,
+            [user.sub],
+          );
+
+          let conversationId: string;
+
+          if (conversationResult.rows.length > 0) {
+            conversationId = conversationResult.rows[0].id;
+          } else {
+            const created = await db.query(
+              `
+                INSERT INTO ai_conversations (user_id)
+                VALUES ($1)
+                RETURNING id
+              `,
+              [user.sub],
+            );
+
+            conversationId = created.rows[0].id;
+          }
+
+          /*
+           * =====================================================
+           * 7. SALVA MENSAGEM DO USUÁRIO
            * =====================================================
            */
 
@@ -281,7 +271,7 @@ export const Route = createFileRoute("/api/ai/chat")({
 
           /*
            * =====================================================
-           * 7. PEGA HISTÓRICO DO BANCO
+           * 8. CARREGA HISTÓRICO DO BANCO
            * =====================================================
            */
 
@@ -303,58 +293,36 @@ export const Route = createFileRoute("/api/ai/chat")({
 
           /*
            * =====================================================
-           * 8. GEMINI
+           * 9. ENVIA HISTÓRICO PARA GEMINI
            * =====================================================
            */
-
-          const apiKey =
-            process.env.GEMINI_API_KEY;
-
-          if (!apiKey) {
-            console.error(
-              "GEMINI_API_KEY não configurada.",
-            );
-
-            return Response.json(
-              {
-                message:
-                  "A inteligência da WattIQ não está configurada no servidor.",
-              },
-              { status: 500 },
-            );
-          }
 
           const ai = new GoogleGenAI({
             apiKey,
           });
 
-          const contents = history.map(
-            (message) => ({
-              role:
-                message.role === "assistant"
-                  ? "model"
-                  : "user",
-              parts: [
-                {
-                  text: message.content,
-                },
-              ],
-            }),
-          );
-
-          const response =
-            await ai.models.generateContent({
-              model: "gemini-3.5-flash",
-              contents,
-              config: {
-                systemInstruction:
-                  WATTIQ_AI_PROMPT,
-                maxOutputTokens: 1000,
+          const contents = history.map((message) => ({
+            role:
+              message.role === "assistant"
+                ? "model"
+                : "user",
+            parts: [
+              {
+                text: message.content,
               },
-            });
+            ],
+          }));
 
-          const text =
-            response.text?.trim();
+          const response = await ai.models.generateContent({
+            model: "gemini-3.5-flash",
+            contents,
+            config: {
+              systemInstruction: WATTIQ_AI_PROMPT,
+              maxOutputTokens: 1000,
+            },
+          });
+
+          const text = response.text?.trim();
 
           if (!text) {
             throw new Error(
@@ -364,7 +332,7 @@ export const Route = createFileRoute("/api/ai/chat")({
 
           /*
            * =====================================================
-           * 9. SALVA RESPOSTA DA IA
+           * 10. SALVA RESPOSTA DA IA
            * =====================================================
            */
 
@@ -384,6 +352,12 @@ export const Route = createFileRoute("/api/ai/chat")({
             ],
           );
 
+          /*
+           * =====================================================
+           * 11. ATUALIZA CONVERSA
+           * =====================================================
+           */
+
           await db.query(
             `
               UPDATE ai_conversations
@@ -393,9 +367,13 @@ export const Route = createFileRoute("/api/ai/chat")({
             [conversationId],
           );
 
+          console.log(
+            `Conversa salva para ${user.email}`,
+          );
+
           /*
            * =====================================================
-           * 10. RETORNA
+           * 12. RETORNA RESPOSTA
            * =====================================================
            */
 
@@ -404,7 +382,7 @@ export const Route = createFileRoute("/api/ai/chat")({
           });
         } catch (error) {
           console.error(
-            "Erro na API de IA da WattIQ:",
+            "ERRO COMPLETO NA API DE IA:",
             error,
           );
 
