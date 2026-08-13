@@ -23,36 +23,6 @@ const API_URL =
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
 
 export const Route = createFileRoute("/planejar")({
-  beforeLoad: async ({ location }) => {
-    try {
-      const response = await fetch("/auth/me", {
-        credentials: "include",
-        cache: "no-store",
-      });
-
-      if (!response.ok) {
-        throw new Error("Não autenticado");
-      }
-
-      const data = await response.json();
-
-      if (!data?.authenticated || !data?.user) {
-        throw new Error("Não autenticado");
-      }
-
-      return {
-        user: data.user,
-      };
-    } catch {
-      throw redirect({
-        to: "/auth",
-        search: {
-          redirect: location.href,
-        },
-      });
-    }
-  },
-
   component: PlanejarPage,
 });
 
@@ -98,17 +68,19 @@ function PlanejarPage() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_URL}/api/ai/chat`, {
-        method: "POST",
-        credentials: "include",
-        cache: "no-store",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${API_URL}/api/ai/chat`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: nextMessages,
+          }),
         },
-        body: JSON.stringify({
-          messages: nextMessages,
-        }),
-      });
+      );
 
       const data = await response.json().catch(() => ({}));
 
@@ -149,7 +121,7 @@ function PlanejarPage() {
           content:
             error instanceof Error
               ? error.message
-              : "Não consegui conectar à inteligência da WattIQ neste momento.",
+              : "Não consegui conectar à inteligência da WattIQ neste momento. Verifique se o servidor está ativo e tente novamente.",
         },
       ]);
     } finally {
