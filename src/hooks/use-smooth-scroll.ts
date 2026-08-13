@@ -43,23 +43,13 @@ export function useSmoothScroll() {
         block: "start",
       });
 
-      window.history.pushState(
-        null,
-        "",
-        href
-      );
+      window.history.pushState(null, "", href);
     };
 
-    document.addEventListener(
-      "click",
-      handleClick
-    );
+    document.addEventListener("click", handleClick);
 
     return () => {
-      document.removeEventListener(
-        "click",
-        handleClick
-      );
+      document.removeEventListener("click", handleClick);
     };
   }, []);
 }
