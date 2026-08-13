@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 const mark = "/wattiq-logo.png";
@@ -52,6 +52,31 @@ function AuthPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get("redirect");
+
+    if (redirect) {
+      sessionStorage.setItem("wattiq_auth_redirect", redirect);
+    }
+  }, []);
+
+  function getRedirectUrl() {
+    const redirect = sessionStorage.getItem(
+      "wattiq_auth_redirect",
+    );
+
+    if (
+      redirect &&
+      redirect.startsWith("/") &&
+      !redirect.startsWith("//")
+    ) {
+      return redirect;
+    }
+
+    return "/";
+  }
+
   async function handleEmailLogin(
     event: React.FormEvent<HTMLFormElement>,
   ) {
@@ -97,7 +122,10 @@ function AuthPage() {
         return;
       }
 
-      window.location.href = "/auth/verify";
+      const redirect = getRedirectUrl();
+
+      window.location.href =
+        `/auth/verify?redirect=${encodeURIComponent(redirect)}`;
     } catch (error) {
       console.error("Erro ao iniciar login:", error);
 
@@ -109,10 +137,26 @@ function AuthPage() {
     }
   }
 
+  function handleGoogleLogin() {
+    const redirect = getRedirectUrl();
+
+    sessionStorage.setItem(
+      "wattiq_auth_redirect",
+      redirect,
+    );
+
+    const googleUrl = redirect
+      ? `/auth/google?redirect=${encodeURIComponent(redirect)}`
+      : "/auth/google";
+
+    window.location.href = googleUrl;
+  }
+
   return (
     <div className="min-h-screen">
       <div className="flex min-h-screen flex-col justify-center px-5 py-14 sm:px-10 lg:px-16">
         <div className="mx-auto w-full max-w-md animate-rise">
+
           <Link
             to="/"
             className="inline-flex items-center gap-2.5"
@@ -143,6 +187,7 @@ function AuthPage() {
           </p>
 
           <div className="mt-8 rounded-xl border border-border bg-card p-6 shadow-sm">
+
             <div className="grid grid-cols-2 gap-1 rounded-lg bg-secondary p-1 text-sm">
               {(["signin", "signup"] as const).map(
                 (m) => (
@@ -169,9 +214,7 @@ function AuthPage() {
 
             <button
               type="button"
-              onClick={() => {
-                window.location.href = "/auth/google";
-              }}
+              onClick={handleGoogleLogin}
               className="lift mt-5 flex w-full items-center justify-center gap-2.5 rounded-md border border-border bg-background px-4 py-2.5 text-sm font-medium transition-all duration-300 hover:border-primary/60 hover:lift-hover"
             >
               <GoogleIcon />
@@ -235,6 +278,7 @@ function AuthPage() {
           >
             ← Voltar para a página inicial
           </Link>
+
         </div>
       </div>
     </div>
