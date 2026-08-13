@@ -148,18 +148,14 @@ export const Route = createFileRoute("/api/ai/chat")({
           const apiKey = process.env.GEMINI_API_KEY;
 
           if (!apiKey) {
-            console.error(
-              "GEMINI_API_KEY não configurada no servidor.",
-            );
+            console.error("GEMINI_API_KEY não configurada no servidor.");
 
             return Response.json(
               {
                 message:
                   "A inteligência da WattIQ não está configurada no servidor.",
               },
-              {
-                status: 500,
-              },
+              { status: 500 },
             );
           }
 
@@ -191,9 +187,7 @@ export const Route = createFileRoute("/api/ai/chat")({
               {
                 message: "Envie uma mensagem para começar a conversa.",
               },
-              {
-                status: 400,
-              },
+              { status: 400 },
             );
           }
 
@@ -202,10 +196,7 @@ export const Route = createFileRoute("/api/ai/chat")({
           });
 
           const contents = validMessages.map((message) => ({
-            role:
-              message.role === "assistant"
-                ? "model"
-                : "user",
+            role: message.role === "assistant" ? "model" : "user",
             parts: [
               {
                 text: message.content,
@@ -214,31 +205,25 @@ export const Route = createFileRoute("/api/ai/chat")({
           }));
 
           const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.5-flash",
             contents,
             config: {
               systemInstruction: WATTIQ_AI_PROMPT,
-              temperature: 0.4,
               maxOutputTokens: 1000,
             },
           });
 
-          const text =
-            response.text?.trim();
+          const text = response.text?.trim();
 
           if (!text) {
-            console.error(
-              "Gemini retornou resposta vazia.",
-            );
+            console.error("Gemini retornou resposta vazia.");
 
             return Response.json(
               {
                 message:
                   "A inteligência da WattIQ não retornou uma resposta. Tente novamente.",
               },
-              {
-                status: 502,
-              },
+              { status: 502 },
             );
           }
 
@@ -246,19 +231,14 @@ export const Route = createFileRoute("/api/ai/chat")({
             message: text,
           });
         } catch (error) {
-          console.error(
-            "Erro na API de IA da WattIQ:",
-            error,
-          );
+          console.error("Erro na API de IA da WattIQ:", error);
 
           return Response.json(
             {
               message:
                 "Não foi possível processar sua mensagem agora. Tente novamente em instantes.",
             },
-            {
-              status: 500,
-            },
+            { status: 500 },
           );
         }
       },
