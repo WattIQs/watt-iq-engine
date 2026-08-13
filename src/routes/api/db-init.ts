@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { initDatabase } from "../../lib/db-init";
+import { initDatabase } from "@/lib/db-init";
 
 export const Route = createFileRoute("/api/db-init")({
   server: {
@@ -13,10 +13,7 @@ export const Route = createFileRoute("/api/db-init")({
             message: "Banco inicializado com sucesso.",
           });
         } catch (error) {
-          console.error(
-            "Erro ao inicializar banco:",
-            error,
-          );
+          console.error("Erro no db-init:", error);
 
           return Response.json(
             {
