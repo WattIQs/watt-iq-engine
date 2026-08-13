@@ -1,157 +1,50 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { db } from "@/lib/db";
-import { getSessionUser } from "@/lib/session";
-import { initDatabase } from "@/lib/db-init";
-
-export const Route = createFileRoute(
-  "/api/conversations",
-)({
-  server: {
-    handlers: {
-      GET: async ({ request }) => {
-        try {
-          const user = getSessionUser(request);
-
-          if (!user) {
-            return Response.json(
-              {
-                success: false,
-                message:
-                  "Sessão expirada. Faça login novamente.",
-              },
-              {
-                status: 401,
-              },
-            );
-          }
-
-          await initDatabase();
-
-          const result = await db.query(
-            `
-              SELECT
-                c.id,
-                c.created_at,
-                c.updated_at,
-                (
-                  SELECT m.content
-                  FROM ai_messages m
-                  WHERE m.conversation_id = c.id
-                    AND m.role = 'user'
-                  ORDER BY m.created_at ASC, m.id ASC
-                  LIMIT 1
-                ) AS title
-              FROM ai_conversations c
-              WHERE c.user_id = $1
-              ORDER BY c.updated_at DESC
-            `,
-            [user.sub],
-          );
-
-          const conversations =
-            result.rows.map((conversation) => ({
-              id: String(conversation.id),
-              title:
-                conversation.title ||
-                "Nova conversa",
-              createdAt:
-                conversation.created_at,
-              updatedAt:
-                conversation.updated_at,
-            }));
-
-          return Response.json({
-            success: true,
-            conversations,
-          });
-        } catch (error) {
-          console.error(
-            "ERRO AO BUSCAR CONVERSAS DA WATTIQ AI:",
-            error,
-          );
-
-          return Response.json(
-            {
-              success: false,
-              message:
-                "Não foi possível carregar as conversas.",
-            },
-            {
-              status: 500,
-            },
-          );
-        }
-      },
-
-      POST: async ({ request }) => {
-        try {
-          const user = getSessionUser(request);
-
-          if (!user) {
-            return Response.json(
-              {
-                success: false,
-                message:
-                  "Sessão expirada. Faça login novamente.",
-              },
-              {
-                status: 401,
-              },
-            );
-          }
-
-          await initDatabase();
-
-          const result = await db.query(
-            `
-              INSERT INTO ai_conversations (
-                user_id
-              )
-              VALUES ($1)
-              RETURNING
-                id,
-                created_at,
-                updated_at
-            `,
-            [user.sub],
-          );
-
-          const conversation = result.rows[0];
-
-          return Response.json(
-            {
-              success: true,
-              conversation: {
-                id: String(conversation.id),
-                title: "Nova conversa",
-                createdAt:
-                  conversation.created_at,
-                updatedAt:
-                  conversation.updated_at,
-              },
-            },
-            {
-              status: 201,
-            },
-          );
-        } catch (error) {
-          console.error(
-            "ERRO AO CRIAR CONVERSA DA WATTIQ AI:",
-            error,
-          );
-
-          return Response.json(
-            {
-              success: false,
-              message:
-                "Não foi possível criar uma nova conversa.",
-            },
-            {
-              status: 500,
-            },
-          );
-        }
-      },
-    },
-  },
-});
+watt-iq-engine/src
+/routes/
+WattIQs
+WattIQs
+Update conversations.ts
+d6a5e0e
+ · 
+1 minute ago
+Name	Last commit message	Last commit date
+..
+api
+Update conversations.ts
+1 minute ago
+README.md
+template: tanstack_start_ts_current-c6916125be2f
+5 days ago
+__root.tsx
+Changes
+2 days ago
+auth.callback.ts
+Update auth.callback.ts
+yesterday
+auth.email.ts
+Update auth.email.ts
+11 hours ago
+auth.google.ts
+Create auth.google.ts
+yesterday
+auth.index.tsx
+Update auth.index.tsx
+13 hours ago
+auth.logout.ts
+Create auth.logout.ts
+yesterday
+auth.me.ts
+Update auth.me.ts
+11 hours ago
+auth.tsx
+Update auth.tsx
+yesterday
+auth.verify.tsx
+Update auth.verify.tsx
+11 hours ago
+index.tsx
+Update index.tsx
+13 hours ago
+planejar.tsx
+Update planejar.tsx
+3 minutes ago
+README.md
