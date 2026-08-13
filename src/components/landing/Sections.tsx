@@ -301,12 +301,6 @@ export function CtaSection() {
             A WattIQ não responde apenas “quanto você consumiu?”. Ela ajuda a responder o que o seu
             consumo está dizendo sobre a sua empresa.
           </p>
-          <a
-            href="#acesso"
-            className="lift glow-energy mt-9 inline-block rounded-md bg-gradient-energy animate-gradient px-7 py-3 text-sm font-semibold text-primary-foreground hover:lift-hover"
-          >
-            Ver como acessar
-          </a>
         </Reveal>
       </div>
     </section>
