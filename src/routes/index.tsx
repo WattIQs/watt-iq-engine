@@ -50,4 +50,4 @@ function Index() {
       <SiteFooter />
     </div>
   );
-}
+} 
