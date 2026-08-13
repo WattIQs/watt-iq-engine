@@ -7,12 +7,6 @@ export const Route = createFileRoute("/api/ai/history")({
     handlers: {
       GET: async ({ request }) => {
         try {
-          /*
-           * =====================================================
-           * 1. AUTENTICAÇÃO
-           * =====================================================
-           */
-
           const user = getSessionUser(request);
 
           if (!user) {
@@ -26,12 +20,6 @@ export const Route = createFileRoute("/api/ai/history")({
             );
           }
 
-          /*
-           * =====================================================
-           * 2. BUSCAR CONVERSA DO USUÁRIO
-           * =====================================================
-           */
-
           const conversationResult = await db.query(
             `
               SELECT id
@@ -43,10 +31,6 @@ export const Route = createFileRoute("/api/ai/history")({
             [user.sub],
           );
 
-          /*
-           * Usuário ainda não possui conversa.
-           */
-
           if (conversationResult.rows.length === 0) {
             return Response.json({
               messages: [],
@@ -55,12 +39,6 @@ export const Route = createFileRoute("/api/ai/history")({
 
           const conversationId =
             conversationResult.rows[0].id;
-
-          /*
-           * =====================================================
-           * 3. BUSCAR MENSAGENS
-           * =====================================================
-           */
 
           const messagesResult = await db.query(
             `
@@ -74,12 +52,6 @@ export const Route = createFileRoute("/api/ai/history")({
             `,
             [conversationId],
           );
-
-          /*
-           * =====================================================
-           * 4. RETORNO
-           * =====================================================
-           */
 
           return Response.json({
             messages: messagesResult.rows.map(
@@ -100,6 +72,83 @@ export const Route = createFileRoute("/api/ai/history")({
             {
               message:
                 "Não foi possível carregar sua conversa.",
+            },
+            {
+              status: 500,
+            },
+          );
+        }
+      },
+
+      DELETE: async ({ request }) => {
+        try {
+          const user = getSessionUser(request);
+
+          if (!user) {
+            return Response.json(
+              {
+                message: "Usuário não autenticado.",
+              },
+              {
+                status: 401,
+              },
+            );
+          }
+
+          /*
+           * Busca todas as conversas do usuário.
+           *
+           * As mensagens são removidas primeiro para evitar
+           * problemas de chave estrangeira caso o banco não
+           * esteja configurado com ON DELETE CASCADE.
+           */
+
+          const conversationsResult = await db.query(
+            `
+              SELECT id
+              FROM ai_conversations
+              WHERE user_id = $1
+            `,
+            [user.sub],
+          );
+
+          for (const conversation of conversationsResult.rows) {
+            await db.query(
+              `
+                DELETE FROM ai_messages
+                WHERE conversation_id = $1
+              `,
+              [conversation.id],
+            );
+          }
+
+          await db.query(
+            `
+              DELETE FROM ai_conversations
+              WHERE user_id = $1
+            `,
+            [user.sub],
+          );
+
+          console.log(
+            `WattIQ AI: conversa resetada para ${user.email}`,
+          );
+
+          return Response.json({
+            success: true,
+            message: "Conversa resetada com sucesso.",
+          });
+        } catch (error) {
+          console.error(
+            "Erro ao resetar conversa da IA:",
+            error,
+          );
+
+          return Response.json(
+            {
+              success: false,
+              message:
+                "Não foi possível resetar a conversa.",
             },
             {
               status: 500,
