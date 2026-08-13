@@ -62,7 +62,7 @@ export const Route = createFileRoute("/auth/verify")({
             );
           }
 
-          const email = verifyOtpChallenge(
+          const email = await verifyOtpChallenge(
             challengeId,
             code,
           );
@@ -119,14 +119,6 @@ export const Route = createFileRoute("/auth/verify")({
           headers.append(
             "Set-Cookie",
             "wattiq_pending_user=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
-          );
-
-          console.log(
-            "SESSÃO CRIADA:",
-            {
-              email: user.email,
-              sub: user.sub,
-            },
           );
 
           return Response.json(
