@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { GoogleGenAI } from "@google/genai";
+import { db } from "@/lib/db";
 
 const WATTIQ_AI_PROMPT = `
 Você é a WattIQ AI, assistente virtual oficial da WattIQ.
@@ -145,6 +146,9 @@ export const Route = createFileRoute("/api/ai/chat")({
     handlers: {
       POST: async ({ request }) => {
         try {
+          await db.query("SELECT NOW()");
+          console.log("PostgreSQL conectado com sucesso.");
+
           const apiKey = process.env.GEMINI_API_KEY;
 
           if (!apiKey) {
