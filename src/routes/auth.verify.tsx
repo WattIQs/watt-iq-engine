@@ -7,7 +7,6 @@ import {
   createSessionCookie,
 } from "../lib/session";
 
-
 function readCookie(
   request: Request,
   name: string,
@@ -34,7 +33,6 @@ function readCookie(
   );
 }
 
-
 export const Route = createFileRoute(
   "/auth/verify",
 )({
@@ -51,7 +49,6 @@ export const Route = createFileRoute(
               ? body.code.trim()
               : "";
 
-
           if (code.length !== 6) {
             return Response.json(
               {
@@ -64,27 +61,20 @@ export const Route = createFileRoute(
             );
           }
 
-
           const challengeId = readCookie(
             request,
             "wattiq_otp",
           );
-
 
           const pendingUserRaw = readCookie(
             request,
             "wattiq_pending_user",
           );
 
-
-          console.log(
-            "Cookies:",
-            {
-              otp: !!challengeId,
-              pendingUser: !!pendingUserRaw,
-            },
-          );
-
+          console.log("Cookies:", {
+            otp: !!challengeId,
+            pendingUser: !!pendingUserRaw,
+          });
 
           if (!challengeId || !pendingUserRaw) {
             return Response.json(
@@ -98,19 +88,16 @@ export const Route = createFileRoute(
             );
           }
 
-
           const email =
             verifyOtpChallenge(
               challengeId,
               code,
             );
 
-
           console.log(
             "Resultado OTP:",
             email,
           );
-
 
           if (!email) {
             return Response.json(
@@ -123,7 +110,6 @@ export const Route = createFileRoute(
               },
             );
           }
-
 
           const pendingUser =
             JSON.parse(
@@ -138,7 +124,6 @@ export const Route = createFileRoute(
               picture?: string;
             };
 
-
           const user = {
             sub: pendingUser.sub,
             email: pendingUser.email,
@@ -149,28 +134,23 @@ export const Route = createFileRoute(
               pendingUser.picture,
           };
 
-
           const headers =
             new Headers();
-
 
           headers.append(
             "Set-Cookie",
             createSessionCookie(user),
           );
 
-
           headers.append(
             "Set-Cookie",
             "wattiq_otp=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0",
           );
 
-
           headers.append(
             "Set-Cookie",
             "wattiq_pending_user=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0",
           );
-
 
           return Response.json(
             {
@@ -182,14 +162,11 @@ export const Route = createFileRoute(
             },
           );
 
-
         } catch (error) {
-
           console.error(
             "Erro verify:",
             error,
           );
-
 
           return Response.json(
             {
