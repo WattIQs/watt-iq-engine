@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
@@ -23,6 +23,48 @@ const API_URL =
   import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
 
 export const Route = createFileRoute("/planejar")({
+  beforeLoad: async ({ location }) => {
+    try {
+      const response = await fetch("/auth/me", {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+        headers: {
+          Accept: "application/json",
+          "Cache-Control": "no-cache",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Não foi possível verificar a sessão.");
+      }
+
+      const data = await response.json();
+
+      console.log("PLANEJAR AUTH:", data);
+
+      if (data?.authenticated === true && data?.user) {
+        return {
+          user: data.user,
+        };
+      }
+
+      throw new Error("Usuário não autenticado.");
+    } catch (error) {
+      console.error(
+        "Erro ao verificar autenticação:",
+        error,
+      );
+
+      throw redirect({
+        to: "/auth",
+        search: {
+          redirect: location.href,
+        },
+      });
+    }
+  },
+
   component: PlanejarPage,
 });
 
@@ -142,9 +184,7 @@ function PlanejarPage() {
     <main className="min-h-screen overflow-hidden bg-background text-foreground">
       <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute left-1/2 top-[-280px] h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-primary/10 blur-[140px]" />
-
         <div className="absolute right-[-200px] top-[45%] h-[500px] w-[500px] rounded-full bg-primary/5 blur-[130px]" />
-
         <div className="absolute inset-0 opacity-[0.035] [background-image:linear-gradient(to_right,hsl(var(--foreground))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--foreground))_1px,transparent_1px)] [background-size:64px_64px]" />
       </div>
 
@@ -172,12 +212,10 @@ function PlanejarPage() {
 
       <section className="mx-auto max-w-7xl px-5 pb-20 pt-20">
         <div className="mx-auto max-w-4xl text-center">
-          <div className="animate-[fadeUp_0.7s_cubic-bezier(0.16,1,0.3,1)]">
-            <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-[10px] font-medium tracking-[0.2em] text-primary uppercase">
-              <Sparkles className="h-3.5 w-3.5" />
-              Planejamento energético
-            </span>
-          </div>
+          <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-[10px] font-medium tracking-[0.2em] text-primary uppercase">
+            <Sparkles className="h-3.5 w-3.5" />
+            Planejamento energético
+          </span>
 
           <h1 className="mt-7 text-4xl font-semibold tracking-[-0.04em] text-balance sm:text-6xl">
             Antes de analisar os dados,
@@ -425,7 +463,6 @@ function PlanejarPage() {
       <footer className="border-t border-border/60 py-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 text-xs text-muted-foreground sm:flex-row">
           <span>WattIQ</span>
-
           <span>
             Monitoramento · Análise · Inteligência energética
           </span>
@@ -451,9 +488,7 @@ function PlanningCard({
   return (
     <div
       className="group animate-[fadeUp_0.8s_cubic-bezier(0.16,1,0.3,1)_both] rounded-xl border border-border bg-card p-6 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-2 hover:border-primary/40 hover:shadow-[0_24px_50px_-22px_rgba(180,255,80,0.45)]"
-      style={{
-        animationDelay: delay,
-      }}
+      style={{ animationDelay: delay }}
     >
       <div className="flex items-start justify-between">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-primary/20 bg-primary/5 text-primary transition-all duration-500 group-hover:border-primary/40 group-hover:bg-primary/10 group-hover:shadow-[0_0_25px_rgba(180,255,80,0.12)]">
