@@ -1,63 +1,138 @@
 import { useEffect, useState } from "react";
 
+/**
+ * Retorna o progresso vertical da página entre 0 e 1.
+ *
+ * O cálculo é sincronizado com requestAnimationFrame
+ * para evitar atualizações excessivas durante o scroll.
+ */
 export function useScrollProgress() {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let raf = 0;
 
     const update = () => {
-      const doc = document.documentElement;
-      const max = Math.max(doc.scrollHeight - doc.clientHeight, 0);
-      setProgress(max > 0 ? Math.min(window.scrollY / max, 1) : 0);
       raf = 0;
+
+      const doc = document.documentElement;
+
+      const scrollable =
+        doc.scrollHeight - doc.clientHeight;
+
+      if (scrollable <= 0) {
+        setProgress(0);
+        return;
+      }
+
+      const next = Math.min(
+        Math.max(window.scrollY / scrollable, 0),
+        1,
+      );
+
+      setProgress(next);
     };
 
-    const onScroll = () => {
-      if (!reduced && !raf) raf = requestAnimationFrame(update);
-      else if (reduced) update();
+    const requestUpdate = () => {
+      if (raf) return;
+
+      raf = requestAnimationFrame(update);
     };
 
     update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+
+    window.addEventListener(
+      "scroll",
+      requestUpdate,
+      {
+        passive: true,
+      },
+    );
+
+    window.addEventListener(
+      "resize",
+      requestUpdate,
+      {
+        passive: true,
+      },
+    );
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener(
+        "scroll",
+        requestUpdate,
+      );
+
+      window.removeEventListener(
+        "resize",
+        requestUpdate,
+      );
+
+      if (raf) {
+        cancelAnimationFrame(raf);
+      }
     };
   }, []);
 
   return progress;
 }
 
-export function useParallax(factor = 0.08) {
+/**
+ * Parallax extremamente suave.
+ *
+ * Não altera o layout e usa requestAnimationFrame
+ * para manter o movimento estável.
+ */
+export function useParallax(
+  factor = 0.05,
+) {
   const [offset, setOffset] = useState(0);
 
   useEffect(() => {
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) return;
+    const reduced = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (reduced) {
+      setOffset(0);
+      return;
+    }
 
     let raf = 0;
+
     const update = () => {
-      setOffset(Math.max(-48, Math.min(48, window.scrollY * factor)));
       raf = 0;
+
+      setOffset(
+        window.scrollY * factor,
+      );
     };
 
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
+    const requestUpdate = () => {
+      if (raf) return;
+
+      raf = requestAnimationFrame(update);
     };
 
     update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
+
+    window.addEventListener(
+      "scroll",
+      requestUpdate,
+      {
+        passive: true,
+      },
+    );
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener(
+        "scroll",
+        requestUpdate,
+      );
+
+      if (raf) {
+        cancelAnimationFrame(raf);
+      }
     };
   }, [factor]);
 
