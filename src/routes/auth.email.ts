@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  createOtpChallenge,
-} from "../lib/otp-store";
+import { createOtpChallenge } from "../lib/otp-store";
 import {
   generateOtp,
   sendOtpEmail,
@@ -42,10 +40,7 @@ export const Route = createFileRoute("/auth/email")({
             code,
           );
 
-          await sendOtpEmail(
-            email,
-            code,
-          );
+          await sendOtpEmail(email, code);
 
           const pendingUser = {
             sub: email,
