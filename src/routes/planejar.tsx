@@ -51,6 +51,12 @@ const INITIAL_MESSAGE: ChatMessage = {
     "Olá. Sou a WattIQ AI, sua inteligência especializada em análise e planejamento energético. Como posso ajudar?",
 };
 
+/*
+ * =========================================================
+ * MENSAGEM COM ANIMAÇÃO DE DIGITAÇÃO
+ * =========================================================
+ */
+
 function TypingMessage({
   content,
 }: {
@@ -64,6 +70,7 @@ function TypingMessage({
 
   useEffect(() => {
     let index = 0;
+
     let timeout: ReturnType<
       typeof setTimeout
     >;
@@ -87,13 +94,23 @@ function TypingMessage({
 
       index++;
 
+      /*
+       * Animação mais rápida.
+       *
+       * Antes:
+       * 16ms por caractere
+       *
+       * Agora:
+       * 8ms por caractere
+       */
+
       const delay =
         character === "." ||
         character === "," ||
         character === "!" ||
         character === "?"
-          ? 45
-          : 16;
+          ? 25
+          : 8;
 
       timeout = setTimeout(
         typeNextCharacter,
@@ -121,96 +138,29 @@ function TypingMessage({
 
 /*
  * =========================================================
- * 3 PONTOS — ANIMAÇÃO SVG NATIVA
+ * 3 PONTOS — ANIMAÇÃO CSS
  * =========================================================
  */
 
 function ThinkingDots() {
   return (
-    <svg
-      width="34"
-      height="14"
-      viewBox="0 0 34 14"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+    <div
+      className="flex h-[14px] items-center gap-[5px]"
       aria-label="WattIQ AI está respondendo"
       role="status"
     >
-      <circle
-        cx="5"
-        cy="7"
-        r="2.2"
-        fill="currentColor"
-        className="text-primary"
-      >
-        <animate
-          attributeName="cy"
-          values="7;3.5;7"
-          dur="0.9s"
-          repeatCount="indefinite"
-          begin="0s"
-        />
-        <animate
-          attributeName="opacity"
-          values="0.35;1;0.35"
-          dur="0.9s"
-          repeatCount="indefinite"
-          begin="0s"
-        />
-      </circle>
+      <span className="h-[5px] w-[5px] animate-bounce rounded-full bg-primary [animation-delay:0ms]" />
 
-      <circle
-        cx="17"
-        cy="7"
-        r="2.2"
-        fill="currentColor"
-        className="text-primary"
-      >
-        <animate
-          attributeName="cy"
-          values="7;3.5;7"
-          dur="0.9s"
-          repeatCount="indefinite"
-          begin="0.15s"
-        />
-        <animate
-          attributeName="opacity"
-          values="0.35;1;0.35"
-          dur="0.9s"
-          repeatCount="indefinite"
-          begin="0.15s"
-        />
-      </circle>
+      <span className="h-[5px] w-[5px] animate-bounce rounded-full bg-primary [animation-delay:150ms]" />
 
-      <circle
-        cx="29"
-        cy="7"
-        r="2.2"
-        fill="currentColor"
-        className="text-primary"
-      >
-        <animate
-          attributeName="cy"
-          values="7;3.5;7"
-          dur="0.9s"
-          repeatCount="indefinite"
-          begin="0.3s"
-        />
-        <animate
-          attributeName="opacity"
-          values="0.35;1;0.35"
-          dur="0.9s"
-          repeatCount="indefinite"
-          begin="0.3s"
-        />
-      </circle>
-    </svg>
+      <span className="h-[5px] w-[5px] animate-bounce rounded-full bg-primary [animation-delay:300ms]" />
+    </div>
   );
 }
 
 /*
  * =========================================================
- * SPINNER — SVG NATIVO
+ * SPINNER
  * =========================================================
  */
 
@@ -223,6 +173,7 @@ function LoadingSpinner() {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
+      className="animate-spin"
     >
       <circle
         cx="9"
@@ -238,17 +189,7 @@ function LoadingSpinner() {
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
-      >
-        <animateTransform
-          attributeName="transform"
-          attributeType="XML"
-          type="rotate"
-          from="0 9 9"
-          to="360 9 9"
-          dur="0.75s"
-          repeatCount="indefinite"
-        />
-      </path>
+      />
     </svg>
   );
 }
@@ -393,9 +334,7 @@ function PlanejarPage() {
     conversations,
     setConversations,
   ] =
-    useState<Conversation[]>(
-      [],
-    );
+    useState<Conversation[]>([]);
 
   const [
     activeConversationId,
@@ -1017,6 +956,11 @@ function PlanejarPage() {
    * =========================================================
    * TECLADO
    * =========================================================
+   *
+   * Enter envia.
+   * Shift + Enter continua funcionando como quebra de linha.
+   *
+   * Apenas o texto visual de instrução foi removido.
    */
 
   function handleKeyDown(
@@ -1430,6 +1374,22 @@ function PlanejarPage() {
                       message.role ===
                       "user";
 
+                    /*
+                     * A mensagem automática inicial
+                     * NÃO recebe mais a animação.
+                     *
+                     * Isso evita que ela seja
+                     * reanimada quando o ID local
+                     * da conversa muda para o ID
+                     * real vindo do banco.
+                     */
+
+                    const isInitialMessage =
+                      message.role ===
+                        "assistant" &&
+                      message.content ===
+                        INITIAL_MESSAGE.content;
+
                     return (
                       <div
                         key={`${activeConversation.id}-${index}`}
@@ -1454,7 +1414,17 @@ function PlanejarPage() {
                         >
                           {isUser ? (
                             message.content
+                          ) : isInitialMessage ? (
+                            /*
+                             * Mensagem inicial estática.
+                             * Não usa TypingMessage.
+                             */
+                            message.content
                           ) : (
+                            /*
+                             * Somente respostas reais
+                             * da IA usam a animação.
+                             */
                             <TypingMessage
                               content={
                                 message.content
@@ -1511,21 +1481,7 @@ function PlanejarPage() {
                 className="max-h-40 min-h-[52px] w-full resize-none bg-transparent px-4 py-4 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
               />
 
-              <div className="flex items-center justify-between px-3 pb-3">
-
-                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                  <span>
-                    Enter para enviar
-                  </span>
-
-                  <span className="text-border">
-                    ·
-                  </span>
-
-                  <span>
-                    Shift + Enter para nova linha
-                  </span>
-                </div>
+              <div className="flex items-center justify-end px-3 pb-3">
 
                 <div className="flex items-center gap-2">
 
