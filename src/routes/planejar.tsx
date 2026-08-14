@@ -48,12 +48,6 @@ const INITIAL_MESSAGE: ChatMessage = {
     "Olá. Sou a WattIQ AI, sua inteligência especializada em análise e planejamento energético. Como posso ajudar?",
 };
 
-/*
- * =========================================================
- * TEXTO DA IA COM ANIMAÇÃO DE DIGITAÇÃO
- * =========================================================
- */
-
 function TypingMessage({
   content,
 }: {
@@ -67,7 +61,10 @@ function TypingMessage({
 
   useEffect(() => {
     let index = 0;
-    let timeout: ReturnType<typeof setTimeout>;
+
+    let timeout: ReturnType<
+      typeof setTimeout
+    >;
 
     setDisplayedText("");
     setFinished(false);
@@ -86,10 +83,6 @@ function TypingMessage({
 
       index++;
 
-      /*
-       * Pequena variação de velocidade para
-       * deixar a digitação mais natural.
-       */
       const delay =
         character === "." ||
         character === "," ||
@@ -122,18 +115,35 @@ function TypingMessage({
   );
 }
 
-/*
- * =========================================================
- * PENSAMENTO DA IA
- * =========================================================
- */
-
 function ThinkingDots() {
   return (
-    <div className="flex items-center gap-1.5 px-1">
-      <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
-      <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
-      <span className="h-2 w-2 animate-bounce rounded-full bg-primary" />
+    <div className="flex h-5 items-center gap-1.5">
+      <span
+        className="h-2 w-2 rounded-full bg-primary"
+        style={{
+          animation:
+            "wattiq-dot-bounce 900ms infinite ease-in-out",
+          animationDelay: "0ms",
+        }}
+      />
+
+      <span
+        className="h-2 w-2 rounded-full bg-primary"
+        style={{
+          animation:
+            "wattiq-dot-bounce 900ms infinite ease-in-out",
+          animationDelay: "150ms",
+        }}
+      />
+
+      <span
+        className="h-2 w-2 rounded-full bg-primary"
+        style={{
+          animation:
+            "wattiq-dot-bounce 900ms infinite ease-in-out",
+          animationDelay: "300ms",
+        }}
+      />
     </div>
   );
 }
@@ -154,11 +164,28 @@ function PlanejarPage() {
   const [authUser, setAuthUser] =
     useState<AuthUser | null>(null);
 
-  /*
-   * =========================================================
-   * AUTENTICAÇÃO
-   * =========================================================
-   */
+  const [conversations, setConversations] =
+    useState<Conversation[]>([]);
+
+  const [
+    activeConversationId,
+    setActiveConversationId,
+  ] = useState<string | null>(null);
+
+  const [loadingHistory, setLoadingHistory] =
+    useState(false);
+
+  const [sidebarOpen, setSidebarOpen] =
+    useState(true);
+
+  const [input, setInput] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const chatContainerRef =
+    useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -251,41 +278,6 @@ function PlanejarPage() {
     };
   }, [navigate]);
 
-  /*
-   * =========================================================
-   * ESTADOS
-   * =========================================================
-   */
-
-  const [conversations, setConversations] =
-    useState<Conversation[]>([]);
-
-  const [
-    activeConversationId,
-    setActiveConversationId,
-  ] = useState<string | null>(null);
-
-  const [loadingHistory, setLoadingHistory] =
-    useState(false);
-
-  const [sidebarOpen, setSidebarOpen] =
-    useState(true);
-
-  const [input, setInput] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const chatContainerRef =
-    useRef<HTMLDivElement>(null);
-
-  /*
-   * =========================================================
-   * NOVA CONVERSA LOCAL
-   * =========================================================
-   */
-
   function createNewConversation() {
     const id =
       `local-${Date.now()}-${Math.random()
@@ -307,136 +299,6 @@ function PlanejarPage() {
 
     setInput("");
   }
-
-  /*
-   * =========================================================
-   * CARREGAR CONVERSAS
-   * =========================================================
-   */
-
-  useEffect(() => {
-    if (!authenticated) return;
-
-    let mounted = true;
-
-    async function load() {
-      setLoadingHistory(true);
-
-      try {
-        const response =
-          await fetch(
-            `${API_URL}/api/conversations`,
-            {
-              method: "GET",
-              credentials: "include",
-              cache: "no-store",
-            },
-          );
-
-        if (!response.ok) {
-          throw new Error(
-            "Não foi possível carregar as conversas.",
-          );
-        }
-
-        const data =
-          await response.json();
-
-        if (!mounted) return;
-
-        const loaded: Conversation[] =
-          Array.isArray(
-            data?.conversations,
-          )
-            ? data.conversations
-                .filter(
-                  (conversation: any) =>
-                    conversation?.id,
-                )
-                .map(
-                  (
-                    conversation: any,
-                  ) => ({
-                    id: String(
-                      conversation.id,
-                    ),
-
-                    title:
-                      conversation.title ||
-                      "Conversa",
-
-                    messages: [],
-                  }),
-                )
-            : [];
-
-        /*
-         * Se já existir uma conversa salva,
-         * abrimos automaticamente a mais recente.
-         *
-         * Caso contrário, criamos uma nova
-         * conversa local automaticamente.
-         */
-
-        if (loaded.length > 0) {
-          setConversations(loaded);
-
-          setActiveConversationId(
-            loaded[0].id,
-          );
-
-          await loadConversationMessages(
-            loaded[0].id,
-          );
-        } else {
-          const newConversationId =
-            `local-${Date.now()}-${Math.random()
-              .toString(36)
-              .slice(2)}`;
-
-          const newConversation: Conversation =
-            {
-              id: newConversationId,
-              title: "Nova conversa",
-              messages: [INITIAL_MESSAGE],
-            };
-
-          setConversations([
-            newConversation,
-          ]);
-
-          setActiveConversationId(
-            newConversationId,
-          );
-        }
-      } catch (error) {
-        console.error(
-          "Erro ao carregar conversas:",
-          error,
-        );
-
-        if (!mounted) return;
-
-        createNewConversation();
-      } finally {
-        if (mounted) {
-          setLoadingHistory(false);
-        }
-      }
-    }
-
-    load();
-
-    return () => {
-      mounted = false;
-    };
-  }, [authenticated]);
-
-  /*
-   * =========================================================
-   * CARREGAR MENSAGENS
-   * =========================================================
-   */
 
   async function loadConversationMessages(
     conversationId: string,
@@ -514,11 +376,97 @@ function PlanejarPage() {
     }
   }
 
-  /*
-   * =========================================================
-   * CONVERSA ATIVA
-   * =========================================================
-   */
+  useEffect(() => {
+    if (!authenticated) return;
+
+    let mounted = true;
+
+    async function load() {
+      setLoadingHistory(true);
+
+      try {
+        const response =
+          await fetch(
+            `${API_URL}/api/conversations`,
+            {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+            },
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            "Não foi possível carregar as conversas.",
+          );
+        }
+
+        const data =
+          await response.json();
+
+        if (!mounted) return;
+
+        const loaded: Conversation[] =
+          Array.isArray(
+            data?.conversations,
+          )
+            ? data.conversations
+                .filter(
+                  (conversation: any) =>
+                    conversation?.id,
+                )
+                .map(
+                  (
+                    conversation: any,
+                  ) => ({
+                    id: String(
+                      conversation.id,
+                    ),
+
+                    title:
+                      conversation.title ||
+                      "Conversa",
+
+                    messages: [],
+                  }),
+                )
+            : [];
+
+        if (loaded.length > 0) {
+          setConversations(loaded);
+
+          setActiveConversationId(
+            loaded[0].id,
+          );
+
+          await loadConversationMessages(
+            loaded[0].id,
+          );
+        } else {
+          createNewConversation();
+        }
+      } catch (error) {
+        console.error(
+          "Erro ao carregar conversas:",
+          error,
+        );
+
+        if (!mounted) return;
+
+        createNewConversation();
+      } finally {
+        if (mounted) {
+          setLoadingHistory(false);
+        }
+      }
+    }
+
+    load();
+
+    return () => {
+      mounted = false;
+    };
+  }, [authenticated]);
 
   const activeConversation =
     conversations.find(
@@ -526,12 +474,6 @@ function PlanejarPage() {
         conversation.id ===
         activeConversationId,
     ) || null;
-
-  /*
-   * =========================================================
-   * SELECIONAR CONVERSA
-   * =========================================================
-   */
 
   async function selectConversation(
     conversationId: string,
@@ -561,12 +503,6 @@ function PlanejarPage() {
     }
   }
 
-  /*
-   * =========================================================
-   * SCROLL AUTOMÁTICO
-   * =========================================================
-   */
-
   useEffect(() => {
     const container =
       chatContainerRef.current;
@@ -590,12 +526,6 @@ function PlanejarPage() {
     loading,
   ]);
 
-  /*
-   * =========================================================
-   * UPDATE CONVERSA
-   * =========================================================
-   */
-
   function updateConversation(
     conversationId: string,
     updater: (
@@ -615,12 +545,6 @@ function PlanejarPage() {
         ),
     );
   }
-
-  /*
-   * =========================================================
-   * ENVIAR MENSAGEM
-   * =========================================================
-   */
 
   async function sendMessage() {
     const text = input.trim();
@@ -673,11 +597,6 @@ function PlanejarPage() {
     setLoading(true);
 
     try {
-      /*
-       * A rota correta do TanStack Start
-       * é /api/ai/chat.
-       */
-
       const response =
         await fetch(
           `${API_URL}/api/ai/chat`,
@@ -731,11 +650,6 @@ function PlanejarPage() {
 
       const returnedConversationId =
         data?.conversationId;
-
-      /*
-       * Se o backend criou uma conversa
-       * real no banco, substituímos o ID local.
-       */
 
       if (
         returnedConversationId
@@ -821,12 +735,6 @@ function PlanejarPage() {
     }
   }
 
-  /*
-   * =========================================================
-   * TECLADO
-   * =========================================================
-   */
-
   function handleKeyDown(
     event: React.KeyboardEvent<HTMLTextAreaElement>,
   ) {
@@ -839,12 +747,6 @@ function PlanejarPage() {
       sendMessage();
     }
   }
-
-  /*
-   * =========================================================
-   * EXCLUIR CONVERSA
-   * =========================================================
-   */
 
   async function resetConversation() {
     if (!activeConversation) {
@@ -931,12 +833,6 @@ function PlanejarPage() {
     }
   }
 
-  /*
-   * =========================================================
-   * VERIFICAÇÃO
-   * =========================================================
-   */
-
   if (checkingAuth) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background text-foreground">
@@ -971,422 +867,392 @@ function PlanejarPage() {
       .toUpperCase() || "U";
 
   return (
-    <main className="flex h-screen overflow-hidden bg-background text-foreground">
+    <>
+      <style>{`
+        @keyframes wattiq-dot-bounce {
+          0%,
+          60%,
+          100% {
+            transform: translateY(0);
+            opacity: 0.45;
+          }
 
-      {/* =====================================================
-          SIDEBAR
-      ===================================================== */}
+          30% {
+            transform: translateY(-7px);
+            opacity: 1;
+          }
+        }
+      `}</style>
 
-      <aside
-        className={`relative flex shrink-0 flex-col border-r border-border bg-card/40 backdrop-blur-xl transition-all duration-500 ease-out ${
-          sidebarOpen
-            ? "w-[280px]"
-            : "w-0 overflow-hidden border-r-0"
-        }`}
-      >
-        <div className="flex h-16 items-center border-b border-border px-4">
-          <a
-            href="/"
-            className="group flex items-center gap-2.5"
-          >
-            <div className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 transition-all duration-300 group-hover:scale-105 group-hover:border-primary/60 group-hover:shadow-[0_0_20px_rgba(180,255,80,0.15)]">
-              <Zap className="h-4 w-4 text-primary transition-transform duration-300 group-hover:scale-110" />
-            </div>
+      <main className="flex h-screen overflow-hidden bg-background text-foreground">
 
-            <span className="font-semibold tracking-tight">
-              WattIQ
-            </span>
-          </a>
-        </div>
-
-        <div className="p-3">
-          <button
-            type="button"
-            onClick={
-              createNewConversation
-            }
-            className="group flex w-full items-center gap-3 rounded-xl border border-border bg-background/70 px-4 py-3 text-sm font-medium transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.15)] active:translate-y-0"
-          >
-            <Plus className="h-4 w-4 text-primary transition-transform duration-300 group-hover:rotate-90" />
-
-            Nova conversa
-          </button>
-        </div>
-
-        <div className="px-4 pb-2 pt-3">
-          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            Conversas
-          </p>
-        </div>
-
-        <div className="flex-1 overflow-y-auto px-2">
-          {loadingHistory ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            </div>
-          ) : conversations.length ===
-            0 ? (
-            <div className="px-3 py-8 text-center text-xs text-muted-foreground">
-              Nenhuma conversa ainda.
-            </div>
-          ) : (
-            <div className="space-y-1">
-              {conversations.map(
-                (conversation) => (
-                  <button
-                    key={
-                      conversation.id
-                    }
-                    type="button"
-                    onClick={() =>
-                      selectConversation(
-                        conversation.id,
-                      )
-                    }
-                    className={`group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm transition-all duration-300 ${
-                      conversation.id ===
-                      activeConversationId
-                        ? "translate-x-1 bg-primary/10 text-foreground shadow-[inset_2px_0_0_hsl(var(--primary))]"
-                        : "text-muted-foreground hover:translate-x-1 hover:bg-background hover:text-foreground"
-                    }`}
-                  >
-                    <MessageSquare
-                      className={`h-4 w-4 shrink-0 transition-transform duration-300 group-hover:scale-110 ${
-                        conversation.id ===
-                        activeConversationId
-                          ? "text-primary"
-                          : ""
-                      }`}
-                    />
-
-                    <span className="min-w-0 flex-1 truncate">
-                      {
-                        conversation.title
-                      }
-                    </span>
-                  </button>
-                ),
-              )}
-            </div>
-          )}
-        </div>
-
-        <div className="border-t border-border p-3">
-          <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-3 transition-all duration-300 hover:border-primary/20">
-            {authUser?.picture ? (
-              <img
-                src={
-                  authUser.picture
-                }
-                alt={profileName}
-                className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-border"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-sm font-semibold text-primary">
-                {
-                  profileInitial
-                }
+        <aside
+          className={`relative flex shrink-0 flex-col border-r border-border bg-card/40 backdrop-blur-xl transition-all duration-500 ease-out ${
+            sidebarOpen
+              ? "w-[280px]"
+              : "w-0 overflow-hidden border-r-0"
+          }`}
+        >
+          <div className="flex h-16 items-center border-b border-border px-4">
+            <a
+              href="/"
+              className="group flex items-center gap-2.5"
+            >
+              <div className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 transition-all duration-300 group-hover:scale-105 group-hover:border-primary/60 group-hover:shadow-[0_0_20px_rgba(180,255,80,0.15)]">
+                <Zap className="h-4 w-4 text-primary transition-transform duration-300 group-hover:scale-110" />
               </div>
-            )}
 
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-foreground">
-                {profileName}
-              </p>
-
-              {authUser?.email &&
-                authUser.name && (
-                  <p className="truncate text-[10px] text-muted-foreground">
-                    {authUser.email}
-                  </p>
-                )}
-            </div>
-
-            <span
-              className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-primary shadow-[0_0_8px_rgba(180,255,80,0.8)]"
-              title="Online"
-            />
+              <span className="font-semibold tracking-tight">
+                WattIQ
+              </span>
+            </a>
           </div>
-        </div>
-      </aside>
 
-      {/* =====================================================
-          CHAT
-      ===================================================== */}
-
-      <section className="relative flex min-w-0 flex-1 flex-col">
-
-        <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-          <div className="absolute left-1/2 top-[-300px] h-[600px] w-[900px] -translate-x-1/2 animate-pulse rounded-full bg-primary/5 blur-[150px]" />
-
-          <div className="absolute inset-0 opacity-[0.025] [background-image:linear-gradient(to_right,hsl(var(--foreground))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--foreground))_1px,transparent_1px)] [background-size:64px_64px]" />
-        </div>
-
-        {/* =================================================
-            HEADER
-        ================================================= */}
-
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/70 px-4 backdrop-blur-xl sm:px-6">
-          <div className="flex items-center gap-3">
+          <div className="p-3">
             <button
               type="button"
-              onClick={() =>
-                setSidebarOpen(
-                  (value) =>
-                    !value,
-                )
+              onClick={
+                createNewConversation
               }
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-300 hover:scale-105 hover:border-primary/30 hover:bg-primary/5 hover:text-foreground active:scale-95"
-              aria-label="Abrir ou fechar menu"
+              className="group flex w-full items-center gap-3 rounded-xl border border-border bg-background/70 px-4 py-3 text-sm font-medium transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.15)] active:translate-y-0"
             >
-              {sidebarOpen ? (
-                <ChevronLeft className="h-4 w-4 transition-transform duration-300" />
-              ) : (
-                <ChevronRight className="h-4 w-4 transition-transform duration-300" />
-              )}
+              <Plus className="h-4 w-4 text-primary transition-transform duration-300 group-hover:rotate-90" />
+
+              Nova conversa
             </button>
+          </div>
 
-            <div className="flex items-center gap-3">
-              <div className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
-                <div className="absolute inset-0 animate-ping rounded-lg bg-primary/5" />
+          <div className="px-4 pb-2 pt-3">
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              Conversas
+            </p>
+          </div>
 
-                <Bot className="relative h-4 w-4 text-primary" />
+          <div className="flex-1 overflow-y-auto px-2">
+            {loadingHistory ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
+            ) : conversations.length ===
+              0 ? (
+              <div className="px-3 py-8 text-center text-xs text-muted-foreground">
+                Nenhuma conversa ainda.
+              </div>
+            ) : (
+              <div className="space-y-1">
+                {conversations.map(
+                  (conversation) => (
+                    <button
+                      key={
+                        conversation.id
+                      }
+                      type="button"
+                      onClick={() =>
+                        selectConversation(
+                          conversation.id,
+                        )
+                      }
+                      className={`group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm transition-all duration-300 ${
+                        conversation.id ===
+                        activeConversationId
+                          ? "translate-x-1 bg-primary/10 text-foreground shadow-[inset_2px_0_0_hsl(var(--primary))]"
+                          : "text-muted-foreground hover:translate-x-1 hover:bg-background hover:text-foreground"
+                      }`}
+                    >
+                      <MessageSquare
+                        className={`h-4 w-4 shrink-0 transition-transform duration-300 group-hover:scale-110 ${
+                          conversation.id ===
+                          activeConversationId
+                            ? "text-primary"
+                            : ""
+                        }`}
+                      />
 
-              <div>
-                <p className="text-sm font-semibold">
-                  WattIQ AI
+                      <span className="min-w-0 flex-1 truncate">
+                        {
+                          conversation.title
+                        }
+                      </span>
+                    </button>
+                  ),
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="border-t border-border p-3">
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-3 transition-all duration-300 hover:border-primary/20">
+              {authUser?.picture ? (
+                <img
+                  src={
+                    authUser.picture
+                  }
+                  alt={profileName}
+                  className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-border"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-sm font-semibold text-primary">
+                  {
+                    profileInitial
+                  }
+                </div>
+              )}
+
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-foreground">
+                  {profileName}
                 </p>
 
-                <div className="flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary shadow-[0_0_8px_rgba(180,255,80,0.8)]" />
+                {authUser?.email &&
+                  authUser.name && (
+                    <p className="truncate text-[10px] text-muted-foreground">
+                      {authUser.email}
+                    </p>
+                  )}
+              </div>
 
-                  <span className="text-[10px] text-muted-foreground">
-                    Inteligência energética
-                  </span>
+              <span
+                className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-primary shadow-[0_0_8px_rgba(180,255,80,0.8)]"
+                title="Online"
+              />
+            </div>
+          </div>
+        </aside>
+
+        <section className="relative flex min-w-0 flex-1 flex-col">
+          <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+            <div className="absolute left-1/2 top-[-300px] h-[600px] w-[900px] -translate-x-1/2 animate-pulse rounded-full bg-primary/5 blur-[150px]" />
+
+            <div className="absolute inset-0 opacity-[0.025] [background-image:linear-gradient(to_right,hsl(var(--foreground))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--foreground))_1px,transparent_1px)] [background-size:64px_64px]" />
+          </div>
+
+          <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/70 px-4 backdrop-blur-xl sm:px-6">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() =>
+                  setSidebarOpen(
+                    (value) =>
+                      !value,
+                  )
+                }
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-300 hover:scale-105 hover:border-primary/30 hover:bg-primary/5 hover:text-foreground active:scale-95"
+                aria-label="Abrir ou fechar menu"
+              >
+                {sidebarOpen ? (
+                  <ChevronLeft className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </button>
+
+              <div className="flex items-center gap-3">
+                <div className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
+                  <div className="absolute inset-0 animate-ping rounded-lg bg-primary/5" />
+
+                  <Bot className="relative h-4 w-4 text-primary" />
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold">
+                    WattIQ AI
+                  </p>
+
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary shadow-[0_0_8px_rgba(180,255,80,0.8)]" />
+
+                    <span className="text-[10px] text-muted-foreground">
+                      Inteligência energética
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <Sparkles className="h-4 w-4 animate-pulse text-primary/50" />
-        </header>
+            <Sparkles className="h-4 w-4 animate-pulse text-primary/50" />
+          </header>
 
-        {/* =================================================
-            MENSAGENS
-        ================================================= */}
+          <div
+            ref={
+              chatContainerRef
+            }
+            className="flex-1 overflow-y-auto"
+          >
+            <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+              {!activeConversation ? (
+                <div className="flex min-h-[55vh] flex-col items-center justify-center text-center">
+                  <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+                    <div className="absolute inset-0 animate-ping rounded-2xl bg-primary/5" />
 
-        <div
-          ref={
-            chatContainerRef
-          }
-          className="flex-1 overflow-y-auto"
-        >
-          <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
-
-            {!activeConversation ? (
-              <div className="flex min-h-[55vh] flex-col items-center justify-center text-center">
-                <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
-                  <div className="absolute inset-0 animate-ping rounded-2xl bg-primary/5" />
-
-                  <Bot className="relative h-6 w-6 text-primary" />
-                </div>
-
-                <h2 className="mt-5 text-xl font-semibold">
-                  Comece uma nova conversa
-                </h2>
-
-                <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
-                  Clique em{" "}
-                  <span className="font-medium text-foreground">
-                    Nova conversa
-                  </span>{" "}
-                  para iniciar uma conversa com a WattIQ AI.
-                </p>
-
-                <button
-                  type="button"
-                  onClick={
-                    createNewConversation
-                  }
-                  className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_35px_rgba(180,255,80,0.2)] active:translate-y-0"
-                >
-                  <Plus className="h-4 w-4" />
-
-                  Nova conversa
-                </button>
-              </div>
-            ) : (
-              <>
-                {activeConversation.messages.map(
-                  (
-                    message,
-                    index,
-                  ) => {
-                    const isUser =
-                      message.role ===
-                      "user";
-
-                    return (
-                      <div
-                        key={`${activeConversation.id}-${index}`}
-                        className={`mb-7 flex animate-in gap-3 duration-500 ${
-                          isUser
-                            ? "justify-end"
-                            : "justify-start"
-                        }`}
-                      >
-
-                        {/* ÍCONE DA IA */}
-
-                        {!isUser && (
-                          <div className="mt-1 flex h-8 w-8 shrink-0 animate-in items-center justify-center rounded-lg border border-primary/20 bg-primary/10 shadow-[0_0_20px_rgba(180,255,80,0.04)] duration-500">
-                            <Bot className="h-4 w-4 text-primary" />
-                          </div>
-                        )}
-
-                        {/* BALÃO */}
-
-                        <div
-                          className={`max-w-[82%] text-sm leading-7 transition-all duration-300 ${
-                            isUser
-                              ? "rounded-2xl rounded-br-md bg-primary px-4 py-3 text-primary-foreground shadow-lg shadow-black/10"
-                              : "rounded-2xl rounded-tl-md border border-border bg-card/70 px-4 py-3 text-foreground shadow-lg shadow-black/10 backdrop-blur-sm"
-                          }`}
-                        >
-                          {isUser ? (
-                            message.content
-                          ) : (
-                            <TypingMessage
-                              content={
-                                message.content
-                              }
-                            />
-                          )}
-                        </div>
-                      </div>
-                    );
-                  },
-                )}
-
-                {/* =================================================
-                    PENSANDO
-                ================================================= */}
-
-                {loading && (
-                  <div className="mb-8 flex gap-3 animate-in duration-300">
-                    <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
-                      <Bot className="h-4 w-4 text-primary" />
-                    </div>
-
-                    <div className="rounded-2xl rounded-tl-md border border-border bg-card/70 px-4 py-4 shadow-lg shadow-black/10 backdrop-blur-sm">
-                      <ThinkingDots />
-                    </div>
+                    <Bot className="relative h-6 w-6 text-primary" />
                   </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
 
-        {/* =================================================
-            INPUT
-        ================================================= */}
+                  <h2 className="mt-5 text-xl font-semibold">
+                    Comece uma nova conversa
+                  </h2>
 
-        <div className="shrink-0 bg-gradient-to-t from-background via-background to-transparent px-4 pb-5 pt-3 sm:px-6">
-          <div className="mx-auto w-full max-w-3xl">
-
-            <div className="rounded-2xl border border-border bg-card shadow-2xl shadow-black/20 transition-all duration-300 focus-within:-translate-y-0.5 focus-within:border-primary/40 focus-within:shadow-[0_0_40px_rgba(180,255,80,0.06)]">
-
-              <textarea
-                value={input}
-                onChange={(event) =>
-                  setInput(
-                    event.target.value,
-                  )
-                }
-                onKeyDown={
-                  handleKeyDown
-                }
-                placeholder={
-                  activeConversation
-                    ? "Pergunte à WattIQ AI..."
-                    : "Crie uma nova conversa para começar..."
-                }
-                rows={1}
-                disabled={
-                  loading ||
-                  !activeConversation
-                }
-                className="max-h-40 min-h-[52px] w-full resize-none bg-transparent px-4 py-4 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-              />
-
-              <div className="flex items-center justify-between px-3 pb-3">
-
-                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                  <span>
-                    Enter para enviar
-                  </span>
-
-                  <span className="text-border">
-                    ·
-                  </span>
-
-                  <span>
-                    Shift + Enter para nova linha
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2">
-
-                  {activeConversation && (
-                    <button
-                      type="button"
-                      onClick={
-                        resetConversation
-                      }
-                      disabled={
-                        loading
-                      }
-                      className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-300 hover:scale-105 hover:bg-destructive/10 hover:text-destructive active:scale-95 disabled:opacity-40"
-                      title="Excluir conversa"
-                      aria-label="Excluir conversa"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
+                  <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">
+                    Clique em{" "}
+                    <span className="font-medium text-foreground">
+                      Nova conversa
+                    </span>{" "}
+                    para iniciar uma conversa com a WattIQ AI.
+                  </p>
 
                   <button
                     type="button"
                     onClick={
-                      sendMessage
+                      createNewConversation
                     }
-                    disabled={
-                      !input.trim() ||
-                      loading ||
-                      !activeConversation
-                    }
-                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all duration-300 hover:-translate-y-0.5 hover:scale-105 hover:shadow-[0_5px_20px_rgba(180,255,80,0.2)] active:translate-y-0 active:scale-95 disabled:pointer-events-none disabled:opacity-40"
-                    aria-label="Enviar mensagem"
+                    className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_10px_35px_rgba(180,255,80,0.2)] active:translate-y-0"
                   >
-                    {loading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4 transition-transform duration-300" />
-                    )}
-                  </button>
+                    <Plus className="h-4 w-4" />
 
+                    Nova conversa
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {activeConversation.messages.map(
+                    (
+                      message,
+                      index,
+                    ) => {
+                      const isUser =
+                        message.role ===
+                        "user";
+
+                      return (
+                        <div
+                          key={`${activeConversation.id}-${index}`}
+                          className={`mb-7 flex animate-in gap-3 duration-500 ${
+                            isUser
+                              ? "justify-end"
+                              : "justify-start"
+                          }`}
+                        >
+                          {!isUser && (
+                            <div className="mt-1 flex h-8 w-8 shrink-0 animate-in items-center justify-center rounded-lg border border-primary/20 bg-primary/10 shadow-[0_0_20px_rgba(180,255,80,0.04)] duration-500">
+                              <Bot className="h-4 w-4 text-primary" />
+                            </div>
+                          )}
+
+                          <div
+                            className={`max-w-[82%] text-sm leading-7 transition-all duration-300 ${
+                              isUser
+                                ? "rounded-2xl rounded-br-md bg-primary px-4 py-3 text-primary-foreground shadow-lg shadow-black/10"
+                                : "rounded-2xl rounded-tl-md border border-border bg-card/70 px-4 py-3 text-foreground shadow-lg shadow-black/10 backdrop-blur-sm"
+                            }`}
+                          >
+                            {isUser ? (
+                              message.content
+                            ) : (
+                              <TypingMessage
+                                content={
+                                  message.content
+                                }
+                              />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    },
+                  )}
+
+                  {loading && (
+                    <div className="mb-8 flex animate-in items-start gap-3 duration-300">
+                      <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
+                        <Bot className="h-4 w-4 text-primary" />
+                      </div>
+
+                      <div className="rounded-2xl rounded-tl-md border border-border bg-card/70 px-4 py-3 shadow-lg shadow-black/10 backdrop-blur-sm">
+                        <ThinkingDots />
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="shrink-0 bg-gradient-to-t from-background via-background to-transparent px-4 pb-5 pt-3 sm:px-6">
+            <div className="mx-auto w-full max-w-3xl">
+              <div className="rounded-2xl border border-border bg-card shadow-2xl shadow-black/20 transition-all duration-300 focus-within:-translate-y-0.5 focus-within:border-primary/40 focus-within:shadow-[0_0_40px_rgba(180,255,80,0.06)]">
+                <textarea
+                  value={input}
+                  onChange={(
+                    event,
+                  ) =>
+                    setInput(
+                      event.target.value,
+                    )
+                  }
+                  onKeyDown={
+                    handleKeyDown
+                  }
+                  placeholder={
+                    activeConversation
+                      ? "Pergunte à WattIQ AI..."
+                      : "Crie uma nova conversa para começar..."
+                  }
+                  rows={1}
+                  disabled={
+                    loading ||
+                    !activeConversation
+                  }
+                  className="max-h-40 min-h-[52px] w-full resize-none bg-transparent px-4 py-4 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                />
+
+                <div className="flex items-center justify-end px-3 pb-3">
+                  <div className="flex items-center gap-2">
+                    {activeConversation && (
+                      <button
+                        type="button"
+                        onClick={
+                          resetConversation
+                        }
+                        disabled={
+                          loading
+                        }
+                        className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-300 hover:scale-105 hover:bg-destructive/10 hover:text-destructive active:scale-95 disabled:opacity-40"
+                        title="Excluir conversa"
+                        aria-label="Excluir conversa"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={
+                        sendMessage
+                      }
+                      disabled={
+                        !input.trim() ||
+                        loading ||
+                        !activeConversation
+                      }
+                      className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all duration-300 hover:-translate-y-0.5 hover:scale-105 hover:shadow-[0_5px_20px_rgba(180,255,80,0.2)] active:translate-y-0 active:scale-95 disabled:pointer-events-none disabled:opacity-40"
+                      aria-label="Enviar mensagem"
+                    >
+                      {loading ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Send className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <p className="mt-2 text-center text-[10px] text-muted-foreground">
-              A WattIQ AI pode cometer erros. Verifique informações importantes.
-            </p>
+              <p className="mt-2 text-center text-[10px] text-muted-foreground">
+                A WattIQ AI pode cometer erros. Verifique informações importantes.
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
-    </main>
+        </section>
+      </main>
+    </>
   );
 }
