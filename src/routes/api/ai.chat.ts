@@ -269,7 +269,8 @@ export const Route = createFileRoute(
     handlers: {
       POST: async ({ request }) => {
         try {
-          const user = getSessionUser(request);
+          const user =
+            getSessionUser(request);
 
           if (!user) {
             return Response.json(
@@ -312,6 +313,51 @@ export const Route = createFileRoute(
               ? body.conversationId.trim()
               : "";
 
+          if (!conversationId) {
+            return Response.json(
+              {
+                success: false,
+                message:
+                  "Conversa não informada.",
+              },
+              { status: 400 },
+            );
+          }
+
+          /*
+           * Verifica se a conversa realmente existe
+           * e pertence ao usuário.
+           */
+
+          const conversationResult =
+            await db.query(
+              `
+                SELECT id
+                FROM ai_conversations
+                WHERE id = $1
+                  AND user_id = $2
+                LIMIT 1
+              `,
+              [
+                conversationId,
+                user.sub,
+              ],
+            );
+
+          if (
+            conversationResult.rows
+              .length === 0
+          ) {
+            return Response.json(
+              {
+                success: false,
+                message:
+                  "Conversa não encontrada.",
+              },
+              { status: 404 },
+            );
+          }
+
           const messages = Array.isArray(
             body?.messages,
           )
@@ -330,10 +376,12 @@ export const Route = createFileRoute(
                   "role" in message &&
                   "content" in message &&
                   (
-                    (message as ChatMessage)
-                      .role === "user" ||
-                    (message as ChatMessage)
-                      .role === "assistant"
+                    (
+                      message as ChatMessage
+                    ).role === "user" ||
+                    (
+                      message as ChatMessage
+                    ).role === "assistant"
                   ) &&
                   typeof (
                     message as ChatMessage
@@ -381,82 +429,55 @@ export const Route = createFileRoute(
           }
 
           /*
-           * A conversa deve existir antes da primeira mensagem.
-           * O frontend agora cria a conversa através de
-           * POST /api/conversations.
+           * Evita salvar novamente a mesma mensagem
+           * caso o frontend envie o histórico.
+           *
+           * A mensagem do usuário é salva apenas uma vez.
            */
 
-          if (!conversationId) {
-            return Response.json(
-              {
-                success: false,
-                message:
-                  "Conversa não informada.",
-              },
-              { status: 400 },
-            );
-          }
-
-          /*
-           * Garante que a conversa pertence
-           * ao usuário autenticado.
-           */
-
-          const conversationResult =
+          const existingLastUserMessage =
             await db.query(
               `
                 SELECT id
-                FROM ai_conversations
-                WHERE id = $1
-                  AND user_id = $2
+                FROM ai_messages
+                WHERE conversation_id = $1
+                  AND role = 'user'
+                  AND content = $2
+                ORDER BY created_at DESC, id DESC
                 LIMIT 1
               `,
               [
                 conversationId,
-                user.sub,
+                lastMessage.content,
               ],
             );
 
           if (
-            conversationResult.rows
+            existingLastUserMessage.rows
               .length === 0
           ) {
-            return Response.json(
-              {
-                success: false,
-                message:
-                  "Conversa não encontrada.",
-              },
-              { status: 404 },
+            await db.query(
+              `
+                INSERT INTO ai_messages (
+                  conversation_id,
+                  role,
+                  content
+                )
+                VALUES (
+                  $1,
+                  'user',
+                  $2
+                )
+              `,
+              [
+                conversationId,
+                lastMessage.content,
+              ],
             );
           }
 
           /*
-           * Salva a mensagem do usuário.
-           */
-
-          await db.query(
-            `
-              INSERT INTO ai_messages (
-                conversation_id,
-                role,
-                content
-              )
-              VALUES (
-                $1,
-                'user',
-                $2
-              )
-            `,
-            [
-              conversationId,
-              lastMessage.content,
-            ],
-          );
-
-          /*
-           * Busca todo o histórico real
-           * diretamente do banco.
+           * Busca o histórico REAL do banco.
            */
 
           const historyResult =
@@ -480,13 +501,15 @@ export const Route = createFileRoute(
                   "assistant"
                     ? "assistant"
                     : "user",
-                content: row.content,
+
+                content:
+                  String(row.content),
               }),
             );
 
-          const ai = new GoogleGenAI({
-            apiKey,
-          });
+          /*
+           * Converte o histórico para o formato Gemini.
+           */
 
           const contents =
             history.map((message) => ({
@@ -495,6 +518,7 @@ export const Route = createFileRoute(
                 "assistant"
                   ? "model"
                   : "user",
+
               parts: [
                 {
                   text: message.content,
@@ -502,13 +526,20 @@ export const Route = createFileRoute(
               ],
             }));
 
+          const ai = new GoogleGenAI({
+            apiKey,
+          });
+
           const response =
             await ai.models.generateContent({
               model: "gemini-3.5-flash",
+
               contents,
+
               config: {
                 systemInstruction:
                   WATTIQ_AI_PROMPT,
+
                 maxOutputTokens: 1000,
               },
             });
@@ -546,7 +577,7 @@ export const Route = createFileRoute(
           );
 
           /*
-           * Atualiza a data da conversa.
+           * Atualiza a conversa.
            */
 
           await db.query(
