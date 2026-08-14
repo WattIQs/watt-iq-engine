@@ -12,7 +12,6 @@ import {
 } from "../lib/otp-store";
 
 import { db } from "../lib/db";
-import { initDatabase } from "../lib/db-init";
 
 export const Route = createFileRoute(
   "/auth/callback",
@@ -52,12 +51,6 @@ export const Route = createFileRoute(
         }
 
         try {
-          /*
-           * =====================================================
-           * GOOGLE
-           * =====================================================
-           */
-
           const tokens =
             await exchangeGoogleCode(
               code,
@@ -108,65 +101,130 @@ export const Route = createFileRoute(
 
           const googleName =
             typeof googleUser.name ===
-              "string" &&
-            googleUser.name.trim()
+            "string"
               ? googleUser.name.trim()
-              : email.split("@")[0];
+              : "";
 
           const googlePicture =
             typeof googleUser.picture ===
-              "string"
-              ? googleUser.picture
+            "string"
+              ? googleUser.picture.trim()
               : "";
 
-          /*
-           * =====================================================
-           * BANCO
-           * =====================================================
-           */
-
-          await initDatabase();
+          const googleSub =
+            googleUser.id ||
+            email;
 
           /*
-           * Salvamos os dados do Google associados
-           * ao e-mail.
+           * =====================================================
+           * SALVAR / ATUALIZAR PERFIL
+           * =====================================================
            *
-           * Se o usuário já existir, atualizamos os dados.
+           * O e-mail é a chave de ligação entre Google e login
+           * por código.
            */
 
-          await db.query(
-            `
-              INSERT INTO user_profiles (
+          const existing =
+            await db.query(
+              `
+                SELECT
+                  id,
+                  name,
+                  picture
+                FROM users
+                WHERE email = $1
+                LIMIT 1
+              `,
+              [email],
+            );
+
+          let userId: string;
+
+          if (
+            existing.rows.length > 0
+          ) {
+            const row =
+              existing.rows[0];
+
+            userId = String(
+              row.id,
+            );
+
+            /*
+             * O Google fornece os dados mais completos.
+             * Só substituímos nome/foto quando realmente
+             * recebemos esses valores.
+             */
+
+            await db.query(
+              `
+                UPDATE users
+                SET
+                  name = CASE
+                    WHEN $2 <> '' THEN $2
+                    ELSE name
+                  END,
+                  picture = CASE
+                    WHEN $3 <> '' THEN $3
+                    ELSE picture
+                  END,
+                  updated_at = NOW()
+                WHERE email = $1
+              `,
+              [
                 email,
-                name,
-                picture,
-                google_sub
-              )
-              VALUES ($1, $2, $3, $4)
-              ON CONFLICT (email)
-              DO UPDATE SET
-                name = EXCLUDED.name,
-                picture = EXCLUDED.picture,
-                google_sub = EXCLUDED.google_sub,
-                updated_at = NOW()
-            `,
-            [
-              email,
-              googleName,
-              googlePicture,
-              googleUser.id
-                ? String(
-                    googleUser.id,
+                googleName,
+                googlePicture,
+              ],
+            );
+          } else {
+            const inserted =
+              await db.query(
+                `
+                  INSERT INTO users (
+                    email,
+                    name,
+                    picture
                   )
-                : null,
-            ],
-          );
+                  VALUES (
+                    $1,
+                    $2,
+                    $3
+                  )
+                  RETURNING id
+                `,
+                [
+                  email,
+                  googleName ||
+                    email.split(
+                      "@",
+                    )[0],
+                  googlePicture,
+                ],
+              );
 
-          /*
-           * =====================================================
-           * OTP
-           * =====================================================
-           */
+            userId = String(
+              inserted.rows[0].id,
+            );
+          }
+
+          const savedUser =
+            await db.query(
+              `
+                SELECT
+                  id,
+                  email,
+                  name,
+                  picture
+                FROM users
+                WHERE email = $1
+                LIMIT 1
+              `,
+              [email],
+            );
+
+          const profile =
+            savedUser.rows[0];
 
           const otp =
             generateOtp();
@@ -183,24 +241,32 @@ export const Route = createFileRoute(
           );
 
           /*
-           * =====================================================
-           * USUÁRIO PENDENTE
-           * =====================================================
+           * O Google continua usando a verificação por código
+           * que já existia no fluxo atual.
+           *
+           * Mas agora o perfil já está salvo antes disso.
            */
 
           const userData =
             Buffer.from(
               JSON.stringify({
                 sub:
-                  googleUser.id ||
-                  email,
+                  userId ||
+                  googleSub,
 
                 email,
 
-                name: googleName,
+                name:
+                  profile?.name ||
+                  googleName ||
+                  email.split(
+                    "@",
+                  )[0],
 
                 picture:
-                  googlePicture,
+                  profile?.picture ||
+                  googlePicture ||
+                  "",
               }),
               "utf8",
             ).toString(
