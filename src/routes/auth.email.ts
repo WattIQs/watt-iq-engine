@@ -9,6 +9,9 @@ import {
   sendOtpEmail,
 } from "../lib/email.otp";
 
+import { db } from "../lib/db";
+import { initDatabase } from "../lib/db-init";
+
 function createCookie(
   name: string,
   value: string,
@@ -62,6 +65,71 @@ export const Route = createFileRoute(
             );
           }
 
+          /*
+           * =====================================================
+           * BANCO
+           * =====================================================
+           */
+
+          await initDatabase();
+
+          /*
+           * Procuramos o perfil existente pelo e-mail.
+           *
+           * Isso permite que um login por e-mail encontre
+           * os dados anteriormente cadastrados pelo Google.
+           */
+
+          const profileResult =
+            await db.query(
+              `
+                SELECT
+                  email,
+                  name,
+                  picture,
+                  google_sub
+                FROM user_profiles
+                WHERE email = $1
+                LIMIT 1
+              `,
+              [email],
+            );
+
+          const existingProfile =
+            profileResult.rows[0] ||
+            null;
+
+          /*
+           * Se já existir um perfil:
+           *
+           * - preservamos o nome salvo;
+           * - preservamos a foto do Google;
+           * - só usamos o nome enviado caso não exista
+           *   um nome salvo.
+           */
+
+          const profileName =
+            existingProfile &&
+            typeof existingProfile.name ===
+              "string" &&
+            existingProfile.name.trim()
+              ? existingProfile.name.trim()
+              : name ||
+                email.split("@")[0];
+
+          const profilePicture =
+            existingProfile &&
+            typeof existingProfile.picture ===
+              "string"
+              ? existingProfile.picture
+              : "";
+
+          /*
+           * =====================================================
+           * OTP
+           * =====================================================
+           */
+
           const code =
             generateOtp();
 
@@ -76,13 +144,23 @@ export const Route = createFileRoute(
             code,
           );
 
+          /*
+           * =====================================================
+           * USUÁRIO PENDENTE
+           * =====================================================
+           */
+
           const pendingUser = {
-            sub: email,
+            sub:
+              existingProfile?.google_sub ||
+              email,
+
             email,
-            name:
-              name ||
-              email.split("@")[0],
-            picture: "",
+
+            name: profileName,
+
+            picture:
+              profilePicture,
           };
 
           const pendingUserData =
@@ -91,7 +169,9 @@ export const Route = createFileRoute(
                 pendingUser,
               ),
               "utf8",
-            ).toString("base64url");
+            ).toString(
+              "base64url",
+            );
 
           const headers =
             new Headers();
@@ -124,6 +204,10 @@ export const Route = createFileRoute(
             {
               email,
               challengeId,
+              existingProfile:
+                Boolean(
+                  existingProfile,
+                ),
             },
           );
 
