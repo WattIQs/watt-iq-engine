@@ -349,13 +349,16 @@ type ChatMessage = {
   content: string;
 };
 
-function isTemporaryGeminiError(error: unknown) {
+function isTemporaryGeminiError(
+  error: unknown,
+) {
   const message =
     error instanceof Error
       ? error.message
       : String(error);
 
-  const normalized = message.toLowerCase();
+  const normalized =
+    message.toLowerCase();
 
   return (
     normalized.includes("503") ||
@@ -366,28 +369,40 @@ function isTemporaryGeminiError(error: unknown) {
   );
 }
 
-function isQuotaError(error: unknown) {
+function isQuotaError(
+  error: unknown,
+) {
   const message =
     error instanceof Error
       ? error.message
       : String(error);
 
-  const normalized = message.toLowerCase();
+  const normalized =
+    message.toLowerCase();
 
   return (
     normalized.includes("429") ||
     normalized.includes("resource_exhausted") ||
     normalized.includes("quota exceeded") ||
-    normalized.includes("generate_content_free_tier_requests")
+    normalized.includes(
+      "generate_content_free_tier_requests",
+    )
   );
 }
 
-export const Route = createFileRoute("/api/ai/chat")({
+export const Route = createFileRoute(
+  "/api/ai/chat",
+)({
   server: {
     handlers: {
-      POST: async ({ request }) => {
+      POST: async ({
+        request,
+      }) => {
         try {
-          const user = getSessionUser(request);
+          const user =
+            getSessionUser(
+              request,
+            );
 
           if (!user) {
             return Response.json(
@@ -436,7 +451,9 @@ export const Route = createFileRoute("/api/ai/chat")({
               : "";
 
           const messages =
-            Array.isArray(body?.messages)
+            Array.isArray(
+              body?.messages,
+            )
               ? body.messages
               : [];
 
@@ -471,7 +488,9 @@ export const Route = createFileRoute("/api/ai/chat")({
               )
               .map(
                 (message) => ({
-                  role: message.role,
+                  role:
+                    message.role,
+
                   content:
                     message.content.trim(),
                 }),
@@ -483,7 +502,8 @@ export const Route = createFileRoute("/api/ai/chat")({
               );
 
           if (
-            validMessages.length === 0
+            validMessages.length ===
+            0
           ) {
             return Response.json(
               {
@@ -533,29 +553,25 @@ export const Route = createFileRoute("/api/ai/chat")({
               "local-",
             )
           ) {
-            const title =
-              lastMessage.content
-                .length > 80
-                ? `${lastMessage.content.slice(
-                    0,
-                    80,
-                  )}...`
-                : lastMessage.content;
+            /*
+             * IMPORTANTE:
+             *
+             * ai_conversations NÃO possui coluna title.
+             * O título é calculado por conversations.ts
+             * usando a primeira mensagem do usuário.
+             */
 
             const conversationResult =
               await db.query(
                 `
                   INSERT INTO ai_conversations (
-                    user_id,
-                    title
+                    user_id
                   )
-                  VALUES ($1, $2)
+                  VALUES ($1)
                   RETURNING id
                 `,
                 [
                   user.sub,
-                  title ||
-                    "Nova conversa",
                 ],
               );
 
@@ -564,6 +580,10 @@ export const Route = createFileRoute("/api/ai/chat")({
                 conversationResult
                   .rows[0].id,
               );
+
+            /*
+             * Salva o histórico que veio do frontend.
+             */
 
             for (
               const message of
@@ -586,6 +606,12 @@ export const Route = createFileRoute("/api/ai/chat")({
               );
             }
           } else {
+            /*
+             * =====================================================
+             * CONVERSA EXISTENTE
+             * =====================================================
+             */
+
             const conversationResult =
               await db.query(
                 `
@@ -603,7 +629,8 @@ export const Route = createFileRoute("/api/ai/chat")({
 
             if (
               conversationResult
-                .rows.length === 0
+                .rows.length ===
+              0
             ) {
               return Response.json(
                 {
@@ -636,7 +663,8 @@ export const Route = createFileRoute("/api/ai/chat")({
 
             if (
               existingLastUserMessage
-                .rows.length === 0
+                .rows.length ===
+              0
             ) {
               await db.query(
                 `
@@ -645,7 +673,11 @@ export const Route = createFileRoute("/api/ai/chat")({
                     role,
                     content
                   )
-                  VALUES ($1, 'user', $2)
+                  VALUES (
+                    $1,
+                    'user',
+                    $2
+                  )
                 `,
                 [
                   realConversationId,
@@ -671,7 +703,9 @@ export const Route = createFileRoute("/api/ai/chat")({
                 WHERE conversation_id = $1
                 ORDER BY created_at ASC, id ASC
               `,
-              [realConversationId],
+              [
+                realConversationId,
+              ],
             );
 
           const history: ChatMessage[] =
@@ -682,6 +716,7 @@ export const Route = createFileRoute("/api/ai/chat")({
                   "assistant"
                     ? "assistant"
                     : "user",
+
                 content:
                   String(
                     row.content,
@@ -728,13 +763,6 @@ export const Route = createFileRoute("/api/ai/chat")({
           let lastError:
             unknown = null;
 
-          /*
-           * Tentativa normal.
-           *
-           * Não repetimos erro 429, porque isso é
-           * quota esgotada e não sobrecarga temporária.
-           */
-
           try {
             response =
               await ai.models.generateContent(
@@ -753,7 +781,9 @@ export const Route = createFileRoute("/api/ai/chat")({
                   },
                 },
               );
-          } catch (error) {
+          } catch (
+            error
+          ) {
             lastError =
               error;
 
@@ -763,9 +793,8 @@ export const Route = createFileRoute("/api/ai/chat")({
             );
 
             /*
-             * Só repetimos uma vez quando
-             * realmente for indisponibilidade
-             * temporária do serviço.
+             * Só repetimos em caso de indisponibilidade
+             * temporária. Nunca repetimos 429 de quota.
              */
 
             if (
@@ -792,8 +821,11 @@ export const Route = createFileRoute("/api/ai/chat")({
                     },
                   );
 
-                lastError = null;
-              } catch (retryError) {
+                lastError =
+                  null;
+              } catch (
+                retryError
+              ) {
                 lastError =
                   retryError;
 
@@ -814,7 +846,7 @@ export const Route = createFileRoute("/api/ai/chat")({
               {
                 success: false,
                 message:
-                  "A cota gratuita da WattIQ AI foi atingida. A API do Gemini precisa aguardar a renovação da cota ou usar um projeto/plano com cota disponível.",
+                  "A cota gratuita da WattIQ AI foi atingida. Aguarde a renovação da cota do Gemini ou use um projeto com cota disponível.",
               },
               {
                 status: 429,
@@ -887,11 +919,15 @@ export const Route = createFileRoute("/api/ai/chat")({
 
           return Response.json({
             success: true,
+
             message: text,
+
             conversationId:
               realConversationId,
           });
-        } catch (error) {
+        } catch (
+          error
+        ) {
           console.error(
             "ERRO COMPLETO NA API DA WATTIQ AI:",
             error,
@@ -906,7 +942,7 @@ export const Route = createFileRoute("/api/ai/chat")({
               {
                 success: false,
                 message:
-                  "A cota da API do Gemini foi atingida. Aguarde a renovação da cota ou use um projeto/plano com cota disponível.",
+                  "A cota da API do Gemini foi atingida. Aguarde a renovação da cota ou use um projeto com cota disponível.",
               },
               {
                 status: 429,
