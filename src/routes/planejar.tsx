@@ -51,6 +51,8 @@ const INITIAL_MESSAGE: ChatMessage = {
     "Olá. Sou a WattIQ AI. Como posso ajudar?",
 };
 
+const THINKING_DELAY = 850;
+
 export const Route = createFileRoute(
   "/planejar",
 )({
@@ -86,6 +88,16 @@ function PlanejarPage() {
   const [input, setInput] =
     useState("");
 
+  /*
+   * loading:
+   * Aguardando a resposta da API.
+   *
+   * isTypingResponse:
+   * A resposta já chegou e está sendo escrita.
+   *
+   * initialThinking:
+   * Animação inicial da nova conversa.
+   */
   const [loading, setLoading] =
     useState(false);
 
@@ -97,8 +109,24 @@ function PlanejarPage() {
     setIsTypingResponse,
   ] = useState(false);
 
+  const [
+    initialThinking,
+    setInitialThinking,
+  ] = useState(false);
+
   const chatContainerRef =
     useRef<HTMLDivElement>(null);
+
+  const thinkingTimerRef =
+    useRef<ReturnType<typeof setTimeout> | null>(
+      null,
+    );
+
+  /*
+   * =========================================================
+   * AUTENTICAÇÃO
+   * =========================================================
+   */
 
   useEffect(() => {
     let mounted = true;
@@ -188,10 +216,96 @@ function PlanejarPage() {
 
     return () => {
       mounted = false;
+
+      if (
+        thinkingTimerRef.current
+      ) {
+        clearTimeout(
+          thinkingTimerRef.current,
+        );
+      }
     };
   }, [navigate]);
 
+  /*
+   * =========================================================
+   * ATUALIZAR CONVERSA
+   * =========================================================
+   */
+
+  function updateConversation(
+    conversationId: string,
+    updater: (
+      conversation: Conversation,
+    ) => Conversation,
+  ) {
+    setConversations((current) =>
+      current.map((conversation) =>
+        conversation.id ===
+        conversationId
+          ? updater(conversation)
+          : conversation,
+      ),
+    );
+  }
+
+  /*
+   * =========================================================
+   * ANIMAÇÃO INICIAL
+   * =========================================================
+   *
+   * Ao entrar em uma conversa nova:
+   *
+   * 1. aparecem as três bolinhas;
+   * 2. aguardamos um instante;
+   * 3. começa a saudação da WattIQ AI;
+   * 4. o texto é digitado normalmente.
+   *
+   * Isso elimina o balão vazio que aparecia na imagem.
+   */
+
+  function startInitialConversationAnimation(
+    conversationId: string,
+  ) {
+    if (
+      thinkingTimerRef.current
+    ) {
+      clearTimeout(
+        thinkingTimerRef.current,
+      );
+    }
+
+    setInitialThinking(true);
+    setTypingMessage("");
+    setIsTypingResponse(false);
+
+    thinkingTimerRef.current =
+      setTimeout(() => {
+        setInitialThinking(false);
+
+        void typeAssistantMessage(
+          conversationId,
+          INITIAL_MESSAGE.content,
+          true,
+        );
+      }, THINKING_DELAY);
+  }
+
+  /*
+   * =========================================================
+   * NOVA CONVERSA
+   * =========================================================
+   */
+
   function createNewConversation() {
+    if (
+      thinkingTimerRef.current
+    ) {
+      clearTimeout(
+        thinkingTimerRef.current,
+      );
+    }
+
     const id =
       `local-${Date.now()}-${Math.random()
         .toString(36)
@@ -200,7 +314,14 @@ function PlanejarPage() {
     const conversation: Conversation = {
       id,
       title: "Nova conversa",
-      messages: [INITIAL_MESSAGE],
+
+      /*
+       * Não colocamos INITIAL_MESSAGE aqui.
+       *
+       * A animação inicial vai criar a mensagem
+       * de forma controlada, evitando o balão vazio.
+       */
+      messages: [],
     };
 
     setConversations((current) => [
@@ -209,11 +330,23 @@ function PlanejarPage() {
     ]);
 
     setActiveConversationId(id);
+
     setInput("");
+
+    setLoading(false);
     setTypingMessage("");
     setIsTypingResponse(false);
-    setLoading(false);
+
+    startInitialConversationAnimation(
+      id,
+    );
   }
+
+  /*
+   * =========================================================
+   * CARREGAR HISTÓRICO
+   * =========================================================
+   */
 
   async function loadConversationMessages(
     conversationId: string,
@@ -272,6 +405,7 @@ function PlanejarPage() {
               ? {
                   ...conversation,
                   messages,
+
                   title:
                     messages.find(
                       (message) =>
@@ -294,9 +428,7 @@ function PlanejarPage() {
           conversationId
             ? {
                 ...conversation,
-                messages: [
-                  INITIAL_MESSAGE,
-                ],
+                messages: [],
               }
             : conversation,
         ),
@@ -308,6 +440,12 @@ function PlanejarPage() {
       );
     }
   }
+
+  /*
+   * =========================================================
+   * CARREGAR CONVERSAS
+   * =========================================================
+   */
 
   useEffect(() => {
     if (!authenticated) return;
@@ -406,6 +544,12 @@ function PlanejarPage() {
     };
   }, [authenticated]);
 
+  /*
+   * =========================================================
+   * CONVERSA ATIVA
+   * =========================================================
+   */
+
   const activeConversation =
     conversations.find(
       (conversation) =>
@@ -413,9 +557,24 @@ function PlanejarPage() {
         activeConversationId,
     ) || null;
 
+  /*
+   * =========================================================
+   * SELECIONAR CONVERSA
+   * =========================================================
+   */
+
   async function selectConversation(
     conversationId: string,
   ) {
+    if (
+      thinkingTimerRef.current
+    ) {
+      clearTimeout(
+        thinkingTimerRef.current,
+      );
+    }
+
+    setInitialThinking(false);
     setActiveConversationId(
       conversationId,
     );
@@ -435,6 +594,12 @@ function PlanejarPage() {
     }
   }
 
+  /*
+   * =========================================================
+   * SCROLL
+   * =========================================================
+   */
+
   useEffect(() => {
     const container =
       chatContainerRef.current;
@@ -451,81 +616,80 @@ function PlanejarPage() {
     activeConversation?.messages,
     loading,
     typingMessage,
+    initialThinking,
   ]);
 
-  function updateConversation(
-    conversationId: string,
-    updater: (
-      conversation: Conversation,
-    ) => Conversation,
-  ) {
-    setConversations((current) =>
-      current.map((conversation) =>
-        conversation.id ===
-        conversationId
-          ? updater(conversation)
-          : conversation,
-      ),
-    );
-  }
+  /*
+   * =========================================================
+   * DIGITAÇÃO DA IA
+   * =========================================================
+   */
 
   async function typeAssistantMessage(
     conversationId: string,
     text: string,
+    isInitial = false,
   ) {
     setLoading(false);
     setIsTypingResponse(true);
     setTypingMessage("");
 
-    const length = text.length;
+    const length =
+      text.length;
 
     /*
-     * A animação fica proporcional ao tamanho.
+     * Quanto maior a resposta,
+     * maior a duração.
      *
-     * Respostas pequenas:
-     * aproximadamente 0.7s - 1.2s
-     *
-     * Respostas médias:
-     * aproximadamente 1.5s - 2.5s
-     *
-     * Respostas grandes:
-     * aceleram automaticamente.
-     *
-     * Limite máximo:
-     * aproximadamente 4.5s
+     * Mas existe um limite para não deixar
+     * textos enormes demorando demais.
      */
-    const targetDuration = Math.min(
-      4500,
-      Math.max(
-        700,
-        600 +
-          Math.sqrt(length) * 145,
-      ),
-    );
-
-    const baseDelay = Math.max(
-      2,
+    const targetDuration =
       Math.min(
-        18,
-        targetDuration /
-          Math.max(length, 1),
-      ),
-    );
+        4500,
+        Math.max(
+          700,
+          550 +
+            Math.sqrt(
+              Math.max(
+                length,
+                1,
+              ),
+            ) *
+              145,
+        ),
+      );
 
-    let currentText = "";
+    const baseDelay =
+      Math.max(
+        2,
+        Math.min(
+          18,
+          targetDuration /
+            Math.max(
+              length,
+              1,
+            ),
+        ),
+      );
+
+    let currentText =
+      "";
 
     for (
       let index = 0;
       index < text.length;
       index++
     ) {
-      currentText += text[index];
+      currentText +=
+        text[index];
 
       setTypingMessage(
         currentText,
       );
 
-      let delay = baseDelay;
+      let delay =
+        baseDelay;
 
       const character =
         text[index];
@@ -587,7 +751,17 @@ function PlanejarPage() {
 
     setTypingMessage("");
     setIsTypingResponse(false);
+
+    if (isInitial) {
+      setLoading(false);
+    }
   }
+
+  /*
+   * =========================================================
+   * ENVIAR MENSAGEM
+   * =========================================================
+   */
 
   async function sendMessage() {
     const text =
@@ -597,15 +771,17 @@ function PlanejarPage() {
       !text ||
       loading ||
       isTypingResponse ||
+      initialThinking ||
       !activeConversation
     ) {
       return;
     }
 
-    const userMessage: ChatMessage = {
-      role: "user",
-      content: text,
-    };
+    const userMessage: ChatMessage =
+      {
+        role: "user",
+        content: text,
+      };
 
     let conversationId =
       activeConversation.id;
@@ -614,6 +790,12 @@ function PlanejarPage() {
       ...activeConversation.messages,
       userMessage,
     ];
+
+    /*
+     * =======================================================
+     * CONVERSA LOCAL -> POSTGRESQL
+     * =======================================================
+     */
 
     if (
       conversationId.startsWith(
@@ -630,6 +812,7 @@ function PlanejarPage() {
               method: "POST",
               credentials:
                 "include",
+
               headers: {
                 "Content-Type":
                   "application/json",
@@ -670,7 +853,9 @@ function PlanejarPage() {
         setConversations(
           (current) =>
             current.map(
-              (conversation) =>
+              (
+                conversation,
+              ) =>
                 conversation.id ===
                 conversationId
                   ? {
@@ -707,6 +892,10 @@ function PlanejarPage() {
         );
 
         setLoading(false);
+        setIsTypingResponse(
+          false,
+        );
+        setTypingMessage("");
 
         updateConversation(
           activeConversation.id,
@@ -757,18 +946,13 @@ function PlanejarPage() {
 
     setInput("");
     setTypingMessage("");
-    setIsTypingResponse(false);
+    setIsTypingResponse(
+      false,
+    );
+
+    setLoading(true);
 
     try {
-      /*
-       * O loading permanece TRUE durante
-       * TODA a chamada da API.
-       *
-       * Portanto as bolinhas ficam visíveis
-       * até a resposta do Gemini chegar.
-       */
-      setLoading(true);
-
       const response =
         await fetch(
           `${API_URL}/api/ai/chat`,
@@ -840,7 +1024,7 @@ function PlanejarPage() {
 
       await typeAssistantMessage(
         conversationId,
-        answer,
+        answer.trim(),
       );
     } catch (error) {
       console.error(
@@ -849,7 +1033,12 @@ function PlanejarPage() {
       );
 
       setLoading(false);
-      setIsTypingResponse(false);
+      setInitialThinking(
+        false,
+      );
+      setIsTypingResponse(
+        false,
+      );
       setTypingMessage("");
 
       updateConversation(
@@ -874,10 +1063,26 @@ function PlanejarPage() {
     }
   }
 
+  /*
+   * =========================================================
+   * EXCLUIR
+   * =========================================================
+   */
+
   async function resetConversation() {
     if (!activeConversation) {
       return;
     }
+
+    if (
+      thinkingTimerRef.current
+    ) {
+      clearTimeout(
+        thinkingTimerRef.current,
+      );
+    }
+
+    setInitialThinking(false);
 
     const conversationId =
       activeConversation.id;
@@ -967,6 +1172,12 @@ function PlanejarPage() {
     }
   }
 
+  /*
+   * =========================================================
+   * TECLADO
+   * =========================================================
+   */
+
   function handleInputKeyDown(
     event: React.KeyboardEvent<HTMLTextAreaElement>,
   ) {
@@ -979,6 +1190,12 @@ function PlanejarPage() {
       sendMessage();
     }
   }
+
+  /*
+   * =========================================================
+   * LOADING
+   * =========================================================
+   */
 
   if (checkingAuth) {
     return (
@@ -1069,7 +1286,9 @@ function PlanejarPage() {
           ) : (
             <div className="space-y-1">
               {conversations.map(
-                (conversation) => (
+                (
+                  conversation,
+                ) => (
                   <button
                     key={
                       conversation.id
@@ -1281,74 +1500,79 @@ function PlanejarPage() {
                   },
                 )}
 
-                {/*
-                 * =====================================================
-                 * WATTIQ THINKING
-                 * =====================================================
-                 *
-                 * Não depende de animate-bounce do Tailwind.
-                 * A animação é CSS puro e inline.
-                 *
-                 * Isso garante que as três bolinhas apareçam
-                 * mesmo se alguma configuração do Tailwind não
-                 * gerar a classe de animação.
-                 */}
+                {/* =================================================
+                    ANIMAÇÃO INICIAL DA WATTIQ AI
+                ================================================= */}
+
+                {initialThinking && (
+                  <div className="mb-6 flex animate-in gap-3 duration-300">
+                    <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
+                      <Bot className="h-4 w-4 text-primary" />
+                    </div>
+
+                    <div className="wattiq-ai-bubble">
+                      <div
+                        className="wattiq-thinking-dots"
+                        aria-label="WattIQ AI está preparando a conversa"
+                      >
+                        <span />
+                        <span />
+                        <span />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* =================================================
+                    PENSAMENTO DA IA
+                ================================================= */}
+
                 {loading && (
                   <div className="mb-6 flex animate-in gap-3 duration-300">
                     <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
                       <Bot className="h-4 w-4 text-primary" />
                     </div>
 
-                    <div
-                      className="flex h-[48px] min-w-[70px] items-center justify-center rounded-2xl rounded-bl-md border border-border bg-card px-5 shadow-sm"
-                      aria-label="WattIQ AI está pensando"
-                    >
-                      <div className="wattiq-thinking-dots">
-                        <span
-                          style={{
-                            animationDelay:
-                              "0ms",
-                          }}
-                        />
-                        <span
-                          style={{
-                            animationDelay:
-                              "160ms",
-                          }}
-                        />
-                        <span
-                          style={{
-                            animationDelay:
-                              "320ms",
-                          }}
-                        />
+                    <div className="wattiq-ai-bubble">
+                      <div
+                        className="wattiq-thinking-dots"
+                        aria-label="WattIQ AI está pensando"
+                      >
+                        <span />
+                        <span />
+                        <span />
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/*
-                 * =====================================================
-                 * RESPOSTA SENDO DIGITADA
-                 * =====================================================
-                 */}
-                {isTypingResponse && (
-                  <div className="mb-6 flex animate-in gap-3 duration-300">
-                    <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
-                      <Bot className="h-4 w-4 text-primary" />
-                    </div>
+                {/* =================================================
+                    RESPOSTA SENDO DIGITADA
+                ================================================= */}
 
-                    <div className="max-w-[82%] whitespace-pre-wrap rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 text-sm leading-7 text-foreground shadow-sm">
-                      {typingMessage}
+                {isTypingResponse &&
+                  typingMessage.length >
+                    0 && (
+                    <div className="mb-6 flex animate-in gap-3 duration-300">
+                      <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
+                        <Bot className="h-4 w-4 text-primary" />
+                      </div>
 
-                      <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-1 animate-pulse bg-primary" />
+                      <div className="max-w-[82%] whitespace-pre-wrap rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 text-sm leading-7 text-foreground shadow-sm">
+                        {typingMessage}
+
+                        <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-1 animate-pulse bg-primary" />
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </>
             )}
           </div>
         </div>
+
+        {/* =========================================================
+            CAMPO DE MENSAGEM
+        ========================================================= */}
 
         <div className="shrink-0 bg-gradient-to-t from-background via-background to-transparent px-4 pb-5 pt-3 sm:px-6">
           <div className="mx-auto w-full max-w-3xl">
@@ -1371,6 +1595,7 @@ function PlanejarPage() {
                 rows={1}
                 disabled={
                   loading ||
+                  initialThinking ||
                   isTypingResponse ||
                   !activeConversation
                 }
@@ -1387,6 +1612,7 @@ function PlanejarPage() {
                       }
                       disabled={
                         loading ||
+                        initialThinking ||
                         isTypingResponse
                       }
                       className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-all duration-200 hover:bg-destructive/10 hover:text-destructive active:scale-95 disabled:opacity-40"
@@ -1405,16 +1631,23 @@ function PlanejarPage() {
                     disabled={
                       !input.trim() ||
                       loading ||
+                      initialThinking ||
                       isTypingResponse ||
                       !activeConversation
                     }
-                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10 active:translate-y-0 disabled:pointer-events-none disabled:opacity-40"
+                    className={`wattiq-send-button flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10 active:scale-95 disabled:pointer-events-none disabled:opacity-40 ${
+                      loading
+                        ? "wattiq-send-button-loading"
+                        : ""
+                    }`}
                     aria-label="Enviar mensagem"
                   >
                     {loading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="wattiq-send-spinner">
+                        <Loader2 className="h-4 w-4" />
+                      </span>
                     ) : (
-                      <Send className="h-4 w-4 transition-transform duration-200" />
+                      <Send className="h-4 w-4" />
                     )}
                   </button>
                 </div>
@@ -1429,12 +1662,41 @@ function PlanejarPage() {
       </section>
 
       <style>{`
+        /*
+         * =========================================================
+         * BOLINHAS DA WATTIQ AI
+         * =========================================================
+         */
+
+        .wattiq-ai-bubble {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 70px;
+          min-height: 48px;
+          padding: 0 18px;
+
+          border: 1px solid hsl(var(--border));
+          border-radius: 16px 16px 16px 4px;
+
+          background: hsl(var(--card));
+
+          box-shadow:
+            0 8px 30px rgba(0, 0, 0, 0.08);
+
+          animation:
+            wattiq-bubble-enter
+            240ms
+            ease-out
+            both;
+        }
+
         .wattiq-thinking-dots {
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 6px;
-          width: 28px;
+          width: 30px;
           height: 20px;
         }
 
@@ -1442,37 +1704,193 @@ function PlanejarPage() {
           display: block;
           width: 6px;
           height: 6px;
-          min-width: 6px;
-          min-height: 6px;
+          flex: 0 0 6px;
+
           border-radius: 9999px;
-          background-color: hsl(var(--primary));
-          opacity: 0.35;
-          transform: translateY(0) scale(0.75);
-          animation-name: wattiq-thinking-dot;
-          animation-duration: 900ms;
-          animation-timing-function: ease-in-out;
-          animation-iteration-count: infinite;
-          animation-fill-mode: both;
+
+          background:
+            hsl(var(--primary));
+
+          opacity: 0.3;
+
+          animation-name:
+            wattiq-thinking-dot;
+
+          animation-duration:
+            900ms;
+
+          animation-timing-function:
+            cubic-bezier(
+              0.4,
+              0,
+              0.2,
+              1
+            );
+
+          animation-iteration-count:
+            infinite;
+
+          animation-fill-mode:
+            both;
+
+          will-change:
+            transform,
+            opacity;
+        }
+
+        .wattiq-thinking-dots span:nth-child(1) {
+          animation-delay: 0ms;
+        }
+
+        .wattiq-thinking-dots span:nth-child(2) {
+          animation-delay: 150ms;
+        }
+
+        .wattiq-thinking-dots span:nth-child(3) {
+          animation-delay: 300ms;
         }
 
         @keyframes wattiq-thinking-dot {
-          0%,
-          100% {
+          0% {
             opacity: 0.3;
-            transform: translateY(0) scale(0.75);
+            transform:
+              translateY(0)
+              scale(0.75);
+          }
+
+          25% {
+            opacity: 1;
+            transform:
+              translateY(-5px)
+              scale(1);
           }
 
           50% {
-            opacity: 1;
-            transform: translateY(-5px) scale(1);
+            opacity: 0.55;
+            transform:
+              translateY(0)
+              scale(0.9);
+          }
+
+          100% {
+            opacity: 0.3;
+            transform:
+              translateY(0)
+              scale(0.75);
           }
         }
 
-        @media (prefers-reduced-motion: reduce) {
-          .wattiq-thinking-dots span {
+        /*
+         * =========================================================
+         * BOTÃO DE ENVIAR
+         * =========================================================
+         */
+
+        .wattiq-send-button {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .wattiq-send-button-loading {
+          box-shadow:
+            0 0 0 0
+              rgba(
+                180,
+                255,
+                80,
+                0.3
+              ),
+            0 0 20px
+              rgba(
+                180,
+                255,
+                80,
+                0.14
+              );
+
+          animation:
+            wattiq-send-pulse
+            1.15s
+            ease-in-out
+            infinite;
+        }
+
+        .wattiq-send-spinner {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          animation:
+            wattiq-send-spin
+            0.75s
+            linear
+            infinite;
+        }
+
+        @keyframes wattiq-send-spin {
+          from {
+            transform:
+              rotate(0deg);
+          }
+
+          to {
+            transform:
+              rotate(360deg);
+          }
+        }
+
+        @keyframes wattiq-send-pulse {
+          0%,
+          100% {
+            transform:
+              scale(1);
+            box-shadow:
+              0 0 0 0
+                rgba(
+                  180,
+                  255,
+                  80,
+                  0.18
+                );
+          }
+
+          50% {
+            transform:
+              scale(1.04);
+            box-shadow:
+              0 0 0 5px
+                rgba(
+                  180,
+                  255,
+                  80,
+                  0
+                );
+          }
+        }
+
+        @keyframes wattiq-bubble-enter {
+          from {
+            opacity: 0;
+            transform:
+              translateY(4px)
+              scale(0.96);
+          }
+
+          to {
+            opacity: 1;
+            transform:
+              translateY(0)
+              scale(1);
+          }
+        }
+
+        @media (
+          prefers-reduced-motion: reduce
+        ) {
+          .wattiq-thinking-dots span,
+          .wattiq-send-spinner,
+          .wattiq-send-button-loading {
             animation: none;
-            opacity: 0.75;
-            transform: scale(0.9);
           }
         }
       `}</style>
