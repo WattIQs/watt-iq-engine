@@ -10,7 +10,6 @@ import {
 } from "../lib/session";
 
 import { db } from "../lib/db";
-import { initDatabase } from "../lib/db-init";
 
 function readCookie(
   request: Request,
@@ -31,8 +30,9 @@ function readCookie(
       continue;
     }
 
-    const cookieName =
-      part.slice(0, separator).trim();
+    const cookieName = part
+      .slice(0, separator)
+      .trim();
 
     if (cookieName !== name) {
       continue;
@@ -64,7 +64,8 @@ function decodePendingUser(
 
     if (
       !decoded ||
-      typeof decoded !== "object"
+      typeof decoded !==
+        "object"
     ) {
       return null;
     }
@@ -93,7 +94,8 @@ export const Route = createFileRoute(
             await request.json();
 
           const code =
-            typeof body?.code === "string"
+            typeof body?.code ===
+            "string"
               ? body.code
                   .replace(/\D/g, "")
                   .slice(0, 6)
@@ -137,12 +139,6 @@ export const Route = createFileRoute(
             );
           }
 
-          /*
-           * =====================================================
-           * VALIDAR OTP
-           * =====================================================
-           */
-
           const email =
             await verifyOtpChallenge(
               challengeId,
@@ -167,12 +163,6 @@ export const Route = createFileRoute(
               .trim()
               .toLowerCase();
 
-          /*
-           * =====================================================
-           * USUÁRIO PENDENTE
-           * =====================================================
-           */
-
           const pendingUser =
             decodePendingUser(
               pendingUserRaw,
@@ -180,157 +170,146 @@ export const Route = createFileRoute(
 
           /*
            * =====================================================
-           * BANCO
+           * RECUPERAR PERFIL EXISTENTE
            * =====================================================
            *
-           * Buscamos novamente pelo e-mail.
+           * Aqui acontece a ligação definitiva entre:
            *
-           * Isso garante que o perfil do Google seja utilizado
-           * mesmo que o cookie tenha dados incompletos.
+           * Google -> e-mail
+           * E-mail -> mesmo e-mail
+           *
+           * Se existir perfil, nome e foto são reaproveitados.
            */
 
-          await initDatabase();
+          let existingUser:
+            | {
+                id: string;
+                name: string;
+                picture: string;
+              }
+            | null = null;
 
-          const profileResult =
-            await db.query(
-              `
-                SELECT
-                  email,
-                  name,
-                  picture,
-                  google_sub
-                FROM user_profiles
-                WHERE email = $1
-                LIMIT 1
-              `,
-              [normalizedEmail],
-            );
+          try {
+            const result =
+              await db.query(
+                `
+                  SELECT
+                    id,
+                    name,
+                    picture
+                  FROM users
+                  WHERE email = $1
+                  LIMIT 1
+                `,
+                [normalizedEmail],
+              );
 
-          const existingProfile =
-            profileResult.rows[0] ||
-            null;
+            if (
+              result.rows.length > 0
+            ) {
+              const row =
+                result.rows[0];
 
-          /*
-           * =====================================================
-           * DADOS FINAIS DO USUÁRIO
-           * =====================================================
-           */
-
-          const databaseName =
-            existingProfile &&
-            typeof existingProfile.name ===
-              "string" &&
-            existingProfile.name.trim()
-              ? existingProfile.name.trim()
-              : "";
-
-          const pendingName =
-            typeof pendingUser?.name ===
-              "string" &&
-            pendingUser.name.trim()
-              ? pendingUser.name.trim()
-              : "";
-
-          const databasePicture =
-            existingProfile &&
-            typeof existingProfile.picture ===
-              "string"
-              ? existingProfile.picture
-              : "";
-
-          const pendingPicture =
-            typeof pendingUser?.picture ===
-              "string"
-              ? pendingUser.picture
-              : "";
-
-          const finalName =
-            databaseName ||
-            pendingName ||
-            normalizedEmail.split(
-              "@",
-            )[0];
-
-          const finalPicture =
-            databasePicture ||
-            pendingPicture ||
-            "";
-
-          const finalSub =
-            existingProfile &&
-            typeof existingProfile.google_sub ===
-              "string" &&
-            existingProfile.google_sub.trim()
-              ? existingProfile.google_sub
-              : typeof pendingUser?.sub ===
-                  "string" &&
-                pendingUser.sub.trim()
-                ? pendingUser.sub
-                : normalizedEmail;
-
-          /*
-           * =====================================================
-           * GARANTIR PERFIL
-           * =====================================================
-           */
-
-          await db.query(
-            `
-              INSERT INTO user_profiles (
-                email,
-                name,
-                picture,
-                google_sub
-              )
-              VALUES ($1, $2, $3, $4)
-              ON CONFLICT (email)
-              DO UPDATE SET
-                name = CASE
-                  WHEN user_profiles.name IS NULL
-                    OR TRIM(user_profiles.name) = ''
-                  THEN EXCLUDED.name
-                  ELSE user_profiles.name
-                END,
-                picture = CASE
-                  WHEN user_profiles.picture IS NULL
-                    OR TRIM(user_profiles.picture) = ''
-                  THEN EXCLUDED.picture
-                  ELSE user_profiles.picture
-                END,
-                google_sub = COALESCE(
-                  user_profiles.google_sub,
-                  EXCLUDED.google_sub
+              existingUser = {
+                id: String(
+                  row.id,
                 ),
-                updated_at = NOW()
-            `,
-            [
-              normalizedEmail,
-              finalName,
-              finalPicture,
-              finalSub !== normalizedEmail
-                ? finalSub
-                : null,
-            ],
-          );
-
-          /*
-           * =====================================================
-           * SESSÃO
-           * =====================================================
-           */
+                name:
+                  typeof row.name ===
+                  "string"
+                    ? row.name
+                    : "",
+                picture:
+                  typeof row.picture ===
+                  "string"
+                    ? row.picture
+                    : "",
+              };
+            }
+          } catch (lookupError) {
+            console.error(
+              "AUTH VERIFY: erro ao procurar perfil:",
+              lookupError,
+            );
+          }
 
           const user: SessionUser = {
-            sub: finalSub,
+            sub:
+              existingUser?.id ||
+              (typeof pendingUser?.sub ===
+                "string" &&
+              pendingUser.sub.trim()
+                ? pendingUser.sub
+                : normalizedEmail),
 
             email:
               normalizedEmail,
 
             name:
-              finalName,
+              existingUser?.name?.trim() ||
+              (typeof pendingUser?.name ===
+                "string" &&
+              pendingUser.name.trim()
+                ? pendingUser.name.trim()
+                : normalizedEmail.split(
+                    "@",
+                  )[0]),
 
             picture:
-              finalPicture,
+              existingUser?.picture ||
+              (typeof pendingUser?.picture ===
+                "string"
+                ? pendingUser.picture
+                : ""),
           };
+
+          /*
+           * Se ainda não existia usuário, criamos o perfil
+           * agora. Isso também permite que um usuário que
+           * começou pelo e-mail tenha seu perfil salvo.
+           */
+
+          try {
+            await db.query(
+              `
+                INSERT INTO users (
+                  email,
+                  name,
+                  picture
+                )
+                VALUES (
+                  $1,
+                  $2,
+                  $3
+                )
+                ON CONFLICT (email)
+                DO UPDATE SET
+                  name = CASE
+                    WHEN users.name = ''
+                      AND EXCLUDED.name <> ''
+                    THEN EXCLUDED.name
+                    ELSE users.name
+                  END,
+                  picture = CASE
+                    WHEN users.picture = ''
+                      AND EXCLUDED.picture <> ''
+                    THEN EXCLUDED.picture
+                    ELSE users.picture
+                  END,
+                  updated_at = NOW()
+              `,
+              [
+                user.email,
+                user.name,
+                user.picture || "",
+              ],
+            );
+          } catch (saveError) {
+            console.error(
+              "AUTH VERIFY: erro ao salvar perfil:",
+              saveError,
+            );
+          }
 
           const sessionCookie =
             createSessionCookie(
@@ -377,12 +356,13 @@ export const Route = createFileRoute(
           console.log(
             "AUTH VERIFY: login confirmado",
             {
-              email: user.email,
+              email:
+                user.email,
               sub: user.sub,
-              hasName:
-                Boolean(user.name),
               hasPicture:
-                Boolean(user.picture),
+                Boolean(
+                  user.picture,
+                ),
             },
           );
 
