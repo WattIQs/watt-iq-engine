@@ -214,7 +214,6 @@ function PlanejarPage() {
     ]);
 
     setActiveConversationId(id);
-
     setInput("");
     setTypingMessage("");
     setIsTypingResponse(false);
@@ -272,7 +271,8 @@ function PlanejarPage() {
 
                     title:
                       typeof conversation.title ===
-                      "string"
+                      "string" &&
+                      conversation.title.trim()
                         ? conversation.title
                         : "Conversa",
 
@@ -282,15 +282,19 @@ function PlanejarPage() {
             : [];
 
         if (loaded.length > 0) {
+          setConversations(loaded);
+
           const firstConversation =
             loaded[0];
-
-          setConversations(loaded);
 
           setActiveConversationId(
             firstConversation.id,
           );
 
+          /*
+           * IMPORTANTE:
+           * Carrega as mensagens reais da conversa.
+           */
           await loadConversationMessages(
             firstConversation.id,
           );
@@ -322,7 +326,7 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * CARREGAR MENSAGENS
+   * CARREGAR MENSAGENS DA CONVERSA
    * =========================================================
    */
 
@@ -340,34 +344,84 @@ function PlanejarPage() {
       );
 
       if (!response.ok) {
+        console.error(
+          "Erro ao carregar conversa:",
+          response.status,
+        );
+
         return;
       }
 
       const data = await response.json();
 
-      const messages: ChatMessage[] =
+      console.log(
+        "Resposta da conversa:",
+        data,
+      );
+
+      /*
+       * Aceita diferentes formatos de resposta
+       * que o backend possa estar utilizando.
+       */
+      const rawMessages =
         Array.isArray(data?.messages)
           ? data.messages
-              .filter(
-                (message: any) =>
-                  (
-                    message?.role ===
-                      "user" ||
-                    message?.role ===
-                      "assistant"
-                  ) &&
-                  typeof message?.content ===
-                    "string",
+          : Array.isArray(
+                data?.conversation?.messages,
               )
-              .map(
-                (message: any) => ({
-                  role: message.role,
-                  content:
-                    message.content,
-                }),
-              )
-          : [];
+            ? data.conversation.messages
+            : Array.isArray(
+                  data?.data?.messages,
+                )
+              ? data.data.messages
+              : [];
 
+      const messages: ChatMessage[] =
+        rawMessages
+          .filter(
+            (message: any) =>
+              (
+                message?.role ===
+                  "user" ||
+                message?.role ===
+                  "assistant"
+              ) &&
+              typeof message?.content ===
+                "string",
+          )
+          .map(
+            (message: any) => ({
+              role: message.role,
+              content:
+                message.content,
+            }),
+          );
+
+      /*
+       * Se o backend retornou mensagens,
+       * colocamos elas na conversa.
+       */
+      if (messages.length > 0) {
+        setConversations((current) =>
+          current.map(
+            (conversation) =>
+              conversation.id ===
+              conversationId
+                ? {
+                    ...conversation,
+                    messages,
+                  }
+                : conversation,
+          ),
+        );
+
+        return;
+      }
+
+      /*
+       * Caso a conversa exista mas ainda não tenha
+       * mensagens, usamos a mensagem inicial.
+       */
       setConversations((current) =>
         current.map(
           (conversation) =>
@@ -375,20 +429,16 @@ function PlanejarPage() {
             conversationId
               ? {
                   ...conversation,
-
-                  messages:
-                    messages.length > 0
-                      ? messages
-                      : [
-                          INITIAL_MESSAGE,
-                        ],
+                  messages: [
+                    INITIAL_MESSAGE,
+                  ],
                 }
               : conversation,
         ),
       );
     } catch (error) {
       console.error(
-        "Erro ao carregar mensagens:",
+        "Erro ao carregar mensagens da conversa:",
         error,
       );
     }
@@ -416,13 +466,6 @@ function PlanejarPage() {
   async function selectConversation(
     conversationId: string,
   ) {
-    if (
-      loading ||
-      isTypingResponse
-    ) {
-      return;
-    }
-
     setActiveConversationId(
       conversationId,
     );
@@ -430,17 +473,15 @@ function PlanejarPage() {
     setTypingMessage("");
     setIsTypingResponse(false);
     setLoading(false);
-    setInput("");
 
-    const conversation =
-      conversations.find(
-        (item) =>
-          item.id === conversationId,
-      );
-
+    /*
+     * Sempre recarrega a conversa salva
+     * quando ela não é local.
+     *
+     * Isso evita aparecer somente o nome
+     * enquanto as mensagens ficam vazias.
+     */
     if (
-      conversation &&
-      conversation.messages.length === 0 &&
       !conversationId.startsWith(
         "local-",
       )
@@ -508,7 +549,6 @@ function PlanejarPage() {
     conversationId: string,
     text: string,
   ) {
-    setLoading(false);
     setIsTypingResponse(true);
     setTypingMessage("");
 
@@ -525,37 +565,31 @@ function PlanejarPage() {
 
       let delay = 14;
 
-      const character =
-        text[index];
-
       if (
-        character === "." ||
-        character === "!" ||
-        character === "?"
+        text[index] === "." ||
+        text[index] === "!" ||
+        text[index] === "?"
       ) {
-        delay = 90;
+        delay = 100;
       } else if (
-        character === "," ||
-        character === ";" ||
-        character === ":"
+        text[index] === "," ||
+        text[index] === ";" ||
+        text[index] === ":"
       ) {
-        delay = 45;
+        delay = 55;
       } else if (
-        character === "\n"
+        text[index] === "\n"
       ) {
         delay = 80;
       } else if (
-        character === " "
+        text[index] === " "
       ) {
-        delay = 5;
+        delay = 8;
       }
 
-      await new Promise<void>(
+      await new Promise(
         (resolve) =>
-          setTimeout(
-            resolve,
-            delay,
-          ),
+          setTimeout(resolve, delay),
       );
     }
 
@@ -585,8 +619,7 @@ function PlanejarPage() {
    */
 
   async function sendMessage() {
-    const text =
-      input.trim();
+    const text = input.trim();
 
     if (
       !text ||
@@ -619,10 +652,7 @@ function PlanejarPage() {
           conversation.title ===
           "Nova conversa"
             ? text.length > 35
-              ? `${text.slice(
-                  0,
-                  35,
-                )}...`
+              ? `${text.slice(0, 35)}...`
               : text
             : conversation.title,
 
@@ -655,16 +685,14 @@ function PlanejarPage() {
                 ? null
                 : conversationId,
 
-            messages:
-              nextMessages,
+            messages: nextMessages,
           }),
         },
       );
 
-      const data =
-        await response
-          .json()
-          .catch(() => ({}));
+      const data = await response
+        .json()
+        .catch(() => ({}));
 
       if (!response.ok) {
         throw new Error(
@@ -680,8 +708,7 @@ function PlanejarPage() {
         data?.content;
 
       if (
-        typeof answer !==
-          "string" ||
+        typeof answer !== "string" ||
         !answer.trim()
       ) {
         throw new Error(
@@ -692,39 +719,39 @@ function PlanejarPage() {
       const returnedConversationId =
         data?.conversationId;
 
-      if (
-        returnedConversationId
-      ) {
-        const newId =
-          String(
-            returnedConversationId,
-          );
-
-        setConversations(
-          (current) =>
-            current.map(
-              (
-                conversation,
-              ) =>
-                conversation.id ===
-                conversationId
-                  ? {
-                      ...conversation,
-                      id: newId,
-                    }
-                  : conversation,
-            ),
+      /*
+       * Quando o backend cria a conversa,
+       * substituímos o ID local pelo ID real.
+       */
+      if (returnedConversationId) {
+        const newId = String(
+          returnedConversationId,
         );
 
-        setActiveConversationId(
-          newId,
+        setConversations((current) =>
+          current.map(
+            (conversation) =>
+              conversation.id ===
+              conversationId
+                ? {
+                    ...conversation,
+                    id: newId,
+                  }
+                : conversation,
+          ),
         );
+
+        setActiveConversationId(newId);
+
+        setLoading(false);
 
         await typeAssistantMessage(
           newId,
           answer,
         );
       } else {
+        setLoading(false);
+
         await typeAssistantMessage(
           conversationId,
           answer,
@@ -737,8 +764,6 @@ function PlanejarPage() {
       );
 
       setLoading(false);
-      setTypingMessage("");
-      setIsTypingResponse(false);
 
       updateConversation(
         conversationId,
@@ -749,10 +774,8 @@ function PlanejarPage() {
             ...conversation.messages,
             {
               role: "assistant",
-
               content:
-                error instanceof
-                  Error
+                error instanceof Error
                   ? error.message
                   : "Não foi possível conectar à WattIQ AI neste momento.",
             },
@@ -764,59 +787,12 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * TECLADO DO CHAT
-   *
-   * ENTER       = enviar
-   * SHIFT+ENTER = nova linha
-   * =========================================================
-   */
-
-  function handleInputKeyDown(
-    event: React.KeyboardEvent<HTMLTextAreaElement>,
-  ) {
-    if (
-      event.key !==
-      "Enter"
-    ) {
-      return;
-    }
-
-    if (
-      event.shiftKey
-    ) {
-      return;
-    }
-
-    event.preventDefault();
-
-    if (
-      !input.trim() ||
-      loading ||
-      isTypingResponse ||
-      !activeConversation
-    ) {
-      return;
-    }
-
-    sendMessage();
-  }
-
-  /*
-   * =========================================================
    * EXCLUIR CONVERSA
    * =========================================================
    */
 
   async function resetConversation() {
-    if (!activeConversation)
-      return;
-
-    if (
-      loading ||
-      isTypingResponse
-    ) {
-      return;
-    }
+    if (!activeConversation) return;
 
     const conversationId =
       activeConversation.id;
@@ -826,19 +802,15 @@ function PlanejarPage() {
         "local-",
       )
     ) {
-      setConversations(
-        (current) =>
-          current.filter(
-            (conversation) =>
-              conversation.id !==
-              conversationId,
-          ),
+      setConversations((current) =>
+        current.filter(
+          (conversation) =>
+            conversation.id !==
+            conversationId,
+        ),
       );
 
-      setActiveConversationId(
-        null,
-      );
-
+      setActiveConversationId(null);
       setInput("");
       setTypingMessage("");
       setLoading(false);
@@ -865,10 +837,9 @@ function PlanejarPage() {
         },
       );
 
-      const data =
-        await response
-          .json()
-          .catch(() => ({}));
+      const data = await response
+        .json()
+        .catch(() => ({}));
 
       if (!response.ok) {
         throw new Error(
@@ -877,19 +848,15 @@ function PlanejarPage() {
         );
       }
 
-      setConversations(
-        (current) =>
-          current.filter(
-            (conversation) =>
-              conversation.id !==
-              conversationId,
-          ),
+      setConversations((current) =>
+        current.filter(
+          (conversation) =>
+            conversation.id !==
+            conversationId,
+        ),
       );
 
-      setActiveConversationId(
-        null,
-      );
-
+      setActiveConversationId(null);
       setInput("");
       setTypingMessage("");
       setLoading(false);
@@ -899,6 +866,28 @@ function PlanejarPage() {
         "Erro ao excluir conversa:",
         error,
       );
+    }
+  }
+
+  /*
+   * =========================================================
+   * ENTER / SHIFT + ENTER
+   * =========================================================
+   *
+   * ENTER envia.
+   * SHIFT + ENTER cria nova linha.
+   */
+
+  function handleInputKeyDown(
+    event: React.KeyboardEvent<HTMLTextAreaElement>,
+  ) {
+    if (
+      event.key === "Enter" &&
+      !event.shiftKey
+    ) {
+      event.preventDefault();
+
+      sendMessage();
     }
   }
 
@@ -937,11 +926,11 @@ function PlanejarPage() {
     profileName
       .trim()
       .charAt(0)
-      .toUpperCase() ||
-    "U";
+      .toUpperCase() || "U";
 
   return (
     <main className="flex h-screen overflow-hidden bg-background text-foreground">
+
       {/* =====================================================
           SIDEBAR
       ===================================================== */}
@@ -974,11 +963,7 @@ function PlanejarPage() {
             onClick={
               createNewConversation
             }
-            disabled={
-              loading ||
-              isTypingResponse
-            }
-            className="group flex w-full items-center gap-3 rounded-xl border border-border bg-background/70 px-4 py-3 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/5 active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
+            className="group flex w-full items-center gap-3 rounded-xl border border-border bg-background/70 px-4 py-3 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/5 active:translate-y-0"
           >
             <Plus className="h-4 w-4 text-primary transition-transform duration-300 group-hover:rotate-90" />
 
@@ -1005,24 +990,16 @@ function PlanejarPage() {
           ) : (
             <div className="space-y-1">
               {conversations.map(
-                (
-                  conversation,
-                ) => (
+                (conversation) => (
                   <button
-                    key={
-                      conversation.id
-                    }
+                    key={conversation.id}
                     type="button"
                     onClick={() =>
                       selectConversation(
                         conversation.id,
                       )
                     }
-                    disabled={
-                      loading ||
-                      isTypingResponse
-                    }
-                    className={`group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm transition-all duration-200 disabled:pointer-events-none ${
+                    className={`group flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm transition-all duration-200 ${
                       conversation.id ===
                       activeConversationId
                         ? "bg-primary/10 text-foreground shadow-sm"
@@ -1039,9 +1016,7 @@ function PlanejarPage() {
                     />
 
                     <span className="min-w-0 flex-1 truncate">
-                      {
-                        conversation.title
-                      }
+                      {conversation.title}
                     </span>
                   </button>
                 ),
@@ -1054,9 +1029,7 @@ function PlanejarPage() {
           <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-3">
             {authUser?.picture ? (
               <img
-                src={
-                  authUser.picture
-                }
+                src={authUser.picture}
                 alt={profileName}
                 className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-border"
                 referrerPolicy="no-referrer"
@@ -1075,9 +1048,7 @@ function PlanejarPage() {
               {authUser?.email &&
                 authUser.name && (
                   <p className="truncate text-[10px] text-muted-foreground">
-                    {
-                      authUser.email
-                    }
+                    {authUser.email}
                   </p>
                 )}
             </div>
@@ -1095,24 +1066,23 @@ function PlanejarPage() {
       ===================================================== */}
 
       <section className="relative flex min-w-0 flex-1 flex-col">
+
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <div className="absolute left-1/2 top-[-300px] h-[600px] w-[900px] -translate-x-1/2 animate-pulse rounded-full bg-primary/5 blur-[150px]" />
 
           <div className="absolute inset-0 opacity-[0.025] [background-image:linear-gradient(to_right,hsl(var(--foreground))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--foreground))_1px,transparent_1px)] [background-size:64px_64px]" />
         </div>
 
-        {/* =====================================================
-            HEADER
-        ===================================================== */}
+        {/* HEADER */}
 
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/70 px-4 backdrop-blur-xl sm:px-6">
           <div className="flex items-center gap-3">
+
             <button
               type="button"
               onClick={() =>
                 setSidebarOpen(
-                  (value) =>
-                    !value,
+                  (value) => !value,
                 )
               }
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:text-foreground active:scale-95"
@@ -1126,6 +1096,7 @@ function PlanejarPage() {
             </button>
 
             <div className="flex items-center gap-3">
+
               <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
                 <Bot className="h-4 w-4 text-primary" />
               </div>
@@ -1143,6 +1114,7 @@ function PlanejarPage() {
                   </span>
                 </div>
               </div>
+
             </div>
           </div>
 
@@ -1154,14 +1126,14 @@ function PlanejarPage() {
         ===================================================== */}
 
         <div
-          ref={
-            chatContainerRef
-          }
+          ref={chatContainerRef}
           className="flex-1 overflow-y-auto"
         >
           <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+
             {!activeConversation ? (
               <div className="flex min-h-[55vh] flex-col items-center justify-center text-center">
+
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
                   <Bot className="h-6 w-6 text-primary" />
                 </div>
@@ -1186,21 +1158,15 @@ function PlanejarPage() {
                   className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10 active:translate-y-0"
                 >
                   <Plus className="h-4 w-4" />
-
                   Nova conversa
                 </button>
+
               </div>
             ) : (
               <>
-                {/* =================================================
-                    MENSAGENS EXISTENTES
-                ================================================= */}
 
                 {activeConversation.messages.map(
-                  (
-                    message,
-                    index,
-                  ) => {
+                  (message, index) => {
                     const isUser =
                       message.role ===
                       "user";
@@ -1214,6 +1180,7 @@ function PlanejarPage() {
                             : "justify-start"
                         }`}
                       >
+
                         {!isUser && (
                           <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
                             <Bot className="h-4 w-4 text-primary" />
@@ -1227,10 +1194,9 @@ function PlanejarPage() {
                               : "rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 text-foreground shadow-black/10"
                           }`}
                         >
-                          {
-                            message.content
-                          }
+                          {message.content}
                         </div>
+
                       </div>
                     );
                   },
@@ -1242,17 +1208,20 @@ function PlanejarPage() {
 
                 {loading && (
                   <div className="mb-6 flex animate-in gap-3 duration-300">
+
                     <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
                       <Bot className="h-4 w-4 text-primary" />
                     </div>
 
                     <div className="flex h-[48px] items-center rounded-2xl rounded-bl-md border border-border bg-card px-5 shadow-sm">
-                      <div className="flex items-center gap-[5px]">
+
+                      <div className="flex items-center gap-[4px]">
+
                         <span
                           className="h-[6px] w-[6px] rounded-full bg-primary"
                           style={{
                             animation:
-                              "wattiq-thinking 1.15s ease-in-out infinite",
+                              "wattiq-thinking 1.2s ease-in-out infinite",
                             animationDelay:
                               "0ms",
                           }}
@@ -1262,7 +1231,7 @@ function PlanejarPage() {
                           className="h-[6px] w-[6px] rounded-full bg-primary"
                           style={{
                             animation:
-                              "wattiq-thinking 1.15s ease-in-out infinite",
+                              "wattiq-thinking 1.2s ease-in-out infinite",
                             animationDelay:
                               "180ms",
                           }}
@@ -1272,12 +1241,14 @@ function PlanejarPage() {
                           className="h-[6px] w-[6px] rounded-full bg-primary"
                           style={{
                             animation:
-                              "wattiq-thinking 1.15s ease-in-out infinite",
+                              "wattiq-thinking 1.2s ease-in-out infinite",
                             animationDelay:
                               "360ms",
                           }}
                         />
+
                       </div>
+
                     </div>
                   </div>
                 )}
@@ -1288,19 +1259,25 @@ function PlanejarPage() {
 
                 {isTypingResponse && (
                   <div className="mb-6 flex animate-in gap-3 duration-300">
+
                     <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
                       <Bot className="h-4 w-4 text-primary" />
                     </div>
 
                     <div className="max-w-[82%] whitespace-pre-wrap rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 text-sm leading-7 text-foreground shadow-sm">
+
                       {typingMessage}
 
                       <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-1 animate-pulse bg-primary" />
+
                     </div>
+
                   </div>
                 )}
+
               </>
             )}
+
           </div>
         </div>
 
@@ -1309,16 +1286,16 @@ function PlanejarPage() {
         ===================================================== */}
 
         <div className="shrink-0 bg-gradient-to-t from-background via-background to-transparent px-4 pb-5 pt-3 sm:px-6">
+
           <div className="mx-auto w-full max-w-3xl">
+
             <div className="rounded-2xl border border-border bg-card shadow-2xl shadow-black/20 transition-all duration-300 focus-within:border-primary/40 focus-within:shadow-[0_0_40px_rgba(180,255,80,0.06)]">
+
               <textarea
                 value={input}
-                onChange={(
-                  event,
-                ) =>
+                onChange={(event) =>
                   setInput(
-                    event.target
-                      .value,
+                    event.target.value,
                   )
                 }
                 onKeyDown={
@@ -1338,12 +1315,10 @@ function PlanejarPage() {
                 className="max-h-40 min-h-[52px] w-full resize-none bg-transparent px-4 py-4 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
               />
 
-              <div className="flex items-center justify-between px-3 pb-3">
-                <p className="pl-1 text-[10px] text-muted-foreground">
-                  Enter para enviar · Shift + Enter para nova linha
-                </p>
+              <div className="flex items-center justify-end px-3 pb-3">
 
                 <div className="flex items-center gap-2">
+
                   {activeConversation && (
                     <button
                       type="button"
@@ -1373,24 +1348,28 @@ function PlanejarPage() {
                       isTypingResponse ||
                       !activeConversation
                     }
-                    className="group flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10 active:translate-y-0 disabled:pointer-events-none disabled:opacity-40"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10 active:translate-y-0 disabled:pointer-events-none disabled:opacity-40"
                     aria-label="Enviar mensagem"
                   >
                     {loading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Send className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+                      <Send className="h-4 w-4 transition-transform duration-200" />
                     )}
                   </button>
+
                 </div>
               </div>
+
             </div>
 
             <p className="mt-2 text-center text-[10px] text-muted-foreground">
               WattIQ AI
             </p>
+
           </div>
         </div>
+
       </section>
 
       {/* =======================================================
@@ -1407,11 +1386,12 @@ function PlanejarPage() {
           }
 
           30% {
-            transform: translateY(-6px);
+            transform: translateY(-5px);
             opacity: 1;
           }
         }
       `}</style>
+
     </main>
   );
 }
