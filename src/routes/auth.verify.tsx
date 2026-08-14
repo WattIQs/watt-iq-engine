@@ -9,6 +9,9 @@ import {
   type SessionUser,
 } from "../lib/session";
 
+import { db } from "../lib/db";
+import { initDatabase } from "../lib/db-init";
+
 function readCookie(
   request: Request,
   name: string,
@@ -21,15 +24,15 @@ function readCookie(
   }
 
   for (const part of header.split(";")) {
-    const separator = part.indexOf("=");
+    const separator =
+      part.indexOf("=");
 
     if (separator === -1) {
       continue;
     }
 
-    const cookieName = part
-      .slice(0, separator)
-      .trim();
+    const cookieName =
+      part.slice(0, separator).trim();
 
     if (cookieName !== name) {
       continue;
@@ -51,12 +54,13 @@ function decodePendingUser(
   }
 
   try {
-    const decoded = JSON.parse(
-      Buffer.from(
-        value,
-        "base64url",
-      ).toString("utf8"),
-    );
+    const decoded =
+      JSON.parse(
+        Buffer.from(
+          value,
+          "base64url",
+        ).toString("utf8"),
+      );
 
     if (
       !decoded ||
@@ -133,6 +137,12 @@ export const Route = createFileRoute(
             );
           }
 
+          /*
+           * =====================================================
+           * VALIDAR OTP
+           * =====================================================
+           */
+
           const email =
             await verifyOtpChallenge(
               challengeId,
@@ -152,42 +162,183 @@ export const Route = createFileRoute(
             );
           }
 
+          const normalizedEmail =
+            email
+              .trim()
+              .toLowerCase();
+
+          /*
+           * =====================================================
+           * USUÁRIO PENDENTE
+           * =====================================================
+           */
+
           const pendingUser =
             decodePendingUser(
               pendingUserRaw,
             );
 
-          const user: SessionUser = {
-            sub:
-              typeof pendingUser?.sub ===
-                "string" &&
-              pendingUser.sub.trim()
+          /*
+           * =====================================================
+           * BANCO
+           * =====================================================
+           *
+           * Buscamos novamente pelo e-mail.
+           *
+           * Isso garante que o perfil do Google seja utilizado
+           * mesmo que o cookie tenha dados incompletos.
+           */
+
+          await initDatabase();
+
+          const profileResult =
+            await db.query(
+              `
+                SELECT
+                  email,
+                  name,
+                  picture,
+                  google_sub
+                FROM user_profiles
+                WHERE email = $1
+                LIMIT 1
+              `,
+              [normalizedEmail],
+            );
+
+          const existingProfile =
+            profileResult.rows[0] ||
+            null;
+
+          /*
+           * =====================================================
+           * DADOS FINAIS DO USUÁRIO
+           * =====================================================
+           */
+
+          const databaseName =
+            existingProfile &&
+            typeof existingProfile.name ===
+              "string" &&
+            existingProfile.name.trim()
+              ? existingProfile.name.trim()
+              : "";
+
+          const pendingName =
+            typeof pendingUser?.name ===
+              "string" &&
+            pendingUser.name.trim()
+              ? pendingUser.name.trim()
+              : "";
+
+          const databasePicture =
+            existingProfile &&
+            typeof existingProfile.picture ===
+              "string"
+              ? existingProfile.picture
+              : "";
+
+          const pendingPicture =
+            typeof pendingUser?.picture ===
+              "string"
+              ? pendingUser.picture
+              : "";
+
+          const finalName =
+            databaseName ||
+            pendingName ||
+            normalizedEmail.split(
+              "@",
+            )[0];
+
+          const finalPicture =
+            databasePicture ||
+            pendingPicture ||
+            "";
+
+          const finalSub =
+            existingProfile &&
+            typeof existingProfile.google_sub ===
+              "string" &&
+            existingProfile.google_sub.trim()
+              ? existingProfile.google_sub
+              : typeof pendingUser?.sub ===
+                  "string" &&
+                pendingUser.sub.trim()
                 ? pendingUser.sub
-                : email,
+                : normalizedEmail;
+
+          /*
+           * =====================================================
+           * GARANTIR PERFIL
+           * =====================================================
+           */
+
+          await db.query(
+            `
+              INSERT INTO user_profiles (
+                email,
+                name,
+                picture,
+                google_sub
+              )
+              VALUES ($1, $2, $3, $4)
+              ON CONFLICT (email)
+              DO UPDATE SET
+                name = CASE
+                  WHEN user_profiles.name IS NULL
+                    OR TRIM(user_profiles.name) = ''
+                  THEN EXCLUDED.name
+                  ELSE user_profiles.name
+                END,
+                picture = CASE
+                  WHEN user_profiles.picture IS NULL
+                    OR TRIM(user_profiles.picture) = ''
+                  THEN EXCLUDED.picture
+                  ELSE user_profiles.picture
+                END,
+                google_sub = COALESCE(
+                  user_profiles.google_sub,
+                  EXCLUDED.google_sub
+                ),
+                updated_at = NOW()
+            `,
+            [
+              normalizedEmail,
+              finalName,
+              finalPicture,
+              finalSub !== normalizedEmail
+                ? finalSub
+                : null,
+            ],
+          );
+
+          /*
+           * =====================================================
+           * SESSÃO
+           * =====================================================
+           */
+
+          const user: SessionUser = {
+            sub: finalSub,
 
             email:
-              email
-                .trim()
-                .toLowerCase(),
+              normalizedEmail,
 
             name:
-              typeof pendingUser?.name ===
-                "string" &&
-              pendingUser.name.trim()
-                ? pendingUser.name.trim()
-                : email.split("@")[0],
+              finalName,
 
             picture:
-              typeof pendingUser?.picture ===
-                "string"
-                ? pendingUser.picture
-                : "",
+              finalPicture,
           };
 
           const sessionCookie =
-            createSessionCookie(user);
+            createSessionCookie(
+              user,
+            );
 
-          const headers = new Headers();
+          const headers =
+            new Headers();
 
           headers.append(
             "Set-Cookie",
@@ -228,6 +379,10 @@ export const Route = createFileRoute(
             {
               email: user.email,
               sub: user.sub,
+              hasName:
+                Boolean(user.name),
+              hasPicture:
+                Boolean(user.picture),
             },
           );
 
