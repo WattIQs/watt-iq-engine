@@ -40,10 +40,7 @@ type AuthUser = {
 };
 
 const API_URL =
-  import.meta.env.VITE_API_URL?.replace(
-    /\/$/,
-    "",
-  ) || "";
+  import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
 
 const INITIAL_MESSAGE: ChatMessage = {
   role: "assistant",
@@ -58,41 +55,24 @@ export const Route = createFileRoute("/planejar")({
 function PlanejarPage() {
   const navigate = useNavigate();
 
-  const [authenticated, setAuthenticated] =
-    useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
 
-  const [checkingAuth, setCheckingAuth] =
-    useState(true);
-
-  const [authUser, setAuthUser] =
-    useState<AuthUser | null>(null);
-
-  const [conversations, setConversations] =
-    useState<Conversation[]>([]);
-
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] =
     useState<string | null>(null);
 
-  const [loadingHistory, setLoadingHistory] =
-    useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const [sidebarOpen, setSidebarOpen] =
-    useState(true);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const [input, setInput] =
-    useState("");
+  const [typingMessage, setTypingMessage] = useState("");
+  const [isTypingResponse, setIsTypingResponse] = useState(false);
 
-  const [loading, setLoading] =
-    useState(false);
-
-  const [typingMessage, setTypingMessage] =
-    useState("");
-
-  const [isTypingResponse, setIsTypingResponse] =
-    useState(false);
-
-  const chatContainerRef =
-    useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   /*
    * =========================================================
@@ -105,14 +85,11 @@ function PlanejarPage() {
 
     async function checkSession() {
       try {
-        const response = await fetch(
-          "/auth/me",
-          {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store",
-          },
-        );
+        const response = await fetch("/auth/me", {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        });
 
         if (!response.ok) {
           throw new Error(
@@ -124,29 +101,24 @@ function PlanejarPage() {
 
         if (!mounted) return;
 
-        if (
-          data?.authenticated === true
-        ) {
+        if (data?.authenticated === true) {
           setAuthenticated(true);
 
           setAuthUser(
             data?.user
               ? {
                   name:
-                    typeof data.user.name ===
-                    "string"
+                    typeof data.user.name === "string"
                       ? data.user.name
                       : undefined,
 
                   email:
-                    typeof data.user.email ===
-                    "string"
+                    typeof data.user.email === "string"
                       ? data.user.email
                       : undefined,
 
                   picture:
-                    typeof data.user.picture ===
-                    "string"
+                    typeof data.user.picture === "string"
                       ? data.user.picture
                       : undefined,
                 }
@@ -192,8 +164,11 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * NOVA CONVERSA
+   * NOVA CONVERSA LOCAL
    * =========================================================
+   *
+   * A conversa só é criada no PostgreSQL quando a primeira
+   * mensagem for enviada.
    */
 
   function createNewConversation() {
@@ -222,7 +197,112 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * CARREGAR CONVERSAS
+   * CARREGAR MENSAGENS
+   * =========================================================
+   */
+
+  async function loadConversationMessages(
+    conversationId: string,
+  ) {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/conversations/${conversationId}`,
+        {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store",
+        },
+      );
+
+      if (!response.ok) {
+        console.error(
+          "Erro ao carregar conversa:",
+          response.status,
+        );
+
+        return;
+      }
+
+      const data = await response.json();
+
+      const rawMessages =
+        Array.isArray(data?.messages)
+          ? data.messages
+          : Array.isArray(
+                data?.conversation?.messages,
+              )
+            ? data.conversation.messages
+            : Array.isArray(
+                  data?.data?.messages,
+                )
+              ? data.data.messages
+              : [];
+
+      const messages: ChatMessage[] =
+        rawMessages
+          .filter(
+            (message: any) =>
+              (
+                message?.role === "user" ||
+                message?.role === "assistant"
+              ) &&
+              typeof message?.content === "string",
+          )
+          .map((message: any) => ({
+            role: message.role,
+            content: message.content,
+          }));
+
+      /*
+       * Se houver mensagens salvas, utiliza exatamente
+       * o histórico do banco.
+       */
+      if (messages.length > 0) {
+        setConversations((current) =>
+          current.map((conversation) =>
+            conversation.id === conversationId
+              ? {
+                  ...conversation,
+                  messages,
+                  title:
+                    messages.find(
+                      (message) =>
+                        message.role === "user",
+                    )?.content ||
+                    conversation.title ||
+                    "Nova conversa",
+                }
+              : conversation,
+          ),
+        );
+
+        return;
+      }
+
+      /*
+       * Conversa vazia.
+       */
+      setConversations((current) =>
+        current.map((conversation) =>
+          conversation.id === conversationId
+            ? {
+                ...conversation,
+                messages: [INITIAL_MESSAGE],
+              }
+            : conversation,
+        ),
+      );
+    } catch (error) {
+      console.error(
+        "Erro ao carregar mensagens da conversa:",
+        error,
+      );
+    }
+  }
+
+  /*
+   * =========================================================
+   * CARREGAR CONVERSAS DO BANCO
    * =========================================================
    */
 
@@ -255,9 +335,7 @@ function PlanejarPage() {
         if (!mounted) return;
 
         const loaded: Conversation[] =
-          Array.isArray(
-            data?.conversations,
-          )
+          Array.isArray(data?.conversations)
             ? data.conversations
                 .filter(
                   (conversation: any) =>
@@ -271,10 +349,10 @@ function PlanejarPage() {
 
                     title:
                       typeof conversation.title ===
-                      "string" &&
+                        "string" &&
                       conversation.title.trim()
                         ? conversation.title
-                        : "Conversa",
+                        : "Nova conversa",
 
                     messages: [],
                   }),
@@ -284,17 +362,12 @@ function PlanejarPage() {
         if (loaded.length > 0) {
           setConversations(loaded);
 
-          const firstConversation =
-            loaded[0];
+          const firstConversation = loaded[0];
 
           setActiveConversationId(
             firstConversation.id,
           );
 
-          /*
-           * IMPORTANTE:
-           * Carrega as mensagens reais da conversa.
-           */
           await loadConversationMessages(
             firstConversation.id,
           );
@@ -326,126 +399,6 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * CARREGAR MENSAGENS DA CONVERSA
-   * =========================================================
-   */
-
-  async function loadConversationMessages(
-    conversationId: string,
-  ) {
-    try {
-      const response = await fetch(
-        `${API_URL}/api/conversations/${conversationId}`,
-        {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-        },
-      );
-
-      if (!response.ok) {
-        console.error(
-          "Erro ao carregar conversa:",
-          response.status,
-        );
-
-        return;
-      }
-
-      const data = await response.json();
-
-      console.log(
-        "Resposta da conversa:",
-        data,
-      );
-
-      /*
-       * Aceita diferentes formatos de resposta
-       * que o backend possa estar utilizando.
-       */
-      const rawMessages =
-        Array.isArray(data?.messages)
-          ? data.messages
-          : Array.isArray(
-                data?.conversation?.messages,
-              )
-            ? data.conversation.messages
-            : Array.isArray(
-                  data?.data?.messages,
-                )
-              ? data.data.messages
-              : [];
-
-      const messages: ChatMessage[] =
-        rawMessages
-          .filter(
-            (message: any) =>
-              (
-                message?.role ===
-                  "user" ||
-                message?.role ===
-                  "assistant"
-              ) &&
-              typeof message?.content ===
-                "string",
-          )
-          .map(
-            (message: any) => ({
-              role: message.role,
-              content:
-                message.content,
-            }),
-          );
-
-      /*
-       * Se o backend retornou mensagens,
-       * colocamos elas na conversa.
-       */
-      if (messages.length > 0) {
-        setConversations((current) =>
-          current.map(
-            (conversation) =>
-              conversation.id ===
-              conversationId
-                ? {
-                    ...conversation,
-                    messages,
-                  }
-                : conversation,
-          ),
-        );
-
-        return;
-      }
-
-      /*
-       * Caso a conversa exista mas ainda não tenha
-       * mensagens, usamos a mensagem inicial.
-       */
-      setConversations((current) =>
-        current.map(
-          (conversation) =>
-            conversation.id ===
-            conversationId
-              ? {
-                  ...conversation,
-                  messages: [
-                    INITIAL_MESSAGE,
-                  ],
-                }
-              : conversation,
-        ),
-      );
-    } catch (error) {
-      console.error(
-        "Erro ao carregar mensagens da conversa:",
-        error,
-      );
-    }
-  }
-
-  /*
-   * =========================================================
    * CONVERSA ATIVA
    * =========================================================
    */
@@ -453,8 +406,7 @@ function PlanejarPage() {
   const activeConversation =
     conversations.find(
       (conversation) =>
-        conversation.id ===
-        activeConversationId,
+        conversation.id === activeConversationId,
     ) || null;
 
   /*
@@ -466,26 +418,13 @@ function PlanejarPage() {
   async function selectConversation(
     conversationId: string,
   ) {
-    setActiveConversationId(
-      conversationId,
-    );
+    setActiveConversationId(conversationId);
 
     setTypingMessage("");
     setIsTypingResponse(false);
     setLoading(false);
 
-    /*
-     * Sempre recarrega a conversa salva
-     * quando ela não é local.
-     *
-     * Isso evita aparecer somente o nome
-     * enquanto as mensagens ficam vazias.
-     */
-    if (
-      !conversationId.startsWith(
-        "local-",
-      )
-    ) {
+    if (!conversationId.startsWith("local-")) {
       await loadConversationMessages(
         conversationId,
       );
@@ -494,7 +433,7 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * SCROLL AUTOMÁTICO
+   * SCROLL
    * =========================================================
    */
 
@@ -529,19 +468,17 @@ function PlanejarPage() {
     ) => Conversation,
   ) {
     setConversations((current) =>
-      current.map(
-        (conversation) =>
-          conversation.id ===
-          conversationId
-            ? updater(conversation)
-            : conversation,
+      current.map((conversation) =>
+        conversation.id === conversationId
+          ? updater(conversation)
+          : conversation,
       ),
     );
   }
 
   /*
    * =========================================================
-   * ANIMAÇÃO DE DIGITAÇÃO DA IA
+   * DIGITAÇÃO DA IA
    * =========================================================
    */
 
@@ -577,19 +514,14 @@ function PlanejarPage() {
         text[index] === ":"
       ) {
         delay = 55;
-      } else if (
-        text[index] === "\n"
-      ) {
+      } else if (text[index] === "\n") {
         delay = 80;
-      } else if (
-        text[index] === " "
-      ) {
+      } else if (text[index] === " ") {
         delay = 8;
       }
 
-      await new Promise(
-        (resolve) =>
-          setTimeout(resolve, delay),
+      await new Promise((resolve) =>
+        setTimeout(resolve, delay),
       );
     }
 
@@ -635,7 +567,7 @@ function PlanejarPage() {
       content: text,
     };
 
-    const conversationId =
+    let conversationId =
       activeConversation.id;
 
     const nextMessages = [
@@ -643,29 +575,141 @@ function PlanejarPage() {
       userMessage,
     ];
 
-    updateConversation(
-      conversationId,
-      (conversation) => ({
-        ...conversation,
+    /*
+     * =======================================================
+     * PRIMEIRA MENSAGEM
+     * =======================================================
+     *
+     * Se a conversa ainda for local, cria a conversa
+     * REAL no PostgreSQL antes de chamar a IA.
+     */
 
-        title:
-          conversation.title ===
-          "Nova conversa"
-            ? text.length > 35
-              ? `${text.slice(0, 35)}...`
-              : text
-            : conversation.title,
+    if (conversationId.startsWith("local-")) {
+      try {
+        setLoading(true);
 
-        messages: nextMessages,
-      }),
-    );
+        const createResponse = await fetch(
+          `${API_URL}/api/conversations`,
+          {
+            method: "POST",
+            credentials: "include",
+
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        const createData =
+          await createResponse
+            .json()
+            .catch(() => ({}));
+
+        if (!createResponse.ok) {
+          throw new Error(
+            createData?.message ||
+              "Não foi possível criar a conversa.",
+          );
+        }
+
+        const createdId =
+          createData?.conversation?.id;
+
+        if (!createdId) {
+          throw new Error(
+            "O servidor não retornou o ID da conversa.",
+          );
+        }
+
+        const newId = String(createdId);
+
+        /*
+         * Substitui o ID local pelo ID real.
+         */
+        setConversations((current) =>
+          current.map((conversation) =>
+            conversation.id === conversationId
+              ? {
+                  ...conversation,
+                  id: newId,
+                  title:
+                    text.length > 35
+                      ? `${text.slice(0, 35)}...`
+                      : text,
+                  messages: nextMessages,
+                }
+              : conversation,
+          ),
+        );
+
+        setActiveConversationId(newId);
+
+        conversationId = newId;
+      } catch (error) {
+        console.error(
+          "Erro ao criar conversa:",
+          error,
+        );
+
+        setLoading(false);
+
+        updateConversation(
+          activeConversation.id,
+          (conversation) => ({
+            ...conversation,
+            messages: [
+              ...conversation.messages,
+              {
+                role: "assistant",
+                content:
+                  error instanceof Error
+                    ? error.message
+                    : "Não foi possível criar a conversa.",
+              },
+            ],
+          }),
+        );
+
+        return;
+      }
+    } else {
+      /*
+       * Conversa já existente.
+       */
+      updateConversation(
+        conversationId,
+        (conversation) => ({
+          ...conversation,
+
+          title:
+            conversation.title ===
+              "Nova conversa"
+              ? text.length > 35
+                ? `${text.slice(0, 35)}...`
+                : text
+              : conversation.title,
+
+          messages: nextMessages,
+        }),
+      );
+
+      setLoading(true);
+    }
 
     setInput("");
-    setLoading(true);
     setTypingMessage("");
     setIsTypingResponse(false);
 
     try {
+      /*
+       * Busca o histórico atual da conversa.
+       *
+       * Para a primeira mensagem, nextMessages contém
+       * a mensagem inicial + mensagem do usuário.
+       */
+      const messagesToSend =
+        nextMessages;
+
       const response = await fetch(
         `${API_URL}/api/ai/chat`,
         {
@@ -678,14 +722,8 @@ function PlanejarPage() {
           },
 
           body: JSON.stringify({
-            conversationId:
-              conversationId.startsWith(
-                "local-",
-              )
-                ? null
-                : conversationId,
-
-            messages: nextMessages,
+            conversationId,
+            messages: messagesToSend,
           }),
         },
       );
@@ -716,47 +754,30 @@ function PlanejarPage() {
         );
       }
 
-      const returnedConversationId =
-        data?.conversationId;
-
       /*
-       * Quando o backend cria a conversa,
-       * substituímos o ID local pelo ID real.
+       * Atualiza o título local imediatamente.
        */
-      if (returnedConversationId) {
-        const newId = String(
-          returnedConversationId,
-        );
+      updateConversation(
+        conversationId,
+        (conversation) => ({
+          ...conversation,
 
-        setConversations((current) =>
-          current.map(
-            (conversation) =>
-              conversation.id ===
-              conversationId
-                ? {
-                    ...conversation,
-                    id: newId,
-                  }
-                : conversation,
-          ),
-        );
+          title:
+            conversation.title ===
+              "Nova conversa"
+              ? text.length > 35
+                ? `${text.slice(0, 35)}...`
+                : text
+              : conversation.title,
+        }),
+      );
 
-        setActiveConversationId(newId);
+      setLoading(false);
 
-        setLoading(false);
-
-        await typeAssistantMessage(
-          newId,
-          answer,
-        );
-      } else {
-        setLoading(false);
-
-        await typeAssistantMessage(
-          conversationId,
-          answer,
-        );
-      }
+      await typeAssistantMessage(
+        conversationId,
+        answer,
+      );
     } catch (error) {
       console.error(
         "Erro ao conversar com a WattIQ AI:",
@@ -797,11 +818,7 @@ function PlanejarPage() {
     const conversationId =
       activeConversation.id;
 
-    if (
-      conversationId.startsWith(
-        "local-",
-      )
-    ) {
+    if (conversationId.startsWith("local-")) {
       setConversations((current) =>
         current.filter(
           (conversation) =>
@@ -871,11 +888,8 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * ENTER / SHIFT + ENTER
+   * ENTER
    * =========================================================
-   *
-   * ENTER envia.
-   * SHIFT + ENTER cria nova linha.
    */
 
   function handleInputKeyDown(
@@ -931,9 +945,7 @@ function PlanejarPage() {
   return (
     <main className="flex h-screen overflow-hidden bg-background text-foreground">
 
-      {/* =====================================================
-          SIDEBAR
-      ===================================================== */}
+      {/* SIDEBAR */}
 
       <aside
         className={`relative flex shrink-0 flex-col border-r border-border bg-card/40 backdrop-blur-xl transition-all duration-300 ${
@@ -960,13 +972,10 @@ function PlanejarPage() {
         <div className="p-3">
           <button
             type="button"
-            onClick={
-              createNewConversation
-            }
+            onClick={createNewConversation}
             className="group flex w-full items-center gap-3 rounded-xl border border-border bg-background/70 px-4 py-3 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/5 active:translate-y-0"
           >
             <Plus className="h-4 w-4 text-primary transition-transform duration-300 group-hover:rotate-90" />
-
             Nova conversa
           </button>
         </div>
@@ -982,8 +991,7 @@ function PlanejarPage() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
-          ) : conversations.length ===
-            0 ? (
+          ) : conversations.length === 0 ? (
             <div className="px-3 py-8 text-center text-xs text-muted-foreground">
               Nenhuma conversa ainda.
             </div>
@@ -1061,9 +1069,7 @@ function PlanejarPage() {
         </div>
       </aside>
 
-      {/* =====================================================
-          CHAT
-      ===================================================== */}
+      {/* CHAT */}
 
       <section className="relative flex min-w-0 flex-1 flex-col">
 
@@ -1077,7 +1083,6 @@ function PlanejarPage() {
 
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/70 px-4 backdrop-blur-xl sm:px-6">
           <div className="flex items-center gap-3">
-
             <button
               type="button"
               onClick={() =>
@@ -1096,7 +1101,6 @@ function PlanejarPage() {
             </button>
 
             <div className="flex items-center gap-3">
-
               <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
                 <Bot className="h-4 w-4 text-primary" />
               </div>
@@ -1114,16 +1118,13 @@ function PlanejarPage() {
                   </span>
                 </div>
               </div>
-
             </div>
           </div>
 
           <Sparkles className="h-4 w-4 animate-pulse text-primary/50" />
         </header>
 
-        {/* =====================================================
-            MENSAGENS
-        ===================================================== */}
+        {/* MENSAGENS */}
 
         <div
           ref={chatContainerRef}
@@ -1152,24 +1153,19 @@ function PlanejarPage() {
 
                 <button
                   type="button"
-                  onClick={
-                    createNewConversation
-                  }
+                  onClick={createNewConversation}
                   className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10 active:translate-y-0"
                 >
                   <Plus className="h-4 w-4" />
                   Nova conversa
                 </button>
-
               </div>
             ) : (
               <>
-
                 {activeConversation.messages.map(
                   (message, index) => {
                     const isUser =
-                      message.role ===
-                      "user";
+                      message.role === "user";
 
                     return (
                       <div
@@ -1180,7 +1176,6 @@ function PlanejarPage() {
                             : "justify-start"
                         }`}
                       >
-
                         {!isUser && (
                           <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
                             <Bot className="h-4 w-4 text-primary" />
@@ -1196,111 +1191,66 @@ function PlanejarPage() {
                         >
                           {message.content}
                         </div>
-
                       </div>
                     );
                   },
                 )}
 
-                {/* =================================================
-                    IA PENSANDO
-                ================================================= */}
-
                 {loading && (
                   <div className="mb-6 flex animate-in gap-3 duration-300">
-
                     <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
                       <Bot className="h-4 w-4 text-primary" />
                     </div>
 
                     <div className="flex h-[48px] items-center rounded-2xl rounded-bl-md border border-border bg-card px-5 shadow-sm">
-
                       <div className="flex items-center gap-[4px]">
-
-                        <span
-                          className="h-[6px] w-[6px] rounded-full bg-primary"
-                          style={{
-                            animation:
-                              "wattiq-thinking 1.2s ease-in-out infinite",
-                            animationDelay:
-                              "0ms",
-                          }}
-                        />
-
-                        <span
-                          className="h-[6px] w-[6px] rounded-full bg-primary"
-                          style={{
-                            animation:
-                              "wattiq-thinking 1.2s ease-in-out infinite",
-                            animationDelay:
-                              "180ms",
-                          }}
-                        />
-
-                        <span
-                          className="h-[6px] w-[6px] rounded-full bg-primary"
-                          style={{
-                            animation:
-                              "wattiq-thinking 1.2s ease-in-out infinite",
-                            animationDelay:
-                              "360ms",
-                          }}
-                        />
-
+                        {[0, 180, 360].map(
+                          (delay) => (
+                            <span
+                              key={delay}
+                              className="h-[6px] w-[6px] rounded-full bg-primary"
+                              style={{
+                                animation:
+                                  "wattiq-thinking 1.2s ease-in-out infinite",
+                                animationDelay: `${delay}ms`,
+                              }}
+                            />
+                          ),
+                        )}
                       </div>
-
                     </div>
                   </div>
                 )}
 
-                {/* =================================================
-                    IA DIGITANDO
-                ================================================= */}
-
                 {isTypingResponse && (
                   <div className="mb-6 flex animate-in gap-3 duration-300">
-
                     <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
                       <Bot className="h-4 w-4 text-primary" />
                     </div>
 
                     <div className="max-w-[82%] whitespace-pre-wrap rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 text-sm leading-7 text-foreground shadow-sm">
-
                       {typingMessage}
 
                       <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-1 animate-pulse bg-primary" />
-
                     </div>
-
                   </div>
                 )}
-
               </>
             )}
-
           </div>
         </div>
 
-        {/* =====================================================
-            INPUT
-        ===================================================== */}
+        {/* INPUT */}
 
         <div className="shrink-0 bg-gradient-to-t from-background via-background to-transparent px-4 pb-5 pt-3 sm:px-6">
-
           <div className="mx-auto w-full max-w-3xl">
-
             <div className="rounded-2xl border border-border bg-card shadow-2xl shadow-black/20 transition-all duration-300 focus-within:border-primary/40 focus-within:shadow-[0_0_40px_rgba(180,255,80,0.06)]">
-
               <textarea
                 value={input}
                 onChange={(event) =>
-                  setInput(
-                    event.target.value,
-                  )
+                  setInput(event.target.value)
                 }
-                onKeyDown={
-                  handleInputKeyDown
-                }
+                onKeyDown={handleInputKeyDown}
                 placeholder={
                   activeConversation
                     ? "Pergunte à WattIQ AI..."
@@ -1316,7 +1266,6 @@ function PlanejarPage() {
               />
 
               <div className="flex items-center justify-end px-3 pb-3">
-
                 <div className="flex items-center gap-2">
 
                   {activeConversation && (
@@ -1339,9 +1288,7 @@ function PlanejarPage() {
 
                   <button
                     type="button"
-                    onClick={
-                      sendMessage
-                    }
+                    onClick={sendMessage}
                     disabled={
                       !input.trim() ||
                       loading ||
@@ -1357,24 +1304,16 @@ function PlanejarPage() {
                       <Send className="h-4 w-4 transition-transform duration-200" />
                     )}
                   </button>
-
                 </div>
               </div>
-
             </div>
 
             <p className="mt-2 text-center text-[10px] text-muted-foreground">
               WattIQ AI
             </p>
-
           </div>
         </div>
-
       </section>
-
-      {/* =======================================================
-          ANIMAÇÃO DOS 3 PONTOS
-      ======================================================= */}
 
       <style>{`
         @keyframes wattiq-thinking {
@@ -1391,7 +1330,6 @@ function PlanejarPage() {
           }
         }
       `}</style>
-
     </main>
   );
 }
