@@ -474,11 +474,20 @@ function PlanejarPage() {
    * DIGITAÇÃO DA IA
    * =========================================================
    *
-   * A velocidade é calculada de acordo com o tamanho
+   * A duração é calculada proporcionalmente ao tamanho
    * da resposta.
    *
-   * Respostas curtas aparecem rapidamente.
-   * Respostas longas aceleram para não ficarem demoradas.
+   * Respostas pequenas:
+   * aparecem rapidamente.
+   *
+   * Respostas médias:
+   * possuem uma animação perceptível.
+   *
+   * Respostas grandes:
+   * aceleram automaticamente para não ficarem demoradas.
+   *
+   * A duração máxima é limitada para impedir que uma resposta
+   * muito grande fique "digitando" por vários segundos.
    */
   async function typeAssistantMessage(
     conversationId: string,
@@ -490,42 +499,33 @@ function PlanejarPage() {
     const length = text.length;
 
     /*
-     * Define uma duração-alvo baseada no tamanho.
+     * Duração aproximada da animação.
      *
-     * Curta:
-     * ~0.8s
-     *
-     * Média:
-     * ~1.8s
-     *
-     * Grande:
-     * ~3.5s
-     *
-     * Muito grande:
-     * máximo ~5s
+     * 1-30 caracteres  -> ~650ms
+     * 100 caracteres   -> ~1.2s
+     * 300 caracteres   -> ~1.8s
+     * 600 caracteres   -> ~2.5s
+     * 1000 caracteres  -> ~3.2s
+     * respostas muito grandes -> máximo 4.5s
      */
     const targetDuration = Math.min(
-      5000,
+      4500,
       Math.max(
-        700,
-        700 +
-          Math.sqrt(length) * 150,
+        650,
+        450 +
+          Math.sqrt(length) * 100,
       ),
     );
 
     /*
-     * Velocidade média necessária para
-     * completar a resposta dentro da duração.
+     * Calcula automaticamente o intervalo
+     * necessário entre caracteres.
      */
-    const baseDelay =
-      Math.max(
-        3,
-        Math.min(
-          28,
-          targetDuration /
-            Math.max(length, 1),
-        ),
-      );
+    const baseDelay = Math.max(
+      2,
+      targetDuration /
+        Math.max(length, 1),
+    );
 
     let currentText = "";
 
@@ -554,8 +554,8 @@ function PlanejarPage() {
         character === "?"
       ) {
         delay += Math.min(
-          90,
-          baseDelay * 4,
+          80,
+          baseDelay * 3,
         );
       } else if (
         character === "," ||
@@ -563,20 +563,20 @@ function PlanejarPage() {
         character === ":"
       ) {
         delay += Math.min(
-          45,
-          baseDelay * 2,
+          35,
+          baseDelay * 1.5,
         );
       } else if (
         character === "\n"
       ) {
         delay += Math.min(
-          55,
+          45,
           baseDelay * 2,
         );
       } else if (
         character === " "
       ) {
-        delay *= 0.45;
+        delay *= 0.35;
       }
 
       await new Promise(
@@ -605,6 +605,7 @@ function PlanejarPage() {
 
     setTypingMessage("");
     setIsTypingResponse(false);
+    setLoading(false);
   }
 
   async function sendMessage() {
@@ -779,6 +780,14 @@ function PlanejarPage() {
     setIsTypingResponse(false);
 
     try {
+      /*
+       * O loading continua TRUE enquanto a API está
+       * processando a mensagem.
+       *
+       * Assim os três pontos permanecem visíveis.
+       */
+      setLoading(true);
+
       const response =
         await fetch(
           `${API_URL}/api/ai/chat`,
@@ -849,14 +858,16 @@ function PlanejarPage() {
       );
 
       /*
-       * Mantém o indicador ativo até a
-       * resposta realmente chegar.
+       * NÃO desligamos loading aqui.
+       *
+       * Primeiro os três pontos dão lugar
+       * à animação de escrita.
        */
       setLoading(false);
 
       await typeAssistantMessage(
         conversationId,
-        answer,
+        answer.trim(),
       );
     } catch (error) {
       console.error(
@@ -1298,10 +1309,14 @@ function PlanejarPage() {
                 )}
 
                 {/*
-                 * INDICADOR DE PROCESSAMENTO
+                 * =====================================================
+                 * INDICADOR DE PENSAMENTO
+                 * =====================================================
                  *
-                 * Os três pontos agora possuem uma animação
-                 * própria e sincronizada.
+                 * Fica visível enquanto a API do Gemini está processando.
+                 *
+                 * Quando a resposta chega, ele desaparece e a animação
+                 * de escrita começa imediatamente.
                  */}
                 {loading && (
                   <div className="mb-6 flex animate-in gap-3 duration-300">
@@ -1320,7 +1335,9 @@ function PlanejarPage() {
                 )}
 
                 {/*
+                 * =====================================================
                  * DIGITAÇÃO DA RESPOSTA
+                 * =====================================================
                  */}
                 {isTypingResponse && (
                   <div className="mb-6 flex animate-in gap-3 duration-300">
@@ -1422,6 +1439,7 @@ function PlanejarPage() {
         .wattiq-thinking-dots {
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 5px;
           height: 20px;
         }
@@ -1431,12 +1449,14 @@ function PlanejarPage() {
           height: 6px;
           border-radius: 999px;
           background: hsl(var(--primary));
-          opacity: 0.3;
-          animation: wattiq-dot-bounce 1.15s
+          opacity: 0.25;
+          transform: translateY(0) scale(0.75);
+
+          animation:
+            wattiq-dot-bounce
+            1.1s
             cubic-bezier(0.4, 0, 0.2, 1)
             infinite;
-          transform: translateY(0)
-            scale(0.8);
         }
 
         .wattiq-thinking-dots span:nth-child(1) {
@@ -1444,24 +1464,24 @@ function PlanejarPage() {
         }
 
         .wattiq-thinking-dots span:nth-child(2) {
-          animation-delay: 140ms;
+          animation-delay: 150ms;
         }
 
         .wattiq-thinking-dots span:nth-child(3) {
-          animation-delay: 280ms;
+          animation-delay: 300ms;
         }
 
         @keyframes wattiq-dot-bounce {
           0%,
-          60%,
+          55%,
           100% {
-            opacity: 0.3;
+            opacity: 0.25;
             transform:
               translateY(0)
-              scale(0.8);
+              scale(0.75);
           }
 
-          30% {
+          27% {
             opacity: 1;
             transform:
               translateY(-5px)
