@@ -349,12 +349,6 @@ type ChatMessage = {
   content: string;
 };
 
-function sleep(ms: number) {
-  return new Promise((resolve) =>
-    setTimeout(resolve, ms),
-  );
-}
-
 function isTemporaryGeminiError(error: unknown) {
   const message =
     error instanceof Error
@@ -368,9 +362,23 @@ function isTemporaryGeminiError(error: unknown) {
     normalized.includes("unavailable") ||
     normalized.includes("high demand") ||
     normalized.includes("overloaded") ||
-    normalized.includes("temporarily") ||
+    normalized.includes("temporarily")
+  );
+}
+
+function isQuotaError(error: unknown) {
+  const message =
+    error instanceof Error
+      ? error.message
+      : String(error);
+
+  const normalized = message.toLowerCase();
+
+  return (
     normalized.includes("429") ||
-    normalized.includes("resource_exhausted")
+    normalized.includes("resource_exhausted") ||
+    normalized.includes("quota exceeded") ||
+    normalized.includes("generate_content_free_tier_requests")
   );
 }
 
@@ -396,7 +404,8 @@ export const Route = createFileRoute("/api/ai/chat")({
 
           await initDatabase();
 
-          const apiKey = process.env.GEMINI_API_KEY;
+          const apiKey =
+            process.env.GEMINI_API_KEY;
 
           if (!apiKey) {
             console.error(
@@ -415,53 +424,67 @@ export const Route = createFileRoute("/api/ai/chat")({
             );
           }
 
-          const body = await request
-            .json()
-            .catch(() => ({}));
+          const body =
+            await request
+              .json()
+              .catch(() => ({}));
 
           const conversationId =
-            typeof body?.conversationId === "string"
+            typeof body?.conversationId ===
+            "string"
               ? body.conversationId.trim()
               : "";
 
-          const messages = Array.isArray(body?.messages)
-            ? body.messages
-            : [];
+          const messages =
+            Array.isArray(body?.messages)
+              ? body.messages
+              : [];
 
-          const validMessages: ChatMessage[] = messages
-            .filter(
-              (
-                message: unknown,
-              ): message is ChatMessage => {
-                if (
-                  !message ||
-                  typeof message !== "object"
-                ) {
-                  return false;
-                }
+          const validMessages: ChatMessage[] =
+            messages
+              .filter(
+                (
+                  message: unknown,
+                ): message is ChatMessage => {
+                  if (
+                    !message ||
+                    typeof message !==
+                      "object"
+                  ) {
+                    return false;
+                  }
 
-                const item =
-                  message as ChatMessage;
+                  const item =
+                    message as ChatMessage;
 
-                return (
-                  (
-                    item.role === "user" ||
-                    item.role === "assistant"
-                  ) &&
-                  typeof item.content === "string"
-                );
-              },
-            )
-            .map((message) => ({
-              role: message.role,
-              content: message.content.trim(),
-            }))
-            .filter(
-              (message) =>
-                message.content.length > 0,
-            );
+                  return (
+                    (
+                      item.role ===
+                        "user" ||
+                      item.role ===
+                        "assistant"
+                    ) &&
+                    typeof item.content ===
+                      "string"
+                  );
+                },
+              )
+              .map(
+                (message) => ({
+                  role: message.role,
+                  content:
+                    message.content.trim(),
+                }),
+              )
+              .filter(
+                (message) =>
+                  message.content
+                    .length > 0,
+              );
 
-          if (validMessages.length === 0) {
+          if (
+            validMessages.length === 0
+          ) {
             return Response.json(
               {
                 success: false,
@@ -475,9 +498,14 @@ export const Route = createFileRoute("/api/ai/chat")({
           }
 
           const lastMessage =
-            validMessages[validMessages.length - 1];
+            validMessages[
+              validMessages.length - 1
+            ];
 
-          if (lastMessage.role !== "user") {
+          if (
+            lastMessage.role !==
+            "user"
+          ) {
             return Response.json(
               {
                 success: false,
@@ -492,19 +520,26 @@ export const Route = createFileRoute("/api/ai/chat")({
 
           /*
            * =====================================================
-           * CONVERSA LOCAL
+           * CONVERSA
            * =====================================================
            */
 
-          let realConversationId = conversationId;
+          let realConversationId =
+            conversationId;
 
           if (
             !realConversationId ||
-            realConversationId.startsWith("local-")
+            realConversationId.startsWith(
+              "local-",
+            )
           ) {
             const title =
-              lastMessage.content.length > 80
-                ? `${lastMessage.content.slice(0, 80)}...`
+              lastMessage.content
+                .length > 80
+                ? `${lastMessage.content.slice(
+                    0,
+                    80,
+                  )}...`
                 : lastMessage.content;
 
             const conversationResult =
@@ -519,17 +554,20 @@ export const Route = createFileRoute("/api/ai/chat")({
                 `,
                 [
                   user.sub,
-                  title || "Nova conversa",
+                  title ||
+                    "Nova conversa",
                 ],
               );
 
             realConversationId =
               String(
-                conversationResult.rows[0].id,
+                conversationResult
+                  .rows[0].id,
               );
 
             for (
-              const message of validMessages
+              const message of
+                validMessages
             ) {
               await db.query(
                 `
@@ -548,12 +586,6 @@ export const Route = createFileRoute("/api/ai/chat")({
               );
             }
           } else {
-            /*
-             * =====================================================
-             * CONVERSA EXISTENTE
-             * =====================================================
-             */
-
             const conversationResult =
               await db.query(
                 `
@@ -570,7 +602,8 @@ export const Route = createFileRoute("/api/ai/chat")({
               );
 
             if (
-              conversationResult.rows.length === 0
+              conversationResult
+                .rows.length === 0
             ) {
               return Response.json(
                 {
@@ -602,7 +635,8 @@ export const Route = createFileRoute("/api/ai/chat")({
               );
 
             if (
-              existingLastUserMessage.rows.length === 0
+              existingLastUserMessage
+                .rows.length === 0
             ) {
               await db.query(
                 `
@@ -644,29 +678,34 @@ export const Route = createFileRoute("/api/ai/chat")({
             historyResult.rows.map(
               (row) => ({
                 role:
-                  row.role === "assistant"
+                  row.role ===
+                  "assistant"
                     ? "assistant"
                     : "user",
-                content: String(
-                  row.content,
-                ),
+                content:
+                  String(
+                    row.content,
+                  ),
               }),
             );
 
-          const contents = history.map(
-            (message) => ({
-              role:
-                message.role === "assistant"
-                  ? "model"
-                  : "user",
+          const contents =
+            history.map(
+              (message) => ({
+                role:
+                  message.role ===
+                  "assistant"
+                    ? "model"
+                    : "user",
 
-              parts: [
-                {
-                  text: message.content,
-                },
-              ],
-            }),
-          );
+                parts: [
+                  {
+                    text:
+                      message.content,
+                  },
+                ],
+              }),
+            );
 
           /*
            * =====================================================
@@ -674,9 +713,10 @@ export const Route = createFileRoute("/api/ai/chat")({
            * =====================================================
            */
 
-          const ai = new GoogleGenAI({
-            apiKey,
-          });
+          const ai =
+            new GoogleGenAI({
+              apiKey,
+            });
 
           let response:
             Awaited<
@@ -685,22 +725,22 @@ export const Route = createFileRoute("/api/ai/chat")({
               >
             > | null = null;
 
-          let lastError: unknown = null;
+          let lastError:
+            unknown = null;
 
           /*
-           * O modelo anterior gemini-2.5-flash foi
-           * substituído aqui pelo Gemini 3.5 Flash.
+           * Tentativa normal.
+           *
+           * Não repetimos erro 429, porque isso é
+           * quota esgotada e não sobrecarga temporária.
            */
 
-          for (
-            let attempt = 0;
-            attempt < 3;
-            attempt++
-          ) {
-            try {
-              response =
-                await ai.models.generateContent({
-                  model: "gemini-3.5-flash",
+          try {
+            response =
+              await ai.models.generateContent(
+                {
+                  model:
+                    "gemini-3.5-flash-lite",
 
                   contents,
 
@@ -708,47 +748,88 @@ export const Route = createFileRoute("/api/ai/chat")({
                     systemInstruction:
                       WATTIQ_AI_PROMPT,
 
-                    maxOutputTokens: 700,
-
-                    temperature: 0.3,
+                    maxOutputTokens:
+                      700,
                   },
-                });
+                },
+              );
+          } catch (error) {
+            lastError =
+              error;
 
-              lastError = null;
+            console.error(
+              "Erro Gemini:",
+              error,
+            );
 
-              break;
-            } catch (error) {
-              lastError = error;
+            /*
+             * Só repetimos uma vez quando
+             * realmente for indisponibilidade
+             * temporária do serviço.
+             */
 
-              console.error(
-                `Erro Gemini - tentativa ${
-                  attempt + 1
-                }/3:`,
+            if (
+              isTemporaryGeminiError(
                 error,
-              );
+              )
+            ) {
+              try {
+                response =
+                  await ai.models.generateContent(
+                    {
+                      model:
+                        "gemini-3.5-flash-lite",
 
-              if (
-                !isTemporaryGeminiError(error) ||
-                attempt === 2
-              ) {
-                break;
+                      contents,
+
+                      config: {
+                        systemInstruction:
+                          WATTIQ_AI_PROMPT,
+
+                        maxOutputTokens:
+                          700,
+                      },
+                    },
+                  );
+
+                lastError = null;
+              } catch (retryError) {
+                lastError =
+                  retryError;
+
+                console.error(
+                  "Segunda tentativa Gemini:",
+                  retryError,
+                );
               }
-
-              await sleep(
-                1000 *
-                  Math.pow(
-                    2,
-                    attempt,
-                  ),
-              );
             }
           }
 
-          if (lastError || !response) {
+          if (
+            isQuotaError(
+              lastError,
+            )
+          ) {
+            return Response.json(
+              {
+                success: false,
+                message:
+                  "A cota gratuita da WattIQ AI foi atingida. A API do Gemini precisa aguardar a renovação da cota ou usar um projeto/plano com cota disponível.",
+              },
+              {
+                status: 429,
+              },
+            );
+          }
+
+          if (
+            lastError ||
+            !response
+          ) {
             throw (
               lastError ||
               new Error(
-                "Gemini não retornou resposta.",
+                "O Gemini não retornou uma resposta.",
               )
             );
           }
@@ -816,25 +897,44 @@ export const Route = createFileRoute("/api/ai/chat")({
             error,
           );
 
-          const errorMessage =
-            error instanceof Error
-              ? error.message
-              : String(error);
-
           if (
-            isTemporaryGeminiError(error)
+            isQuotaError(
+              error,
+            )
           ) {
             return Response.json(
               {
                 success: false,
                 message:
-                  "A WattIQ AI está recebendo muitas solicitações neste momento. Tente novamente em alguns segundos.",
+                  "A cota da API do Gemini foi atingida. Aguarde a renovação da cota ou use um projeto/plano com cota disponível.",
+              },
+              {
+                status: 429,
+              },
+            );
+          }
+
+          if (
+            isTemporaryGeminiError(
+              error,
+            )
+          ) {
+            return Response.json(
+              {
+                success: false,
+                message:
+                  "O serviço do Gemini está temporariamente indisponível. Tente novamente em alguns segundos.",
               },
               {
                 status: 503,
               },
             );
           }
+
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : String(error);
 
           console.error(
             "Detalhes do erro:",
