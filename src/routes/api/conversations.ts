@@ -41,7 +41,7 @@ export const Route = createFileRoute(
                 ) AS title
               FROM ai_conversations c
               WHERE c.user_id = $1
-              ORDER BY c.updated_at DESC
+              ORDER BY c.updated_at DESC, c.id DESC
             `,
             [user.sub],
           );
@@ -49,11 +49,17 @@ export const Route = createFileRoute(
           const conversations =
             result.rows.map((conversation) => ({
               id: String(conversation.id),
+
               title:
-                conversation.title ||
-                "Nova conversa",
+                typeof conversation.title ===
+                  "string" &&
+                conversation.title.trim()
+                  ? conversation.title.trim()
+                  : "Nova conversa",
+
               createdAt:
                 conversation.created_at,
+
               updatedAt:
                 conversation.updated_at,
             }));
@@ -113,14 +119,26 @@ export const Route = createFileRoute(
           const conversation =
             created.rows[0];
 
+          if (!conversation) {
+            throw new Error(
+              "O banco não retornou a conversa criada.",
+            );
+          }
+
           return Response.json(
             {
               success: true,
+
               conversation: {
-                id: String(conversation.id),
+                id: String(
+                  conversation.id,
+                ),
+
                 title: "Nova conversa",
+
                 createdAt:
                   conversation.created_at,
+
                 updatedAt:
                   conversation.updated_at,
               },
