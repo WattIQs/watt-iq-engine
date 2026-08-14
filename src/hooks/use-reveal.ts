@@ -3,17 +3,16 @@ import { useEffect, useRef, useState } from "react";
 /**
  * Reveal progressivo baseado na entrada do elemento no viewport.
  *
- * Funciona tanto em desktop quanto em mobile.
+ * Funciona de forma confiável em:
+ * - desktop
+ * - notebook
+ * - mobile
+ * - scroll normal
+ * - scroll suave
  *
- * O elemento começa invisível e entra suavemente com:
- * - opacity
- * - translateY
- * - blur
- * - escala muito sutil
- *
- * Depois de revelado, permanece visível.
- *
- * Respeita prefers-reduced-motion.
+ * Também possui fallback através de scroll/resize para
+ * navegadores onde o IntersectionObserver pode não disparar
+ * corretamente durante mudanças de layout.
  */
 export function useReveal<
   T extends HTMLElement = HTMLDivElement,
@@ -35,35 +34,57 @@ export function useReveal<
       return;
     }
 
-    /*
-     * Em alguns desktops o IntersectionObserver pode
-     * executar antes de o layout estar completamente
-     * estabilizado.
-     *
-     * Esperamos um frame antes de observar o elemento.
-     */
     let observer: IntersectionObserver | null = null;
     let frame = 0;
+    let revealed = false;
 
-    const startObserver = () => {
-      /*
-       * Se o elemento já estiver visível quando o observer
-       * for criado, também queremos revelar.
-       */
-      const rect = node.getBoundingClientRect();
+    const reveal = () => {
+      if (revealed) return;
+
+      revealed = true;
+      setShown(true);
+
+      observer?.unobserve(node);
+    };
+
+    const checkVisibility = () => {
+      if (revealed) return;
+
+      const rect =
+        node.getBoundingClientRect();
 
       const viewportHeight =
         window.innerHeight ||
         document.documentElement.clientHeight;
 
-      const alreadyVisible =
-        rect.top < viewportHeight &&
-        rect.bottom > 0;
+      const viewportWidth =
+        window.innerWidth ||
+        document.documentElement.clientWidth;
 
-      if (alreadyVisible) {
-        setShown(true);
-        return;
+      const visible =
+        rect.bottom > 0 &&
+        rect.right > 0 &&
+        rect.top <
+          viewportHeight * 0.95 &&
+        rect.left <
+          viewportWidth &&
+        rect.bottom >
+          viewportHeight * 0.02;
+
+      if (visible) {
+        reveal();
       }
+    };
+
+    const start = () => {
+      /*
+       * Primeiro fazemos uma verificação direta.
+       * Isso resolve principalmente elementos que já estavam
+       * dentro da tela quando o componente foi montado.
+       */
+      checkVisibility();
+
+      if (revealed) return;
 
       observer =
         new IntersectionObserver(
@@ -76,43 +97,76 @@ export function useReveal<
               entry.isIntersecting ||
               entry.intersectionRatio > 0
             ) {
-              setShown(true);
-
-              observer?.unobserve(node);
+              reveal();
             }
           },
           {
-            /*
-             * Um threshold pequeno funciona melhor
-             * para elementos grandes e pequenos.
-             */
-            threshold: 0.01,
+            threshold: [
+              0,
+              0.01,
+              0.05,
+              0.1,
+            ],
 
-            /*
-             * O elemento começa a animar um pouco
-             * antes de entrar completamente na tela.
-             */
             rootMargin:
               "0px 0px -5% 0px",
           },
         );
 
       observer.observe(node);
+
+      /*
+       * Fallback para desktop.
+       */
+      window.addEventListener(
+        "scroll",
+        checkVisibility,
+        {
+          passive: true,
+        },
+      );
+
+      window.addEventListener(
+        "resize",
+        checkVisibility,
+        {
+          passive: true,
+        },
+      );
+
+      /*
+       * Mais uma verificação depois do layout estabilizar.
+       */
+      frame = requestAnimationFrame(
+        () => {
+          checkVisibility();
+
+          frame =
+            requestAnimationFrame(
+              checkVisibility,
+            );
+        },
+      );
     };
 
-    /*
-     * Dois frames ajudam a evitar problemas de layout
-     * principalmente em navegadores desktop.
-     */
     frame = requestAnimationFrame(() => {
-      frame = requestAnimationFrame(
-        startObserver,
-      );
+      frame = requestAnimationFrame(start);
     });
 
     return () => {
       cancelAnimationFrame(frame);
+
       observer?.disconnect();
+
+      window.removeEventListener(
+        "scroll",
+        checkVisibility,
+      );
+
+      window.removeEventListener(
+        "resize",
+        checkVisibility,
+      );
     };
   }, []);
 
@@ -157,15 +211,19 @@ export function useCountUp(
       );
 
       const eased =
-        1 - Math.pow(1 - progress, 3);
+        1 -
+        Math.pow(
+          1 - progress,
+          3,
+        );
 
       setValue(target * eased);
 
       if (progress < 1) {
         raf =
-          requestAnimationFrame(
-            tick,
-          );
+          requestAnimationFrame(tick);
+      } else {
+        setValue(target);
       }
     };
 
