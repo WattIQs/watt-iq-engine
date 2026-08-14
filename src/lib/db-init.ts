@@ -16,6 +16,46 @@ export async function initDatabase() {
       CREATE EXTENSION IF NOT EXISTS pgcrypto;
     `);
 
+    /*
+     * =========================================================
+     * USUÁRIOS
+     *
+     * Guarda os dados básicos do perfil.
+     *
+     * Isso permite que:
+     *
+     * Google:
+     *   email + nome + foto
+     *
+     * E depois:
+     *   login por e-mail
+     *
+     * recupere o mesmo nome e a mesma foto.
+     * =========================================================
+     */
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        email TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL DEFAULT '',
+        picture TEXT NOT NULL DEFAULT '',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email
+      ON users(email);
+    `);
+
+    /*
+     * =========================================================
+     * CONVERSAS
+     * =========================================================
+     */
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS ai_conversations (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -53,6 +93,12 @@ export async function initDatabase() {
       ON ai_messages(conversation_id, created_at);
     `);
 
+    /*
+     * =========================================================
+     * OTP
+     * =========================================================
+     */
+
     await client.query(`
       CREATE TABLE IF NOT EXISTS otp_challenges (
         id UUID PRIMARY KEY,
@@ -66,34 +112,6 @@ export async function initDatabase() {
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_otp_challenges_expires
       ON otp_challenges(expires_at);
-    `);
-
-    /*
-     * =====================================================
-     * PERFIL DOS USUÁRIOS
-     * =====================================================
-     *
-     * O e-mail identifica o usuário.
-     *
-     * Assim, se a pessoa entrar primeiro pelo Google
-     * e depois pelo login por e-mail, conseguimos recuperar
-     * o mesmo nome e a mesma foto.
-     */
-
-    await client.query(`
-      CREATE TABLE IF NOT EXISTS user_profiles (
-        email TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        picture TEXT NOT NULL DEFAULT '',
-        google_sub TEXT,
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-      );
-    `);
-
-    await client.query(`
-      CREATE INDEX IF NOT EXISTS idx_user_profiles_google_sub
-      ON user_profiles(google_sub);
     `);
 
     await client.query("COMMIT");
