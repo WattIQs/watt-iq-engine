@@ -494,14 +494,6 @@ export const Route = createFileRoute("/api/ai/chat")({
            * =====================================================
            * CONVERSA LOCAL
            * =====================================================
-           *
-           * O frontend pode criar uma conversa com:
-           *
-           * local-xxxxxxxx
-           *
-           * Nesse caso ainda não existe registro no PostgreSQL.
-           *
-           * Criamos a conversa aqui antes de falar com o Gemini.
            */
 
           let realConversationId = conversationId;
@@ -536,11 +528,6 @@ export const Route = createFileRoute("/api/ai/chat")({
                 conversationResult.rows[0].id,
               );
 
-            /*
-             * Se a conversa já tinha outras mensagens
-             * no frontend, salvamos apenas o histórico
-             * necessário antes da resposta.
-             */
             for (
               const message of validMessages
             ) {
@@ -596,11 +583,6 @@ export const Route = createFileRoute("/api/ai/chat")({
                 },
               );
             }
-
-            /*
-             * Salva somente a última mensagem do usuário
-             * caso ela ainda não esteja no banco.
-             */
 
             const existingLastUserMessage =
               await db.query(
@@ -706,8 +688,8 @@ export const Route = createFileRoute("/api/ai/chat")({
           let lastError: unknown = null;
 
           /*
-           * Tentamos algumas vezes em caso de
-           * sobrecarga temporária do Gemini.
+           * O modelo anterior gemini-2.5-flash foi
+           * substituído aqui pelo Gemini 3.5 Flash.
            */
 
           for (
@@ -718,7 +700,7 @@ export const Route = createFileRoute("/api/ai/chat")({
             try {
               response =
                 await ai.models.generateContent({
-                  model: "gemini-2.5-flash",
+                  model: "gemini-3.5-flash",
 
                   contents,
 
@@ -853,14 +835,6 @@ export const Route = createFileRoute("/api/ai/chat")({
               },
             );
           }
-
-          /*
-           * Durante o desenvolvimento, o erro real
-           * fica no log do servidor.
-           *
-           * Para o usuário continuamos mostrando
-           * uma mensagem limpa.
-           */
 
           console.error(
             "Detalhes do erro:",
