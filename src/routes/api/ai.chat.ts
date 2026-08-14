@@ -14,10 +14,11 @@ A WattIQ é uma empresa de tecnologia fundada em 1º de agosto de 2026.
 A WattIQ desenvolve uma plataforma profissional de monitoramento,
 análise e inteligência energética voltada para empresas.
 
-A proposta da WattIQ é transformar dados energéticos em informação
-útil para tomada de decisão.
+Seu objetivo é transformar dados energéticos em inteligência útil
+para decisões empresariais.
 
-A plataforma combina:
+A WattIQ combina:
+
 - monitoramento;
 - dados;
 - indicadores;
@@ -26,7 +27,7 @@ A plataforma combina:
 - contextualização energética;
 - apoio à tomada de decisão.
 
-A WattIQ não deve ser apresentada como um chatbot genérico.
+Você não é um chatbot genérico.
 
 Você representa diretamente a inteligência da plataforma WattIQ.
 
@@ -34,14 +35,16 @@ Você representa diretamente a inteligência da plataforma WattIQ.
 POSICIONAMENTO
 ============================================================
 
-A WattIQ ajuda empresas a compreender melhor sua operação energética.
+A WattIQ ajuda empresas a compreender, monitorar e analisar sua
+operação energética.
 
-A plataforma pode trabalhar com informações como:
+A plataforma pode trabalhar com:
+
 - consumo de energia;
 - custos;
 - equipamentos;
 - setores;
-- área;
+- áreas;
 - funcionários;
 - horários;
 - produção;
@@ -49,10 +52,11 @@ A plataforma pode trabalhar com informações como:
 - sazonalidade;
 - indicadores energéticos.
 
-A aplicação é responsável pelos cálculos e pelos dados fornecidos pelo
-sistema.
+A aplicação é responsável por cálculos, métricas e dados fornecidos
+pelo sistema.
 
 Você é responsável por:
+
 - interpretar;
 - explicar;
 - contextualizar;
@@ -61,7 +65,11 @@ Você é responsável por:
 - resumir informações;
 - auxiliar na tomada de decisão.
 
-Nunca altere ou invente os dados fornecidos pela aplicação.
+Nunca invente dados.
+
+Nunca altere números fornecidos pelo sistema.
+
+Nunca apresente uma hipótese como fato.
 
 ============================================================
 PERSONALIDADE
@@ -88,11 +96,11 @@ Não use linguagem infantil.
 
 Não use gírias.
 
-Não use excesso de informalidade.
+Não seja excessivamente informal.
 
 Não use emojis por padrão.
 
-Não tente demonstrar emoções humanas.
+Não finja possuir emoções humanas.
 
 ============================================================
 COMUNICAÇÃO
@@ -110,61 +118,48 @@ Não prolongue respostas apenas para parecer mais inteligente.
 
 Evite frases artificiais como:
 
-- "Fico feliz em ajudar."
-- "Claro!"
-- "Com certeza!"
-- "Perfeito!"
-- "Ótimo!"
-- "Excelente!"
-- "Maravilha!"
-- "Que interessante!"
-- "Vamos nessa!"
-- "Pode deixar!"
-- "Sem problemas!"
-- "É um prazer ajudar."
+"Fico feliz em ajudar."
+"Claro!"
+"Com certeza!"
+"Perfeito!"
+"Ótimo!"
+"Excelente!"
+"Maravilha!"
+"Que interessante!"
+"Vamos nessa!"
+"Pode deixar!"
+"Sem problemas!"
+"É um prazer ajudar."
 
-Também não elogie o usuário sem necessidade.
-
-A cordialidade deve aparecer através da clareza e qualidade da resposta.
+A cordialidade deve aparecer pela clareza e qualidade da resposta.
 
 ============================================================
 TAMANHO DAS RESPOSTAS
 ============================================================
 
-A regra principal é:
-
-RESPONDA O MÍNIMO NECESSÁRIO PARA RESOLVER A PERGUNTA.
+Se a pergunta puder ser respondida em poucas palavras, seja breve.
 
 Perguntas simples:
-- normalmente 1 a 3 frases.
+normalmente 1 a 3 frases.
 
 Perguntas moderadas:
-- normalmente 3 a 6 frases.
+normalmente 3 a 6 frases.
 
 Perguntas complexas:
-- use o tamanho necessário, sem enrolação.
+use o tamanho necessário para explicar corretamente.
 
-Se uma frase for suficiente, use uma frase.
-
-Se três frases forem suficientes, use três.
-
-Não escreva um texto longo para uma pergunta que pode ser respondida
-em poucas palavras.
-
-Só aumente significativamente o nível de detalhe quando o usuário:
+Aumente o nível de detalhe quando o usuário:
 
 - pedir detalhes;
 - pedir uma explicação completa;
-- pedir um passo a passo;
+- pedir passo a passo;
 - pedir exemplos;
-- pedir uma análise aprofundada;
-- fizer uma pergunta que realmente exija contexto.
+- pedir análise aprofundada;
+- fizer uma pergunta que exija contexto.
 
 ============================================================
-SOBRE A PRÓPRIA WATTIQ
+SOBRE A WATTIQ
 ============================================================
-
-Você possui estas informações institucionais:
 
 Nome:
 WattIQ
@@ -173,36 +168,30 @@ Fundação:
 1º de agosto de 2026.
 
 Área:
-tecnologia, monitoramento energético, análise energética e inteligência
-artificial.
+tecnologia, monitoramento energético, análise energética e
+inteligência artificial.
 
 Objetivo:
 ajudar empresas a compreender, analisar e melhorar sua gestão
 energética por meio de dados e inteligência.
 
-A WattIQ oferece uma plataforma que combina monitoramento,
-indicadores, análise e inteligência artificial.
-
-A WattIQ AI é a inteligência artificial integrada a essa plataforma.
-
-O sistema utiliza PostgreSQL para persistência de dados.
+A WattIQ AI é a inteligência artificial integrada à plataforma.
 
 A infraestrutura do projeto utiliza Render.
+
+O sistema utiliza PostgreSQL para persistência de dados.
 
 A inteligência artificial utiliza Google Gemini.
 
 A autenticação da plataforma possui integração com Google.
 
-Quando o usuário perguntar sobre essas informações, responda
-diretamente com base neste conhecimento.
+Quando perguntarem sobre essas informações, responda diretamente.
 
-Não diga que você "não possui informações sobre a WattIQ" quando a
-informação estiver presente neste contexto.
+Nunca diga que não possui informações sobre a WattIQ quando elas
+estiverem presentes nesta instrução.
 
-Se perguntarem algo que não esteja aqui, informe honestamente que
-essa informação específica não foi disponibilizada.
+Nunca invente:
 
-NUNCA invente:
 - fundadores;
 - localização;
 - número de clientes;
@@ -212,7 +201,7 @@ NUNCA invente:
 - avaliações;
 - participação de mercado;
 - resultados financeiros;
-- datas que não foram fornecidas.
+- datas não fornecidas.
 
 ============================================================
 DADOS ENERGÉTICOS
@@ -235,11 +224,11 @@ Nunca invente:
 - emissões;
 - resultados.
 
-Nunca transforme uma hipótese em fato.
+Nunca transforme hipótese em fato.
 
-Nunca transforme uma estimativa em dado real.
+Nunca transforme estimativa em dado real.
 
-Se não houver dados suficientes, diga claramente o que está faltando.
+Se faltarem dados, explique objetivamente o que está faltando.
 
 ============================================================
 INDICADORES
@@ -259,11 +248,9 @@ Você pode explicar:
 - CO2 estimado;
 - eficiência energética.
 
-Sempre considere o contexto.
-
 Não existe um consumo ideal universal.
 
-Para analisar eficiência, considere, quando disponível:
+Quando disponíveis, considere:
 
 - segmento;
 - porte;
@@ -285,7 +272,7 @@ RECOMENDAÇÕES
 
 Você pode sugerir pontos de investigação.
 
-Utilize linguagem responsável como:
+Prefira linguagem responsável:
 
 "Pode valer a pena investigar..."
 
@@ -347,15 +334,14 @@ REGRA FINAL
 Antes de responder:
 
 1. Entenda exatamente o que foi perguntado.
-2. Consulte o contexto da conversa.
-3. Use as informações disponíveis.
-4. Não repita perguntas já respondidas.
-5. Não invente dados.
-6. Responda diretamente.
+2. Considere o contexto da conversa.
+3. Use somente informações disponíveis.
+4. Não invente dados.
+5. Responda diretamente.
+6. Seja profissional.
 7. Seja objetiva.
-8. Seja profissional.
-9. Seja curta quando a pergunta permitir.
-10. Aprofunde somente quando necessário ou solicitado.
+8. Seja curta quando possível.
+9. Aprofunde somente quando necessário.
 `;
 
 type ChatMessage = {
@@ -369,34 +355,31 @@ function sleep(ms: number) {
   );
 }
 
-function isTemporaryGeminiError(
-  error: unknown,
-) {
+function isTemporaryGeminiError(error: unknown) {
   const message =
     error instanceof Error
       ? error.message
       : String(error);
 
+  const normalized = message.toLowerCase();
+
   return (
-    message.includes("503") ||
-    message.includes("UNAVAILABLE") ||
-    message.includes("high demand") ||
-    message.includes("overloaded") ||
-    message.includes("temporarily") ||
-    message.includes("429") ||
-    message.includes("RESOURCE_EXHAUSTED")
+    normalized.includes("503") ||
+    normalized.includes("unavailable") ||
+    normalized.includes("high demand") ||
+    normalized.includes("overloaded") ||
+    normalized.includes("temporarily") ||
+    normalized.includes("429") ||
+    normalized.includes("resource_exhausted")
   );
 }
 
-export const Route = createFileRoute(
-  "/api/ai/chat",
-)({
+export const Route = createFileRoute("/api/ai/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         try {
-          const user =
-            getSessionUser(request);
+          const user = getSessionUser(request);
 
           if (!user) {
             return Response.json(
@@ -413,8 +396,7 @@ export const Route = createFileRoute(
 
           await initDatabase();
 
-          const apiKey =
-            process.env.GEMINI_API_KEY;
+          const apiKey = process.env.GEMINI_API_KEY;
 
           if (!apiKey) {
             console.error(
@@ -433,110 +415,53 @@ export const Route = createFileRoute(
             );
           }
 
-          const body =
-            await request
-              .json()
-              .catch(() => ({}));
+          const body = await request
+            .json()
+            .catch(() => ({}));
 
           const conversationId =
-            typeof body?.conversationId ===
-            "string"
+            typeof body?.conversationId === "string"
               ? body.conversationId.trim()
               : "";
 
-          if (!conversationId) {
-            return Response.json(
-              {
-                success: false,
-                message:
-                  "Conversa não informada.",
-              },
-              {
-                status: 400,
-              },
-            );
-          }
+          const messages = Array.isArray(body?.messages)
+            ? body.messages
+            : [];
 
-          const conversationResult =
-            await db.query(
-              `
-                SELECT id
-                FROM ai_conversations
-                WHERE id = $1
-                  AND user_id = $2
-                LIMIT 1
-              `,
-              [
-                conversationId,
-                user.sub,
-              ],
-            );
+          const validMessages: ChatMessage[] = messages
+            .filter(
+              (
+                message: unknown,
+              ): message is ChatMessage => {
+                if (
+                  !message ||
+                  typeof message !== "object"
+                ) {
+                  return false;
+                }
 
-          if (
-            conversationResult.rows
-              .length === 0
-          ) {
-            return Response.json(
-              {
-                success: false,
-                message:
-                  "Conversa não encontrada.",
-              },
-              {
-                status: 404,
-              },
-            );
-          }
+                const item =
+                  message as ChatMessage;
 
-          const messages =
-            Array.isArray(
-              body?.messages,
-            )
-              ? body.messages
-              : [];
-
-          const validMessages: ChatMessage[] =
-            messages
-              .filter(
-                (
-                  message: unknown,
-                ): message is ChatMessage =>
-                  !!message &&
-                  typeof message ===
-                    "object" &&
-                  "role" in message &&
-                  "content" in message &&
+                return (
                   (
-                    (
-                      message as ChatMessage
-                    ).role ===
-                      "user" ||
-                    (
-                      message as ChatMessage
-                    ).role ===
-                      "assistant"
+                    item.role === "user" ||
+                    item.role === "assistant"
                   ) &&
-                  typeof (
-                    message as ChatMessage
-                  ).content ===
-                    "string",
-              )
-              .map(
-                (message) => ({
-                  role: message.role,
-                  content:
-                    message.content.trim(),
-                }),
-              )
-              .filter(
-                (message) =>
-                  message.content
-                    .length > 0,
-              );
+                  typeof item.content === "string"
+                );
+              },
+            )
+            .map((message) => ({
+              role: message.role,
+              content: message.content.trim(),
+            }))
+            .filter(
+              (message) =>
+                message.content.length > 0,
+            );
 
-          if (
-            validMessages.length === 0
-          ) {
+          if (validMessages.length === 0) {
             return Response.json(
               {
                 success: false,
@@ -550,14 +475,9 @@ export const Route = createFileRoute(
           }
 
           const lastMessage =
-            validMessages[
-              validMessages.length - 1
-            ];
+            validMessages[validMessages.length - 1];
 
-          if (
-            lastMessage.role !==
-            "user"
-          ) {
+          if (lastMessage.role !== "user") {
             return Response.json(
               {
                 success: false,
@@ -570,46 +490,160 @@ export const Route = createFileRoute(
             );
           }
 
-          const existingLastUserMessage =
-            await db.query(
-              `
-                SELECT id
-                FROM ai_messages
-                WHERE conversation_id = $1
-                  AND role = 'user'
-                  AND content = $2
-                ORDER BY created_at DESC, id DESC
-                LIMIT 1
-              `,
-              [
-                conversationId,
-                lastMessage.content,
-              ],
-            );
+          /*
+           * =====================================================
+           * CONVERSA LOCAL
+           * =====================================================
+           *
+           * O frontend pode criar uma conversa com:
+           *
+           * local-xxxxxxxx
+           *
+           * Nesse caso ainda não existe registro no PostgreSQL.
+           *
+           * Criamos a conversa aqui antes de falar com o Gemini.
+           */
+
+          let realConversationId = conversationId;
 
           if (
-            existingLastUserMessage
-              .rows.length === 0
+            !realConversationId ||
+            realConversationId.startsWith("local-")
           ) {
-            await db.query(
-              `
-                INSERT INTO ai_messages (
-                  conversation_id,
-                  role,
-                  content
-                )
-                VALUES (
-                  $1,
-                  'user',
-                  $2
-                )
-              `,
-              [
-                conversationId,
-                lastMessage.content,
-              ],
-            );
+            const title =
+              lastMessage.content.length > 80
+                ? `${lastMessage.content.slice(0, 80)}...`
+                : lastMessage.content;
+
+            const conversationResult =
+              await db.query(
+                `
+                  INSERT INTO ai_conversations (
+                    user_id,
+                    title
+                  )
+                  VALUES ($1, $2)
+                  RETURNING id
+                `,
+                [
+                  user.sub,
+                  title || "Nova conversa",
+                ],
+              );
+
+            realConversationId =
+              String(
+                conversationResult.rows[0].id,
+              );
+
+            /*
+             * Se a conversa já tinha outras mensagens
+             * no frontend, salvamos apenas o histórico
+             * necessário antes da resposta.
+             */
+            for (
+              const message of validMessages
+            ) {
+              await db.query(
+                `
+                  INSERT INTO ai_messages (
+                    conversation_id,
+                    role,
+                    content
+                  )
+                  VALUES ($1, $2, $3)
+                `,
+                [
+                  realConversationId,
+                  message.role,
+                  message.content,
+                ],
+              );
+            }
+          } else {
+            /*
+             * =====================================================
+             * CONVERSA EXISTENTE
+             * =====================================================
+             */
+
+            const conversationResult =
+              await db.query(
+                `
+                  SELECT id
+                  FROM ai_conversations
+                  WHERE id = $1
+                    AND user_id = $2
+                  LIMIT 1
+                `,
+                [
+                  realConversationId,
+                  user.sub,
+                ],
+              );
+
+            if (
+              conversationResult.rows.length === 0
+            ) {
+              return Response.json(
+                {
+                  success: false,
+                  message:
+                    "Conversa não encontrada.",
+                },
+                {
+                  status: 404,
+                },
+              );
+            }
+
+            /*
+             * Salva somente a última mensagem do usuário
+             * caso ela ainda não esteja no banco.
+             */
+
+            const existingLastUserMessage =
+              await db.query(
+                `
+                  SELECT id
+                  FROM ai_messages
+                  WHERE conversation_id = $1
+                    AND role = 'user'
+                    AND content = $2
+                  ORDER BY created_at DESC, id DESC
+                  LIMIT 1
+                `,
+                [
+                  realConversationId,
+                  lastMessage.content,
+                ],
+              );
+
+            if (
+              existingLastUserMessage.rows.length === 0
+            ) {
+              await db.query(
+                `
+                  INSERT INTO ai_messages (
+                    conversation_id,
+                    role,
+                    content
+                  )
+                  VALUES ($1, 'user', $2)
+                `,
+                [
+                  realConversationId,
+                  lastMessage.content,
+                ],
+              );
+            }
           }
+
+          /*
+           * =====================================================
+           * HISTÓRICO
+           * =====================================================
+           */
 
           const historyResult =
             await db.query(
@@ -621,57 +655,60 @@ export const Route = createFileRoute(
                 WHERE conversation_id = $1
                 ORDER BY created_at ASC, id ASC
               `,
-              [conversationId],
+              [realConversationId],
             );
 
           const history: ChatMessage[] =
             historyResult.rows.map(
               (row) => ({
                 role:
-                  row.role ===
-                  "assistant"
+                  row.role === "assistant"
                     ? "assistant"
                     : "user",
-
-                content:
-                  String(
-                    row.content,
-                  ),
+                content: String(
+                  row.content,
+                ),
               }),
             );
 
-          const contents =
-            history.map(
-              (message) => ({
-                role:
-                  message.role ===
-                  "assistant"
-                    ? "model"
-                    : "user",
+          const contents = history.map(
+            (message) => ({
+              role:
+                message.role === "assistant"
+                  ? "model"
+                  : "user",
 
-                parts: [
-                  {
-                    text:
-                      message.content,
-                  },
-                ],
-              }),
-            );
+              parts: [
+                {
+                  text: message.content,
+                },
+              ],
+            }),
+          );
 
-          const ai =
-            new GoogleGenAI({
-              apiKey,
-            });
+          /*
+           * =====================================================
+           * GEMINI
+           * =====================================================
+           */
+
+          const ai = new GoogleGenAI({
+            apiKey,
+          });
 
           let response:
             Awaited<
               ReturnType<
                 typeof ai.models.generateContent
               >
-            >;
+            > | null = null;
 
-          let lastError:
-            unknown = null;
+          let lastError: unknown = null;
+
+          /*
+           * Tentamos algumas vezes em caso de
+           * sobrecarga temporária do Gemini.
+           */
 
           for (
             let attempt = 0;
@@ -680,32 +717,26 @@ export const Route = createFileRoute(
           ) {
             try {
               response =
-                await ai.models.generateContent(
-                  {
-                    model:
-                      "gemini-3.5-flash",
+                await ai.models.generateContent({
+                  model: "gemini-2.5-flash",
 
-                    contents,
+                  contents,
 
-                    config: {
-                      systemInstruction:
-                        WATTIQ_AI_PROMPT,
+                  config: {
+                    systemInstruction:
+                      WATTIQ_AI_PROMPT,
 
-                      maxOutputTokens:
-                        500,
+                    maxOutputTokens: 700,
 
-                      temperature:
-                        0.3,
-                    },
+                    temperature: 0.3,
                   },
-                );
+                });
 
               lastError = null;
 
               break;
             } catch (error) {
-              lastError =
-                error;
+              lastError = error;
 
               console.error(
                 `Erro Gemini - tentativa ${
@@ -715,16 +746,14 @@ export const Route = createFileRoute(
               );
 
               if (
-                !isTemporaryGeminiError(
-                  error,
-                ) ||
+                !isTemporaryGeminiError(error) ||
                 attempt === 2
               ) {
                 break;
               }
 
               await sleep(
-                800 *
+                1000 *
                   Math.pow(
                     2,
                     attempt,
@@ -733,18 +762,29 @@ export const Route = createFileRoute(
             }
           }
 
-          if (lastError) {
-            throw lastError;
+          if (lastError || !response) {
+            throw (
+              lastError ||
+              new Error(
+                "Gemini não retornou resposta.",
+              )
+            );
           }
 
           const text =
-            response!.text?.trim();
+            response.text?.trim();
 
           if (!text) {
             throw new Error(
               "Gemini retornou uma resposta vazia.",
             );
           }
+
+          /*
+           * =====================================================
+           * SALVAR RESPOSTA
+           * =====================================================
+           */
 
           await db.query(
             `
@@ -760,7 +800,7 @@ export const Route = createFileRoute(
               )
             `,
             [
-              conversationId,
+              realConversationId,
               text,
             ],
           );
@@ -773,19 +813,20 @@ export const Route = createFileRoute(
                 AND user_id = $2
             `,
             [
-              conversationId,
+              realConversationId,
               user.sub,
             ],
           );
 
           console.log(
-            `WattIQ AI: mensagem salva para ${user.email} na conversa ${conversationId}`,
+            `WattIQ AI: resposta gerada para ${user.email}`,
           );
 
           return Response.json({
             success: true,
             message: text,
-            conversationId,
+            conversationId:
+              realConversationId,
           });
         } catch (error) {
           console.error(
@@ -799,15 +840,7 @@ export const Route = createFileRoute(
               : String(error);
 
           if (
-            errorMessage.includes(
-              "503",
-            ) ||
-            errorMessage.includes(
-              "UNAVAILABLE",
-            ) ||
-            errorMessage.includes(
-              "high demand",
-            )
+            isTemporaryGeminiError(error)
           ) {
             return Response.json(
               {
@@ -820,6 +853,19 @@ export const Route = createFileRoute(
               },
             );
           }
+
+          /*
+           * Durante o desenvolvimento, o erro real
+           * fica no log do servidor.
+           *
+           * Para o usuário continuamos mostrando
+           * uma mensagem limpa.
+           */
+
+          console.error(
+            "Detalhes do erro:",
+            errorMessage,
+          );
 
           return Response.json(
             {
