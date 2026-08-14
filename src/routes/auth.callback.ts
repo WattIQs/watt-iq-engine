@@ -11,6 +11,9 @@ import {
   createOtpChallenge,
 } from "../lib/otp-store";
 
+import { db } from "../lib/db";
+import { initDatabase } from "../lib/db-init";
+
 export const Route = createFileRoute(
   "/auth/callback",
 )({
@@ -49,6 +52,12 @@ export const Route = createFileRoute(
         }
 
         try {
+          /*
+           * =====================================================
+           * GOOGLE
+           * =====================================================
+           */
+
           const tokens =
             await exchangeGoogleCode(
               code,
@@ -97,6 +106,68 @@ export const Route = createFileRoute(
               .trim()
               .toLowerCase();
 
+          const googleName =
+            typeof googleUser.name ===
+              "string" &&
+            googleUser.name.trim()
+              ? googleUser.name.trim()
+              : email.split("@")[0];
+
+          const googlePicture =
+            typeof googleUser.picture ===
+              "string"
+              ? googleUser.picture
+              : "";
+
+          /*
+           * =====================================================
+           * BANCO
+           * =====================================================
+           */
+
+          await initDatabase();
+
+          /*
+           * Salvamos os dados do Google associados
+           * ao e-mail.
+           *
+           * Se o usuário já existir, atualizamos os dados.
+           */
+
+          await db.query(
+            `
+              INSERT INTO user_profiles (
+                email,
+                name,
+                picture,
+                google_sub
+              )
+              VALUES ($1, $2, $3, $4)
+              ON CONFLICT (email)
+              DO UPDATE SET
+                name = EXCLUDED.name,
+                picture = EXCLUDED.picture,
+                google_sub = EXCLUDED.google_sub,
+                updated_at = NOW()
+            `,
+            [
+              email,
+              googleName,
+              googlePicture,
+              googleUser.id
+                ? String(
+                    googleUser.id,
+                  )
+                : null,
+            ],
+          );
+
+          /*
+           * =====================================================
+           * OTP
+           * =====================================================
+           */
+
           const otp =
             generateOtp();
 
@@ -111,6 +182,12 @@ export const Route = createFileRoute(
             otp,
           );
 
+          /*
+           * =====================================================
+           * USUÁRIO PENDENTE
+           * =====================================================
+           */
+
           const userData =
             Buffer.from(
               JSON.stringify({
@@ -120,16 +197,15 @@ export const Route = createFileRoute(
 
                 email,
 
-                name:
-                  googleUser.name ||
-                  email.split("@")[0],
+                name: googleName,
 
                 picture:
-                  googleUser.picture ||
-                  "",
+                  googlePicture,
               }),
               "utf8",
-            ).toString("base64url");
+            ).toString(
+              "base64url",
+            );
 
           const headers =
             new Headers();
