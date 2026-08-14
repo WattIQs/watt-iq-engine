@@ -48,12 +48,6 @@ const INITIAL_MESSAGE: ChatMessage = {
     "Olá. Sou a WattIQ AI, sua inteligência especializada em análise e planejamento energético. Como posso ajudar?",
 };
 
-/*
- * =========================================================
- * TEXTO DA IA COM ANIMAÇÃO DE DIGITAÇÃO
- * =========================================================
- */
-
 function TypingMessage({
   content,
 }: {
@@ -86,10 +80,6 @@ function TypingMessage({
 
       index++;
 
-      /*
-       * Pequena variação de velocidade para
-       * deixar a digitação mais natural.
-       */
       const delay =
         character === "." ||
         character === "," ||
@@ -121,12 +111,6 @@ function TypingMessage({
     </div>
   );
 }
-
-/*
- * =========================================================
- * PENSAMENTO DA IA
- * =========================================================
- */
 
 function ThinkingDots() {
   return (
@@ -204,12 +188,6 @@ function PlanejarPage() {
 
   const [authUser, setAuthUser] =
     useState<AuthUser | null>(null);
-
-  /*
-   * =========================================================
-   * AUTENTICAÇÃO
-   * =========================================================
-   */
 
   useEffect(() => {
     let mounted = true;
@@ -302,12 +280,6 @@ function PlanejarPage() {
     };
   }, [navigate]);
 
-  /*
-   * =========================================================
-   * ESTADOS
-   * =========================================================
-   */
-
   const [conversations, setConversations] =
     useState<Conversation[]>([]);
 
@@ -331,12 +303,6 @@ function PlanejarPage() {
   const chatContainerRef =
     useRef<HTMLDivElement>(null);
 
-  /*
-   * =========================================================
-   * NOVA CONVERSA LOCAL
-   * =========================================================
-   */
-
   function createNewConversation() {
     const id =
       `local-${Date.now()}-${Math.random()
@@ -358,12 +324,6 @@ function PlanejarPage() {
 
     setInput("");
   }
-
-  /*
-   * =========================================================
-   * CARREGAR CONVERSAS
-   * =========================================================
-   */
 
   useEffect(() => {
     if (!authenticated) return;
@@ -421,14 +381,6 @@ function PlanejarPage() {
                 )
             : [];
 
-        /*
-         * Se já existir uma conversa salva,
-         * abrimos automaticamente a mais recente.
-         *
-         * Caso contrário, criamos uma nova
-         * conversa local automaticamente.
-         */
-
         if (loaded.length > 0) {
           setConversations(loaded);
 
@@ -483,19 +435,15 @@ function PlanejarPage() {
     };
   }, [authenticated]);
 
-  /*
-   * =========================================================
-   * CARREGAR MENSAGENS
-   * =========================================================
-   */
-
   async function loadConversationMessages(
     conversationId: string,
   ) {
     try {
       const response =
         await fetch(
-          `${API_URL}/api/conversations/${conversationId}`,
+          `${API_URL}/api/ai/history?conversationId=${encodeURIComponent(
+            conversationId,
+          )}`,
           {
             method: "GET",
             credentials: "include",
@@ -504,7 +452,15 @@ function PlanejarPage() {
         );
 
       if (!response.ok) {
-        return;
+        const data =
+          await response
+            .json()
+            .catch(() => ({}));
+
+        throw new Error(
+          data?.message ||
+            `Erro ${response.status} ao carregar histórico.`,
+        );
       }
 
       const data =
@@ -559,17 +515,27 @@ function PlanejarPage() {
       );
     } catch (error) {
       console.error(
-        "Erro ao carregar mensagens:",
+        "Erro ao carregar mensagens da conversa:",
         error,
+      );
+
+      setConversations(
+        (current) =>
+          current.map(
+            (conversation) =>
+              conversation.id ===
+              conversationId
+                ? {
+                    ...conversation,
+                    messages: [
+                      INITIAL_MESSAGE,
+                    ],
+                  }
+                : conversation,
+          ),
       );
     }
   }
-
-  /*
-   * =========================================================
-   * CONVERSA ATIVA
-   * =========================================================
-   */
 
   const activeConversation =
     conversations.find(
@@ -577,12 +543,6 @@ function PlanejarPage() {
         conversation.id ===
         activeConversationId,
     ) || null;
-
-  /*
-   * =========================================================
-   * SELECIONAR CONVERSA
-   * =========================================================
-   */
 
   async function selectConversation(
     conversationId: string,
@@ -612,12 +572,6 @@ function PlanejarPage() {
     }
   }
 
-  /*
-   * =========================================================
-   * SCROLL AUTOMÁTICO
-   * =========================================================
-   */
-
   useEffect(() => {
     const container =
       chatContainerRef.current;
@@ -641,12 +595,6 @@ function PlanejarPage() {
     loading,
   ]);
 
-  /*
-   * =========================================================
-   * UPDATE CONVERSA
-   * =========================================================
-   */
-
   function updateConversation(
     conversationId: string,
     updater: (
@@ -666,12 +614,6 @@ function PlanejarPage() {
         ),
     );
   }
-
-  /*
-   * =========================================================
-   * ENVIAR MENSAGEM
-   * =========================================================
-   */
 
   async function sendMessage() {
     const text = input.trim();
@@ -724,11 +666,6 @@ function PlanejarPage() {
     setLoading(true);
 
     try {
-      /*
-       * A rota correta do TanStack Start
-       * é /api/ai/chat.
-       */
-
       const response =
         await fetch(
           `${API_URL}/api/ai/chat`,
@@ -782,11 +719,6 @@ function PlanejarPage() {
 
       const returnedConversationId =
         data?.conversationId;
-
-      /*
-       * Se o backend criou uma conversa
-       * real no banco, substituímos o ID local.
-       */
 
       if (
         returnedConversationId
@@ -872,12 +804,6 @@ function PlanejarPage() {
     }
   }
 
-  /*
-   * =========================================================
-   * TECLADO
-   * =========================================================
-   */
-
   function handleKeyDown(
     event: React.KeyboardEvent<HTMLTextAreaElement>,
   ) {
@@ -890,12 +816,6 @@ function PlanejarPage() {
       sendMessage();
     }
   }
-
-  /*
-   * =========================================================
-   * EXCLUIR CONVERSA
-   * =========================================================
-   */
 
   async function resetConversation() {
     if (!activeConversation) {
@@ -982,12 +902,6 @@ function PlanejarPage() {
     }
   }
 
-  /*
-   * =========================================================
-   * VERIFICAÇÃO
-   * =========================================================
-   */
-
   if (checkingAuth) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background text-foreground">
@@ -1023,10 +937,6 @@ function PlanejarPage() {
 
   return (
     <main className="flex h-screen overflow-hidden bg-background text-foreground">
-
-      {/* =====================================================
-          SIDEBAR
-      ===================================================== */}
 
       <aside
         className={`relative flex shrink-0 flex-col border-r border-border bg-card/40 backdrop-blur-xl transition-all duration-500 ease-out ${
@@ -1162,10 +1072,6 @@ function PlanejarPage() {
         </div>
       </aside>
 
-      {/* =====================================================
-          CHAT
-      ===================================================== */}
-
       <section className="relative flex min-w-0 flex-1 flex-col">
 
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
@@ -1173,10 +1079,6 @@ function PlanejarPage() {
 
           <div className="absolute inset-0 opacity-[0.025] [background-image:linear-gradient(to_right,hsl(var(--foreground))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--foreground))_1px,transparent_1px)] [background-size:64px_64px]" />
         </div>
-
-        {/* =================================================
-            HEADER
-        ================================================= */}
 
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/70 px-4 backdrop-blur-xl sm:px-6">
           <div className="flex items-center gap-3">
@@ -1223,10 +1125,6 @@ function PlanejarPage() {
 
           <Sparkles className="h-4 w-4 animate-pulse text-primary/50" />
         </header>
-
-        {/* =================================================
-            MENSAGENS
-        ================================================= */}
 
         <div
           ref={
@@ -1288,16 +1186,11 @@ function PlanejarPage() {
                             : "justify-start"
                         }`}
                       >
-
-                        {/* ÍCONE DA IA */}
-
                         {!isUser && (
                           <div className="mt-1 flex h-8 w-8 shrink-0 animate-in items-center justify-center rounded-lg border border-primary/20 bg-primary/10 shadow-[0_0_20px_rgba(180,255,80,0.04)] duration-500">
                             <Bot className="h-4 w-4 text-primary" />
                           </div>
                         )}
-
-                        {/* BALÃO */}
 
                         <div
                           className={`max-w-[82%] text-sm leading-7 transition-all duration-300 ${
@@ -1321,10 +1214,6 @@ function PlanejarPage() {
                   },
                 )}
 
-                {/* =================================================
-                    PENSANDO
-                ================================================= */}
-
                 {loading && (
                   <div className="mb-8 flex gap-3 animate-in duration-300">
                     <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
@@ -1340,10 +1229,6 @@ function PlanejarPage() {
             )}
           </div>
         </div>
-
-        {/* =================================================
-            INPUT
-        ================================================= */}
 
         <div className="shrink-0 bg-gradient-to-t from-background via-background to-transparent px-4 pb-5 pt-3 sm:px-6">
           <div className="mx-auto w-full max-w-3xl">
