@@ -40,56 +40,79 @@ type AuthUser = {
 };
 
 const API_URL =
-  import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
+  import.meta.env.VITE_API_URL?.replace(
+    /\/$/,
+    "",
+  ) || "";
 
 const INITIAL_MESSAGE: ChatMessage = {
   role: "assistant",
   content:
-    "Olá. Sou a WattIQ AI, sua inteligência especializada em análise e planejamento energético. Como posso ajudar?",
+    "Olá. Sou a WattIQ AI. Como posso ajudar?",
 };
 
-export const Route = createFileRoute("/planejar")({
+export const Route = createFileRoute(
+  "/planejar",
+)({
   component: PlanejarPage,
 });
 
 function PlanejarPage() {
   const navigate = useNavigate();
 
-  const [authenticated, setAuthenticated] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [authenticated, setAuthenticated] =
+    useState(false);
 
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversationId, setActiveConversationId] =
-    useState<string | null>(null);
+  const [checkingAuth, setCheckingAuth] =
+    useState(true);
 
-  const [loadingHistory, setLoadingHistory] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [authUser, setAuthUser] =
+    useState<AuthUser | null>(null);
 
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [conversations, setConversations] =
+    useState<Conversation[]>([]);
 
-  const [typingMessage, setTypingMessage] = useState("");
-  const [isTypingResponse, setIsTypingResponse] = useState(false);
+  const [
+    activeConversationId,
+    setActiveConversationId,
+  ] = useState<string | null>(null);
 
-  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [loadingHistory, setLoadingHistory] =
+    useState(false);
 
-  /*
-   * =========================================================
-   * AUTENTICAÇÃO
-   * =========================================================
-   */
+  const [sidebarOpen, setSidebarOpen] =
+    useState(true);
+
+  const [input, setInput] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [typingMessage, setTypingMessage] =
+    useState("");
+
+  const [
+    isTypingResponse,
+    setIsTypingResponse,
+  ] = useState(false);
+
+  const chatContainerRef =
+    useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let mounted = true;
 
     async function checkSession() {
       try {
-        const response = await fetch("/auth/me", {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-        });
+        const response = await fetch(
+          "/auth/me",
+          {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+          },
+        );
 
         if (!response.ok) {
           throw new Error(
@@ -97,28 +120,34 @@ function PlanejarPage() {
           );
         }
 
-        const data = await response.json();
+        const data =
+          await response.json();
 
         if (!mounted) return;
 
-        if (data?.authenticated === true) {
+        if (
+          data?.authenticated === true
+        ) {
           setAuthenticated(true);
 
           setAuthUser(
             data?.user
               ? {
                   name:
-                    typeof data.user.name === "string"
+                    typeof data.user.name ===
+                    "string"
                       ? data.user.name
                       : undefined,
 
                   email:
-                    typeof data.user.email === "string"
+                    typeof data.user.email ===
+                    "string"
                       ? data.user.email
                       : undefined,
 
                   picture:
-                    typeof data.user.picture === "string"
+                    typeof data.user.picture ===
+                    "string"
                       ? data.user.picture
                       : undefined,
                 }
@@ -162,12 +191,6 @@ function PlanejarPage() {
     };
   }, [navigate]);
 
-  /*
-   * =========================================================
-   * NOVA CONVERSA LOCAL
-   * =========================================================
-   */
-
   function createNewConversation() {
     const id =
       `local-${Date.now()}-${Math.random()
@@ -192,12 +215,6 @@ function PlanejarPage() {
     setLoading(false);
   }
 
-  /*
-   * =========================================================
-   * CARREGAR MENSAGENS
-   * =========================================================
-   */
-
   async function loadConversationMessages(
     conversationId: string,
   ) {
@@ -213,19 +230,17 @@ function PlanejarPage() {
         },
       );
 
-      const data = await response
-        .json()
-        .catch(() => ({}));
-
       if (!response.ok) {
         console.error(
           "Erro ao carregar conversa:",
           response.status,
-          data?.message,
         );
 
         return;
       }
+
+      const data =
+        await response.json();
 
       const rawMessages =
         Array.isArray(data?.messages)
@@ -238,9 +253,11 @@ function PlanejarPage() {
             (message: any) =>
               (
                 message?.role === "user" ||
-                message?.role === "assistant"
+                message?.role ===
+                  "assistant"
               ) &&
-              typeof message?.content === "string",
+              typeof message?.content ===
+                "string",
           )
           .map((message: any) => ({
             role: message.role,
@@ -250,14 +267,16 @@ function PlanejarPage() {
       if (messages.length > 0) {
         setConversations((current) =>
           current.map((conversation) =>
-            conversation.id === conversationId
+            conversation.id ===
+            conversationId
               ? {
                   ...conversation,
                   messages,
                   title:
                     messages.find(
                       (message) =>
-                        message.role === "user",
+                        message.role ===
+                        "user",
                     )?.content ||
                     conversation.title ||
                     "Nova conversa",
@@ -271,27 +290,24 @@ function PlanejarPage() {
 
       setConversations((current) =>
         current.map((conversation) =>
-          conversation.id === conversationId
+          conversation.id ===
+          conversationId
             ? {
                 ...conversation,
-                messages: [INITIAL_MESSAGE],
+                messages: [
+                  INITIAL_MESSAGE,
+                ],
               }
             : conversation,
         ),
       );
     } catch (error) {
       console.error(
-        "Erro ao carregar mensagens da conversa:",
+        "Erro ao carregar mensagens:",
         error,
       );
     }
   }
-
-  /*
-   * =========================================================
-   * CARREGAR CONVERSAS DO BANCO
-   * =========================================================
-   */
 
   useEffect(() => {
     if (!authenticated) return;
@@ -311,28 +327,30 @@ function PlanejarPage() {
           },
         );
 
-        const data = await response
-          .json()
-          .catch(() => ({}));
-
         if (!response.ok) {
           throw new Error(
-            data?.message ||
-              "Não foi possível carregar as conversas.",
+            "Não foi possível carregar as conversas.",
           );
         }
+
+        const data =
+          await response.json();
 
         if (!mounted) return;
 
         const loaded: Conversation[] =
-          Array.isArray(data?.conversations)
+          Array.isArray(
+            data?.conversations,
+          )
             ? data.conversations
                 .filter(
                   (conversation: any) =>
                     conversation?.id,
                 )
                 .map(
-                  (conversation: any) => ({
+                  (
+                    conversation: any,
+                  ) => ({
                     id: String(
                       conversation.id,
                     ),
@@ -349,19 +367,18 @@ function PlanejarPage() {
                 )
             : [];
 
-        if (!mounted) return;
-
         if (loaded.length > 0) {
           setConversations(loaded);
 
-          const firstConversation = loaded[0];
+          const first =
+            loaded[0];
 
           setActiveConversationId(
-            firstConversation.id,
+            first.id,
           );
 
           await loadConversationMessages(
-            firstConversation.id,
+            first.id,
           );
         } else {
           createNewConversation();
@@ -389,45 +406,34 @@ function PlanejarPage() {
     };
   }, [authenticated]);
 
-  /*
-   * =========================================================
-   * CONVERSA ATIVA
-   * =========================================================
-   */
-
   const activeConversation =
     conversations.find(
       (conversation) =>
-        conversation.id === activeConversationId,
+        conversation.id ===
+        activeConversationId,
     ) || null;
-
-  /*
-   * =========================================================
-   * SELECIONAR CONVERSA
-   * =========================================================
-   */
 
   async function selectConversation(
     conversationId: string,
   ) {
-    setActiveConversationId(conversationId);
+    setActiveConversationId(
+      conversationId,
+    );
 
     setTypingMessage("");
     setIsTypingResponse(false);
     setLoading(false);
 
-    if (!conversationId.startsWith("local-")) {
+    if (
+      !conversationId.startsWith(
+        "local-",
+      )
+    ) {
       await loadConversationMessages(
         conversationId,
       );
     }
   }
-
-  /*
-   * =========================================================
-   * SCROLL
-   * =========================================================
-   */
 
   useEffect(() => {
     const container =
@@ -447,12 +453,6 @@ function PlanejarPage() {
     typingMessage,
   ]);
 
-  /*
-   * =========================================================
-   * UPDATE CONVERSA
-   * =========================================================
-   */
-
   function updateConversation(
     conversationId: string,
     updater: (
@@ -461,7 +461,8 @@ function PlanejarPage() {
   ) {
     setConversations((current) =>
       current.map((conversation) =>
-        conversation.id === conversationId
+        conversation.id ===
+        conversationId
           ? updater(conversation)
           : conversation,
       ),
@@ -472,14 +473,59 @@ function PlanejarPage() {
    * =========================================================
    * DIGITAÇÃO DA IA
    * =========================================================
+   *
+   * A velocidade é calculada de acordo com o tamanho
+   * da resposta.
+   *
+   * Respostas curtas aparecem rapidamente.
+   * Respostas longas aceleram para não ficarem demoradas.
    */
-
   async function typeAssistantMessage(
     conversationId: string,
     text: string,
   ) {
     setIsTypingResponse(true);
     setTypingMessage("");
+
+    const length = text.length;
+
+    /*
+     * Define uma duração-alvo baseada no tamanho.
+     *
+     * Curta:
+     * ~0.8s
+     *
+     * Média:
+     * ~1.8s
+     *
+     * Grande:
+     * ~3.5s
+     *
+     * Muito grande:
+     * máximo ~5s
+     */
+    const targetDuration = Math.min(
+      5000,
+      Math.max(
+        700,
+        700 +
+          Math.sqrt(length) * 150,
+      ),
+    );
+
+    /*
+     * Velocidade média necessária para
+     * completar a resposta dentro da duração.
+     */
+    const baseDelay =
+      Math.max(
+        3,
+        Math.min(
+          28,
+          targetDuration /
+            Math.max(length, 1),
+        ),
+      );
 
     let currentText = "";
 
@@ -490,30 +536,55 @@ function PlanejarPage() {
     ) {
       currentText += text[index];
 
-      setTypingMessage(currentText);
+      setTypingMessage(
+        currentText,
+      );
 
-      let delay = 14;
+      let delay = baseDelay;
 
+      const character =
+        text[index];
+
+      /*
+       * Pequenas pausas naturais.
+       */
       if (
-        text[index] === "." ||
-        text[index] === "!" ||
-        text[index] === "?"
+        character === "." ||
+        character === "!" ||
+        character === "?"
       ) {
-        delay = 100;
+        delay += Math.min(
+          90,
+          baseDelay * 4,
+        );
       } else if (
-        text[index] === "," ||
-        text[index] === ";" ||
-        text[index] === ":"
+        character === "," ||
+        character === ";" ||
+        character === ":"
       ) {
-        delay = 55;
-      } else if (text[index] === "\n") {
-        delay = 80;
-      } else if (text[index] === " ") {
-        delay = 8;
+        delay += Math.min(
+          45,
+          baseDelay * 2,
+        );
+      } else if (
+        character === "\n"
+      ) {
+        delay += Math.min(
+          55,
+          baseDelay * 2,
+        );
+      } else if (
+        character === " "
+      ) {
+        delay *= 0.45;
       }
 
-      await new Promise((resolve) =>
-        setTimeout(resolve, delay),
+      await new Promise(
+        (resolve) =>
+          setTimeout(
+            resolve,
+            delay,
+          ),
       );
     }
 
@@ -536,14 +607,9 @@ function PlanejarPage() {
     setIsTypingResponse(false);
   }
 
-  /*
-   * =========================================================
-   * ENVIAR MENSAGEM
-   * =========================================================
-   */
-
   async function sendMessage() {
-    const text = input.trim();
+    const text =
+      input.trim();
 
     if (
       !text ||
@@ -554,10 +620,11 @@ function PlanejarPage() {
       return;
     }
 
-    const userMessage: ChatMessage = {
-      role: "user",
-      content: text,
-    };
+    const userMessage: ChatMessage =
+      {
+        role: "user",
+        content: text,
+      };
 
     let conversationId =
       activeConversation.id;
@@ -567,34 +634,38 @@ function PlanejarPage() {
       userMessage,
     ];
 
-    /*
-     * =======================================================
-     * PRIMEIRA MENSAGEM
-     * =======================================================
-     */
-
-    if (conversationId.startsWith("local-")) {
+    if (
+      conversationId.startsWith(
+        "local-",
+      )
+    ) {
       try {
         setLoading(true);
 
-        const createResponse = await fetch(
-          `${API_URL}/api/conversations`,
-          {
-            method: "POST",
-            credentials: "include",
-
-            headers: {
-              "Content-Type": "application/json",
+        const createResponse =
+          await fetch(
+            `${API_URL}/api/conversations`,
+            {
+              method: "POST",
+              credentials:
+                "include",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
             },
-          },
-        );
+          );
 
         const createData =
           await createResponse
             .json()
-            .catch(() => ({}));
+            .catch(
+              () => ({}),
+            );
 
-        if (!createResponse.ok) {
+        if (
+          !createResponse.ok
+        ) {
           throw new Error(
             createData?.message ||
               "Não foi possível criar a conversa.",
@@ -602,7 +673,9 @@ function PlanejarPage() {
         }
 
         const createdId =
-          createData?.conversation?.id;
+          createData
+            ?.conversation
+            ?.id;
 
         if (!createdId) {
           throw new Error(
@@ -610,27 +683,42 @@ function PlanejarPage() {
           );
         }
 
-        const newId = String(createdId);
+        const newId =
+          String(createdId);
 
-        setConversations((current) =>
-          current.map((conversation) =>
-            conversation.id === conversationId
-              ? {
-                  ...conversation,
-                  id: newId,
-                  title:
-                    text.length > 35
-                      ? `${text.slice(0, 35)}...`
-                      : text,
-                  messages: nextMessages,
-                }
-              : conversation,
-          ),
+        setConversations(
+          (current) =>
+            current.map(
+              (conversation) =>
+                conversation.id ===
+                conversationId
+                  ? {
+                      ...conversation,
+
+                      id: newId,
+
+                      title:
+                        text.length >
+                        35
+                          ? `${text.slice(
+                              0,
+                              35,
+                            )}...`
+                          : text,
+
+                      messages:
+                        nextMessages,
+                    }
+                  : conversation,
+            ),
         );
 
-        setActiveConversationId(newId);
+        setActiveConversationId(
+          newId,
+        );
 
-        conversationId = newId;
+        conversationId =
+          newId;
       } catch (error) {
         console.error(
           "Erro ao criar conversa:",
@@ -643,12 +731,15 @@ function PlanejarPage() {
           activeConversation.id,
           (conversation) => ({
             ...conversation,
+
             messages: [
               ...conversation.messages,
               {
-                role: "assistant",
+                role:
+                  "assistant",
                 content:
-                  error instanceof Error
+                  error instanceof
+                  Error
                     ? error.message
                     : "Não foi possível criar a conversa.",
               },
@@ -666,13 +757,17 @@ function PlanejarPage() {
 
           title:
             conversation.title ===
-              "Nova conversa"
+            "Nova conversa"
               ? text.length > 35
-                ? `${text.slice(0, 35)}...`
+                ? `${text.slice(
+                    0,
+                    35,
+                  )}...`
                 : text
               : conversation.title,
 
-          messages: nextMessages,
+          messages:
+            nextMessages,
         }),
       );
 
@@ -684,30 +779,33 @@ function PlanejarPage() {
     setIsTypingResponse(false);
 
     try {
-      const messagesToSend =
-        nextMessages;
+      const response =
+        await fetch(
+          `${API_URL}/api/ai/chat`,
+          {
+            method: "POST",
+            credentials:
+              "include",
 
-      const response = await fetch(
-        `${API_URL}/api/ai/chat`,
-        {
-          method: "POST",
-          credentials: "include",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
 
-          headers: {
-            "Content-Type":
-              "application/json",
+            body: JSON.stringify({
+              conversationId,
+              messages:
+                nextMessages,
+            }),
           },
+        );
 
-          body: JSON.stringify({
-            conversationId,
-            messages: messagesToSend,
-          }),
-        },
-      );
-
-      const data = await response
-        .json()
-        .catch(() => ({}));
+      const data =
+        await response
+          .json()
+          .catch(
+            () => ({}),
+          );
 
       if (!response.ok) {
         throw new Error(
@@ -723,7 +821,8 @@ function PlanejarPage() {
         data?.content;
 
       if (
-        typeof answer !== "string" ||
+        typeof answer !==
+          "string" ||
         !answer.trim()
       ) {
         throw new Error(
@@ -738,14 +837,21 @@ function PlanejarPage() {
 
           title:
             conversation.title ===
-              "Nova conversa"
+            "Nova conversa"
               ? text.length > 35
-                ? `${text.slice(0, 35)}...`
+                ? `${text.slice(
+                    0,
+                    35,
+                  )}...`
                 : text
               : conversation.title,
         }),
       );
 
+      /*
+       * Mantém o indicador ativo até a
+       * resposta realmente chegar.
+       */
       setLoading(false);
 
       await typeAssistantMessage(
@@ -759,6 +865,8 @@ function PlanejarPage() {
       );
 
       setLoading(false);
+      setIsTypingResponse(false);
+      setTypingMessage("");
 
       updateConversation(
         conversationId,
@@ -768,9 +876,11 @@ function PlanejarPage() {
           messages: [
             ...conversation.messages,
             {
-              role: "assistant",
+              role:
+                "assistant",
               content:
-                error instanceof Error
+                error instanceof
+                Error
                   ? error.message
                   : "Não foi possível conectar à WattIQ AI neste momento.",
             },
@@ -780,28 +890,32 @@ function PlanejarPage() {
     }
   }
 
-  /*
-   * =========================================================
-   * EXCLUIR CONVERSA
-   * =========================================================
-   */
-
   async function resetConversation() {
-    if (!activeConversation) return;
+    if (!activeConversation) {
+      return;
+    }
 
     const conversationId =
       activeConversation.id;
 
-    if (conversationId.startsWith("local-")) {
-      setConversations((current) =>
-        current.filter(
-          (conversation) =>
-            conversation.id !==
-            conversationId,
-        ),
+    if (
+      conversationId.startsWith(
+        "local-",
+      )
+    ) {
+      setConversations(
+        (current) =>
+          current.filter(
+            (conversation) =>
+              conversation.id !==
+              conversationId,
+          ),
       );
 
-      setActiveConversationId(null);
+      setActiveConversationId(
+        null,
+      );
+
       setInput("");
       setTypingMessage("");
       setLoading(false);
@@ -811,26 +925,31 @@ function PlanejarPage() {
     }
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/ai.reset`,
-        {
-          method: "POST",
-          credentials: "include",
+      const response =
+        await fetch(
+          `${API_URL}/api/ai/reset`,
+          {
+            method: "POST",
+            credentials:
+              "include",
 
-          headers: {
-            "Content-Type":
-              "application/json",
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              conversationId,
+            }),
           },
+        );
 
-          body: JSON.stringify({
-            conversationId,
-          }),
-        },
-      );
-
-      const data = await response
-        .json()
-        .catch(() => ({}));
+      const data =
+        await response
+          .json()
+          .catch(
+            () => ({}),
+          );
 
       if (!response.ok) {
         throw new Error(
@@ -839,15 +958,19 @@ function PlanejarPage() {
         );
       }
 
-      setConversations((current) =>
-        current.filter(
-          (conversation) =>
-            conversation.id !==
-            conversationId,
-        ),
+      setConversations(
+        (current) =>
+          current.filter(
+            (conversation) =>
+              conversation.id !==
+              conversationId,
+          ),
       );
 
-      setActiveConversationId(null);
+      setActiveConversationId(
+        null,
+      );
+
       setInput("");
       setTypingMessage("");
       setLoading(false);
@@ -859,12 +982,6 @@ function PlanejarPage() {
       );
     }
   }
-
-  /*
-   * =========================================================
-   * ENTER
-   * =========================================================
-   */
 
   function handleInputKeyDown(
     event: React.KeyboardEvent<HTMLTextAreaElement>,
@@ -878,12 +995,6 @@ function PlanejarPage() {
       sendMessage();
     }
   }
-
-  /*
-   * =========================================================
-   * TELA DE VERIFICAÇÃO
-   * =========================================================
-   */
 
   if (checkingAuth) {
     return (
@@ -914,13 +1025,11 @@ function PlanejarPage() {
     profileName
       .trim()
       .charAt(0)
-      .toUpperCase() || "U";
+      .toUpperCase() ||
+    "U";
 
   return (
     <main className="flex h-screen overflow-hidden bg-background text-foreground">
-
-      {/* SIDEBAR */}
-
       <aside
         className={`relative flex shrink-0 flex-col border-r border-border bg-card/40 backdrop-blur-xl transition-all duration-300 ${
           sidebarOpen
@@ -946,10 +1055,13 @@ function PlanejarPage() {
         <div className="p-3">
           <button
             type="button"
-            onClick={createNewConversation}
+            onClick={
+              createNewConversation
+            }
             className="group flex w-full items-center gap-3 rounded-xl border border-border bg-background/70 px-4 py-3 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:shadow-lg hover:shadow-primary/5 active:translate-y-0"
           >
             <Plus className="h-4 w-4 text-primary transition-transform duration-300 group-hover:rotate-90" />
+
             Nova conversa
           </button>
         </div>
@@ -965,7 +1077,8 @@ function PlanejarPage() {
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
-          ) : conversations.length === 0 ? (
+          ) : conversations.length ===
+            0 ? (
             <div className="px-3 py-8 text-center text-xs text-muted-foreground">
               Nenhuma conversa ainda.
             </div>
@@ -974,7 +1087,9 @@ function PlanejarPage() {
               {conversations.map(
                 (conversation) => (
                   <button
-                    key={conversation.id}
+                    key={
+                      conversation.id
+                    }
                     type="button"
                     onClick={() =>
                       selectConversation(
@@ -998,7 +1113,9 @@ function PlanejarPage() {
                     />
 
                     <span className="min-w-0 flex-1 truncate">
-                      {conversation.title}
+                      {
+                        conversation.title
+                      }
                     </span>
                   </button>
                 ),
@@ -1011,14 +1128,20 @@ function PlanejarPage() {
           <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-3">
             {authUser?.picture ? (
               <img
-                src={authUser.picture}
-                alt={profileName}
+                src={
+                  authUser.picture
+                }
+                alt={
+                  profileName
+                }
                 className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-border"
                 referrerPolicy="no-referrer"
               />
             ) : (
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-sm font-semibold text-primary">
-                {profileInitial}
+                {
+                  profileInitial
+                }
               </div>
             )}
 
@@ -1030,7 +1153,9 @@ function PlanejarPage() {
               {authUser?.email &&
                 authUser.name && (
                   <p className="truncate text-[10px] text-muted-foreground">
-                    {authUser.email}
+                    {
+                      authUser.email
+                    }
                   </p>
                 )}
             </div>
@@ -1043,17 +1168,12 @@ function PlanejarPage() {
         </div>
       </aside>
 
-      {/* CHAT */}
-
       <section className="relative flex min-w-0 flex-1 flex-col">
-
         <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
           <div className="absolute left-1/2 top-[-300px] h-[600px] w-[900px] -translate-x-1/2 animate-pulse rounded-full bg-primary/5 blur-[150px]" />
 
           <div className="absolute inset-0 opacity-[0.025] [background-image:linear-gradient(to_right,hsl(var(--foreground))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--foreground))_1px,transparent_1px)] [background-size:64px_64px]" />
         </div>
-
-        {/* HEADER */}
 
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/70 px-4 backdrop-blur-xl sm:px-6">
           <div className="flex items-center gap-3">
@@ -1061,7 +1181,8 @@ function PlanejarPage() {
               type="button"
               onClick={() =>
                 setSidebarOpen(
-                  (value) => !value,
+                  (value) =>
+                    !value,
                 )
               }
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-200 hover:border-primary/30 hover:bg-primary/5 hover:text-foreground active:scale-95"
@@ -1098,17 +1219,15 @@ function PlanejarPage() {
           <Sparkles className="h-4 w-4 animate-pulse text-primary/50" />
         </header>
 
-        {/* MENSAGENS */}
-
         <div
-          ref={chatContainerRef}
+          ref={
+            chatContainerRef
+          }
           className="flex-1 overflow-y-auto"
         >
           <div className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
-
             {!activeConversation ? (
               <div className="flex min-h-[55vh] flex-col items-center justify-center text-center">
-
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
                   <Bot className="h-6 w-6 text-primary" />
                 </div>
@@ -1127,7 +1246,9 @@ function PlanejarPage() {
 
                 <button
                   type="button"
-                  onClick={createNewConversation}
+                  onClick={
+                    createNewConversation
+                  }
                   className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10 active:translate-y-0"
                 >
                   <Plus className="h-4 w-4" />
@@ -1137,9 +1258,13 @@ function PlanejarPage() {
             ) : (
               <>
                 {activeConversation.messages.map(
-                  (message, index) => {
+                  (
+                    message,
+                    index,
+                  ) => {
                     const isUser =
-                      message.role === "user";
+                      message.role ===
+                      "user";
 
                     return (
                       <div
@@ -1163,13 +1288,21 @@ function PlanejarPage() {
                               : "rounded-2xl rounded-bl-md border border-border bg-card px-4 py-3 text-foreground shadow-black/10"
                           }`}
                         >
-                          {message.content}
+                          {
+                            message.content
+                          }
                         </div>
                       </div>
                     );
                   },
                 )}
 
+                {/*
+                 * INDICADOR DE PROCESSAMENTO
+                 *
+                 * Os três pontos agora possuem uma animação
+                 * própria e sincronizada.
+                 */}
                 {loading && (
                   <div className="mb-6 flex animate-in gap-3 duration-300">
                     <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
@@ -1177,25 +1310,18 @@ function PlanejarPage() {
                     </div>
 
                     <div className="flex h-[48px] items-center rounded-2xl rounded-bl-md border border-border bg-card px-5 shadow-sm">
-                      <div className="flex items-center gap-[4px]">
-                        {[0, 180, 360].map(
-                          (delay) => (
-                            <span
-                              key={delay}
-                              className="h-[6px] w-[6px] rounded-full bg-primary"
-                              style={{
-                                animation:
-                                  "wattiq-thinking 1.2s ease-in-out infinite",
-                                animationDelay: `${delay}ms`,
-                              }}
-                            />
-                          ),
-                        )}
+                      <div className="wattiq-thinking-dots">
+                        <span />
+                        <span />
+                        <span />
                       </div>
                     </div>
                   </div>
                 )}
 
+                {/*
+                 * DIGITAÇÃO DA RESPOSTA
+                 */}
                 {isTypingResponse && (
                   <div className="mb-6 flex animate-in gap-3 duration-300">
                     <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
@@ -1214,17 +1340,19 @@ function PlanejarPage() {
           </div>
         </div>
 
-        {/* INPUT */}
-
         <div className="shrink-0 bg-gradient-to-t from-background via-background to-transparent px-4 pb-5 pt-3 sm:px-6">
           <div className="mx-auto w-full max-w-3xl">
             <div className="rounded-2xl border border-border bg-card shadow-2xl shadow-black/20 transition-all duration-300 focus-within:border-primary/40 focus-within:shadow-[0_0_40px_rgba(180,255,80,0.06)]">
               <textarea
                 value={input}
                 onChange={(event) =>
-                  setInput(event.target.value)
+                  setInput(
+                    event.target.value,
+                  )
                 }
-                onKeyDown={handleInputKeyDown}
+                onKeyDown={
+                  handleInputKeyDown
+                }
                 placeholder={
                   activeConversation
                     ? "Pergunte à WattIQ AI..."
@@ -1241,7 +1369,6 @@ function PlanejarPage() {
 
               <div className="flex items-center justify-end px-3 pb-3">
                 <div className="flex items-center gap-2">
-
                   {activeConversation && (
                     <button
                       type="button"
@@ -1262,7 +1389,9 @@ function PlanejarPage() {
 
                   <button
                     type="button"
-                    onClick={sendMessage}
+                    onClick={
+                      sendMessage
+                    }
                     disabled={
                       !input.trim() ||
                       loading ||
@@ -1290,17 +1419,53 @@ function PlanejarPage() {
       </section>
 
       <style>{`
-        @keyframes wattiq-thinking {
+        .wattiq-thinking-dots {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          height: 20px;
+        }
+
+        .wattiq-thinking-dots span {
+          width: 6px;
+          height: 6px;
+          border-radius: 999px;
+          background: hsl(var(--primary));
+          opacity: 0.3;
+          animation: wattiq-dot-bounce 1.15s
+            cubic-bezier(0.4, 0, 0.2, 1)
+            infinite;
+          transform: translateY(0)
+            scale(0.8);
+        }
+
+        .wattiq-thinking-dots span:nth-child(1) {
+          animation-delay: 0ms;
+        }
+
+        .wattiq-thinking-dots span:nth-child(2) {
+          animation-delay: 140ms;
+        }
+
+        .wattiq-thinking-dots span:nth-child(3) {
+          animation-delay: 280ms;
+        }
+
+        @keyframes wattiq-dot-bounce {
           0%,
           60%,
           100% {
-            transform: translateY(0);
-            opacity: 0.35;
+            opacity: 0.3;
+            transform:
+              translateY(0)
+              scale(0.8);
           }
 
           30% {
-            transform: translateY(-5px);
             opacity: 1;
+            transform:
+              translateY(-5px)
+              scale(1);
           }
         }
       `}</style>
