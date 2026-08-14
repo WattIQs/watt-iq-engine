@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { db } from "../lib/db";
+
 import {
   createOtpChallenge,
 } from "../lib/otp-store";
@@ -8,9 +10,6 @@ import {
   generateOtp,
   sendOtpEmail,
 } from "../lib/email.otp";
-
-import { db } from "../lib/db";
-import { initDatabase } from "../lib/db-init";
 
 function createCookie(
   name: string,
@@ -38,14 +37,16 @@ export const Route = createFileRoute(
             await request.json();
 
           const email =
-            typeof body?.email === "string"
+            typeof body?.email ===
+            "string"
               ? body.email
                   .trim()
                   .toLowerCase()
               : "";
 
           const name =
-            typeof body?.name === "string"
+            typeof body?.name ===
+            "string"
               ? body.name.trim()
               : "";
 
@@ -67,68 +68,73 @@ export const Route = createFileRoute(
 
           /*
            * =====================================================
-           * BANCO
+           * PROCURAR USUÁRIO EXISTENTE
            * =====================================================
-           */
-
-          await initDatabase();
-
-          /*
-           * Procuramos o perfil existente pelo e-mail.
            *
-           * Isso permite que um login por e-mail encontre
-           * os dados anteriormente cadastrados pelo Google.
+           * Se o usuário já entrou pelo Google anteriormente,
+           * recuperamos nome e foto daquele perfil.
            */
 
-          const profileResult =
-            await db.query(
-              `
-                SELECT
-                  email,
-                  name,
-                  picture,
-                  google_sub
-                FROM user_profiles
-                WHERE email = $1
-                LIMIT 1
-              `,
-              [email],
+          let existingUser:
+            | {
+                id: string;
+                email: string;
+                name: string;
+                picture: string;
+              }
+            | null = null;
+
+          try {
+            const result =
+              await db.query(
+                `
+                  SELECT
+                    id,
+                    email,
+                    name,
+                    picture
+                  FROM users
+                  WHERE email = $1
+                  LIMIT 1
+                `,
+                [email],
+              );
+
+            if (
+              result.rows.length > 0
+            ) {
+              const row =
+                result.rows[0];
+
+              existingUser = {
+                id: String(
+                  row.id,
+                ),
+                email: String(
+                  row.email,
+                ),
+                name:
+                  typeof row.name ===
+                    "string"
+                    ? row.name
+                    : "",
+                picture:
+                  typeof row.picture ===
+                    "string"
+                    ? row.picture
+                    : "",
+              };
+            }
+          } catch (lookupError) {
+            /*
+             * Caso a tabela ainda não tenha sido criada,
+             * não impedimos o login.
+             */
+            console.error(
+              "AUTH EMAIL: erro ao procurar usuário existente:",
+              lookupError,
             );
-
-          const existingProfile =
-            profileResult.rows[0] ||
-            null;
-
-          /*
-           * Se já existir um perfil:
-           *
-           * - preservamos o nome salvo;
-           * - preservamos a foto do Google;
-           * - só usamos o nome enviado caso não exista
-           *   um nome salvo.
-           */
-
-          const profileName =
-            existingProfile &&
-            typeof existingProfile.name ===
-              "string" &&
-            existingProfile.name.trim()
-              ? existingProfile.name.trim()
-              : name ||
-                email.split("@")[0];
-
-          const profilePicture =
-            existingProfile &&
-            typeof existingProfile.picture ===
-              "string"
-              ? existingProfile.picture
-              : "";
-
-          /*
-           * =====================================================
-           * OTP
-           * =====================================================
-           */
+          }
 
           const code =
             generateOtp();
@@ -145,22 +151,31 @@ export const Route = createFileRoute(
           );
 
           /*
-           * =====================================================
-           * USUÁRIO PENDENTE
-           * =====================================================
+           * Se já existe perfil, ele ganha prioridade.
+           *
+           * Assim o login por e-mail não apaga:
+           * - nome do Google
+           * - foto do Google
            */
 
+          const resolvedName =
+            existingUser?.name?.trim() ||
+            name ||
+            email.split("@")[0];
+
+          const resolvedPicture =
+            existingUser?.picture ||
+            "";
+
+          const resolvedSub =
+            existingUser?.id ||
+            email;
+
           const pendingUser = {
-            sub:
-              existingProfile?.google_sub ||
-              email,
-
+            sub: resolvedSub,
             email,
-
-            name: profileName,
-
-            picture:
-              profilePicture,
+            name: resolvedName,
+            picture: resolvedPicture,
           };
 
           const pendingUserData =
@@ -204,9 +219,9 @@ export const Route = createFileRoute(
             {
               email,
               challengeId,
-              existingProfile:
+              existingUser:
                 Boolean(
-                  existingProfile,
+                  existingUser,
                 ),
             },
           );
