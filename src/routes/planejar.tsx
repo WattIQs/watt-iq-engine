@@ -166,9 +166,6 @@ function PlanejarPage() {
    * =========================================================
    * NOVA CONVERSA LOCAL
    * =========================================================
-   *
-   * A conversa só é criada no PostgreSQL quando a primeira
-   * mensagem for enviada.
    */
 
   function createNewConversation() {
@@ -206,7 +203,9 @@ function PlanejarPage() {
   ) {
     try {
       const response = await fetch(
-        `${API_URL}/api/conversations/${conversationId}`,
+        `${API_URL}/api/ai/history?conversationId=${encodeURIComponent(
+          conversationId,
+        )}`,
         {
           method: "GET",
           credentials: "include",
@@ -214,29 +213,24 @@ function PlanejarPage() {
         },
       );
 
+      const data = await response
+        .json()
+        .catch(() => ({}));
+
       if (!response.ok) {
         console.error(
           "Erro ao carregar conversa:",
           response.status,
+          data?.message,
         );
 
         return;
       }
 
-      const data = await response.json();
-
       const rawMessages =
         Array.isArray(data?.messages)
           ? data.messages
-          : Array.isArray(
-                data?.conversation?.messages,
-              )
-            ? data.conversation.messages
-            : Array.isArray(
-                  data?.data?.messages,
-                )
-              ? data.data.messages
-              : [];
+          : [];
 
       const messages: ChatMessage[] =
         rawMessages
@@ -253,10 +247,6 @@ function PlanejarPage() {
             content: message.content,
           }));
 
-      /*
-       * Se houver mensagens salvas, utiliza exatamente
-       * o histórico do banco.
-       */
       if (messages.length > 0) {
         setConversations((current) =>
           current.map((conversation) =>
@@ -279,9 +269,6 @@ function PlanejarPage() {
         return;
       }
 
-      /*
-       * Conversa vazia.
-       */
       setConversations((current) =>
         current.map((conversation) =>
           conversation.id === conversationId
@@ -324,13 +311,16 @@ function PlanejarPage() {
           },
         );
 
+        const data = await response
+          .json()
+          .catch(() => ({}));
+
         if (!response.ok) {
           throw new Error(
-            "Não foi possível carregar as conversas.",
+            data?.message ||
+              "Não foi possível carregar as conversas.",
           );
         }
-
-        const data = await response.json();
 
         if (!mounted) return;
 
@@ -358,6 +348,8 @@ function PlanejarPage() {
                   }),
                 )
             : [];
+
+        if (!mounted) return;
 
         if (loaded.length > 0) {
           setConversations(loaded);
@@ -579,9 +571,6 @@ function PlanejarPage() {
      * =======================================================
      * PRIMEIRA MENSAGEM
      * =======================================================
-     *
-     * Se a conversa ainda for local, cria a conversa
-     * REAL no PostgreSQL antes de chamar a IA.
      */
 
     if (conversationId.startsWith("local-")) {
@@ -623,9 +612,6 @@ function PlanejarPage() {
 
         const newId = String(createdId);
 
-        /*
-         * Substitui o ID local pelo ID real.
-         */
         setConversations((current) =>
           current.map((conversation) =>
             conversation.id === conversationId
@@ -673,9 +659,6 @@ function PlanejarPage() {
         return;
       }
     } else {
-      /*
-       * Conversa já existente.
-       */
       updateConversation(
         conversationId,
         (conversation) => ({
@@ -701,12 +684,6 @@ function PlanejarPage() {
     setIsTypingResponse(false);
 
     try {
-      /*
-       * Busca o histórico atual da conversa.
-       *
-       * Para a primeira mensagem, nextMessages contém
-       * a mensagem inicial + mensagem do usuário.
-       */
       const messagesToSend =
         nextMessages;
 
@@ -754,9 +731,6 @@ function PlanejarPage() {
         );
       }
 
-      /*
-       * Atualiza o título local imediatamente.
-       */
       updateConversation(
         conversationId,
         (conversation) => ({
