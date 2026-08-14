@@ -40,7 +40,10 @@ type AuthUser = {
 };
 
 const API_URL =
-  import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
+  import.meta.env.VITE_API_URL?.replace(
+    /\/$/,
+    "",
+  ) || "";
 
 const INITIAL_MESSAGE: ChatMessage = {
   role: "assistant",
@@ -61,7 +64,9 @@ function TypingMessage({
 
   useEffect(() => {
     let index = 0;
-    let timeout: ReturnType<typeof setTimeout>;
+    let timeout: ReturnType<
+      typeof setTimeout
+    >;
 
     setDisplayedText("");
     setFinished(false);
@@ -72,10 +77,12 @@ function TypingMessage({
         return;
       }
 
-      const character = content[index];
+      const character =
+        content[index];
 
       setDisplayedText(
-        (current) => current + character,
+        (current) =>
+          current + character,
       );
 
       index++;
@@ -112,81 +119,163 @@ function TypingMessage({
   );
 }
 
+/*
+ * =========================================================
+ * 3 PONTOS — ANIMAÇÃO SVG NATIVA
+ * =========================================================
+ */
+
 function ThinkingDots() {
   return (
-    <>
-      <style>
-        {`
-          @keyframes wattiq-dot-bounce {
-            0%, 60%, 100% {
-              transform: translateY(0);
-              opacity: 0.35;
-            }
-
-            30% {
-              transform: translateY(-4px);
-              opacity: 1;
-            }
-          }
-
-          @keyframes wattiq-spinner {
-            from {
-              transform: rotate(0deg);
-            }
-
-            to {
-              transform: rotate(360deg);
-            }
-          }
-        `}
-      </style>
-
-      <div className="flex items-center gap-1.5 px-1">
-        <span
-          className="h-2 w-2 rounded-full bg-primary"
-          style={{
-            animation:
-              "wattiq-dot-bounce 1.2s ease-in-out infinite",
-            animationDelay: "0s",
-          }}
+    <svg
+      width="34"
+      height="14"
+      viewBox="0 0 34 14"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-label="WattIQ AI está respondendo"
+      role="status"
+    >
+      <circle
+        cx="5"
+        cy="7"
+        r="2.2"
+        fill="currentColor"
+        className="text-primary"
+      >
+        <animate
+          attributeName="cy"
+          values="7;3.5;7"
+          dur="0.9s"
+          repeatCount="indefinite"
+          begin="0s"
         />
-
-        <span
-          className="h-2 w-2 rounded-full bg-primary"
-          style={{
-            animation:
-              "wattiq-dot-bounce 1.2s ease-in-out infinite",
-            animationDelay: "0.15s",
-          }}
+        <animate
+          attributeName="opacity"
+          values="0.35;1;0.35"
+          dur="0.9s"
+          repeatCount="indefinite"
+          begin="0s"
         />
+      </circle>
 
-        <span
-          className="h-2 w-2 rounded-full bg-primary"
-          style={{
-            animation:
-              "wattiq-dot-bounce 1.2s ease-in-out infinite",
-            animationDelay: "0.3s",
-          }}
+      <circle
+        cx="17"
+        cy="7"
+        r="2.2"
+        fill="currentColor"
+        className="text-primary"
+      >
+        <animate
+          attributeName="cy"
+          values="7;3.5;7"
+          dur="0.9s"
+          repeatCount="indefinite"
+          begin="0.15s"
         />
-      </div>
-    </>
+        <animate
+          attributeName="opacity"
+          values="0.35;1;0.35"
+          dur="0.9s"
+          repeatCount="indefinite"
+          begin="0.15s"
+        />
+      </circle>
+
+      <circle
+        cx="29"
+        cy="7"
+        r="2.2"
+        fill="currentColor"
+        className="text-primary"
+      >
+        <animate
+          attributeName="cy"
+          values="7;3.5;7"
+          dur="0.9s"
+          repeatCount="indefinite"
+          begin="0.3s"
+        />
+        <animate
+          attributeName="opacity"
+          values="0.35;1;0.35"
+          dur="0.9s"
+          repeatCount="indefinite"
+          begin="0.3s"
+        />
+      </circle>
+    </svg>
   );
 }
 
-export const Route = createFileRoute("/planejar")({
+/*
+ * =========================================================
+ * SPINNER — SVG NATIVO
+ * =========================================================
+ */
+
+function LoadingSpinner() {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 18 18"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <circle
+        cx="9"
+        cy="9"
+        r="6.5"
+        stroke="currentColor"
+        strokeOpacity="0.25"
+        strokeWidth="2"
+      />
+
+      <path
+        d="M15.5 9C15.5 5.41015 12.5899 2.5 9 2.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      >
+        <animateTransform
+          attributeName="transform"
+          attributeType="XML"
+          type="rotate"
+          from="0 9 9"
+          to="360 9 9"
+          dur="0.75s"
+          repeatCount="indefinite"
+        />
+      </path>
+    </svg>
+  );
+}
+
+export const Route = createFileRoute(
+  "/planejar",
+)({
   component: PlanejarPage,
 });
 
 function PlanejarPage() {
   const navigate = useNavigate();
 
-  const [authenticated, setAuthenticated] =
-    useState(false);
+  const [
+    authenticated,
+    setAuthenticated,
+  ] = useState(false);
 
-  const [checkingAuth, setCheckingAuth] =
-    useState(true);
+  const [
+    checkingAuth,
+    setCheckingAuth,
+  ] = useState(true);
 
-  const [authUser, setAuthUser] =
+  const [
+    authUser,
+    setAuthUser,
+  ] =
     useState<AuthUser | null>(null);
 
   /*
@@ -200,14 +289,15 @@ function PlanejarPage() {
 
     async function checkSession() {
       try {
-        const response = await fetch(
-          "/auth/me",
-          {
-            method: "GET",
-            credentials: "include",
-            cache: "no-store",
-          },
-        );
+        const response =
+          await fetch(
+            "/auth/me",
+            {
+              method: "GET",
+              credentials: "include",
+              cache: "no-store",
+            },
+          );
 
         if (!response.ok) {
           throw new Error(
@@ -221,7 +311,8 @@ function PlanejarPage() {
         if (!mounted) return;
 
         if (
-          data?.authenticated === true
+          data?.authenticated ===
+          true
         ) {
           setAuthenticated(true);
 
@@ -229,21 +320,25 @@ function PlanejarPage() {
             data?.user
               ? {
                   name:
-                    typeof data.user.name ===
+                    typeof data.user
+                      .name ===
                     "string"
                       ? data.user.name
                       : undefined,
 
                   email:
-                    typeof data.user.email ===
+                    typeof data.user
+                      .email ===
                     "string"
                       ? data.user.email
                       : undefined,
 
                   picture:
-                    typeof data.user.picture ===
+                    typeof data.user
+                      .picture ===
                     "string"
-                      ? data.user.picture
+                      ? data.user
+                          .picture
                       : undefined,
                 }
               : null,
@@ -257,7 +352,8 @@ function PlanejarPage() {
         navigate({
           to: "/auth",
           search: {
-            redirect: "/planejar",
+            redirect:
+              "/planejar",
           },
           replace: true,
         });
@@ -272,7 +368,8 @@ function PlanejarPage() {
         navigate({
           to: "/auth",
           search: {
-            redirect: "/planejar",
+            redirect:
+              "/planejar",
           },
           replace: true,
         });
@@ -292,32 +389,51 @@ function PlanejarPage() {
    * =========================================================
    */
 
-  const [conversations, setConversations] =
-    useState<Conversation[]>([]);
+  const [
+    conversations,
+    setConversations,
+  ] =
+    useState<Conversation[]>(
+      [],
+    );
 
   const [
     activeConversationId,
     setActiveConversationId,
-  ] = useState<string | null>(null);
+  ] =
+    useState<string | null>(
+      null,
+    );
 
-  const [loadingHistory, setLoadingHistory] =
+  const [
+    loadingHistory,
+    setLoadingHistory,
+  ] =
     useState(false);
 
-  const [sidebarOpen, setSidebarOpen] =
-    useState(true);
+  const [
+    sidebarOpen,
+    setSidebarOpen,
+  ] = useState(true);
 
-  const [input, setInput] =
-    useState("");
+  const [
+    input,
+    setInput,
+  ] = useState("");
 
-  const [loading, setLoading] =
-    useState(false);
+  const [
+    loading,
+    setLoading,
+  ] = useState(false);
 
   const chatContainerRef =
-    useRef<HTMLDivElement>(null);
+    useRef<HTMLDivElement>(
+      null,
+    );
 
   /*
    * =========================================================
-   * NOVA CONVERSA LOCAL
+   * NOVA CONVERSA
    * =========================================================
    */
 
@@ -330,43 +446,60 @@ function PlanejarPage() {
     const conversation: Conversation = {
       id,
       title: "Nova conversa",
-      messages: [INITIAL_MESSAGE],
+      messages: [
+        INITIAL_MESSAGE,
+      ],
     };
 
-    setConversations((current) => [
-      conversation,
-      ...current,
-    ]);
+    setConversations(
+      (current) => [
+        conversation,
+        ...current,
+      ],
+    );
 
-    setActiveConversationId(id);
+    setActiveConversationId(
+      id,
+    );
 
     setInput("");
+    setLoading(false);
   }
 
   /*
    * =========================================================
-   * CARREGAR MENSAGENS DA CONVERSA
+   * CARREGAR HISTÓRICO
    * =========================================================
    */
 
   async function loadConversationMessages(
     conversationId: string,
   ) {
-    try {
-      const response = await fetch(
-        `${API_URL}/api/ai/history?conversationId=${encodeURIComponent(
-          conversationId,
-        )}`,
-        {
-          method: "GET",
-          credentials: "include",
-          cache: "no-store",
-        },
-      );
+    if (
+      conversationId.startsWith(
+        "local-",
+      )
+    ) {
+      return;
+    }
 
-      const data = await response
-        .json()
-        .catch(() => ({}));
+    try {
+      const response =
+        await fetch(
+          `${API_URL}/api/ai/history?conversationId=${encodeURIComponent(
+            conversationId,
+          )}`,
+          {
+            method: "GET",
+            credentials: "include",
+            cache: "no-store",
+          },
+        );
+
+      const data =
+        await response
+          .json()
+          .catch(() => ({}));
 
       if (!response.ok) {
         throw new Error(
@@ -376,10 +509,14 @@ function PlanejarPage() {
       }
 
       const messages: ChatMessage[] =
-        Array.isArray(data?.messages)
+        Array.isArray(
+          data?.messages,
+        )
           ? data.messages
               .filter(
-                (message: any) =>
+                (
+                  message: any,
+                ) =>
                   (
                     message?.role ===
                       "user" ||
@@ -395,16 +532,27 @@ function PlanejarPage() {
                 ) => ({
                   role:
                     message.role,
+
                   content:
                     message.content,
                 }),
+              )
+              .filter(
+                (
+                  message: ChatMessage,
+                ) =>
+                  message.content
+                    .trim()
+                    .length > 0,
               )
           : [];
 
       setConversations(
         (current) =>
           current.map(
-            (conversation) =>
+            (
+              conversation,
+            ) =>
               conversation.id ===
               conversationId
                 ? {
@@ -422,24 +570,8 @@ function PlanejarPage() {
       );
     } catch (error) {
       console.error(
-        "Erro ao carregar histórico da conversa:",
+        "Erro ao carregar histórico:",
         error,
-      );
-
-      setConversations(
-        (current) =>
-          current.map(
-            (conversation) =>
-              conversation.id ===
-              conversationId
-                ? {
-                    ...conversation,
-                    messages: [
-                      INITIAL_MESSAGE,
-                    ],
-                  }
-                : conversation,
-          ),
       );
     }
   }
@@ -451,7 +583,9 @@ function PlanejarPage() {
    */
 
   useEffect(() => {
-    if (!authenticated) return;
+    if (!authenticated) {
+      return;
+    }
 
     let mounted = true;
 
@@ -486,7 +620,9 @@ function PlanejarPage() {
           )
             ? data.conversations
                 .filter(
-                  (conversation: any) =>
+                  (
+                    conversation: any,
+                  ) =>
                     conversation?.id,
                 )
                 .map(
@@ -498,44 +634,36 @@ function PlanejarPage() {
                     ),
 
                     title:
-                      conversation.title ||
-                      "Conversa",
+                      typeof conversation.title ===
+                        "string" &&
+                      conversation.title.trim()
+                        ? conversation.title
+                        : "Conversa",
 
                     messages: [],
                   }),
                 )
             : [];
 
-        if (loaded.length > 0) {
-          setConversations(loaded);
+        if (
+          loaded.length > 0
+        ) {
+          setConversations(
+            loaded,
+          );
+
+          const firstId =
+            loaded[0].id;
 
           setActiveConversationId(
-            loaded[0].id,
+            firstId,
           );
 
           await loadConversationMessages(
-            loaded[0].id,
+            firstId,
           );
         } else {
-          const newConversationId =
-            `local-${Date.now()}-${Math.random()
-              .toString(36)
-              .slice(2)}`;
-
-          const newConversation: Conversation =
-            {
-              id: newConversationId,
-              title: "Nova conversa",
-              messages: [INITIAL_MESSAGE],
-            };
-
-          setConversations([
-            newConversation,
-          ]);
-
-          setActiveConversationId(
-            newConversationId,
-          );
+          createNewConversation();
         }
       } catch (error) {
         console.error(
@@ -548,7 +676,9 @@ function PlanejarPage() {
         createNewConversation();
       } finally {
         if (mounted) {
-          setLoadingHistory(false);
+          setLoadingHistory(
+            false,
+          );
         }
       }
     }
@@ -568,7 +698,9 @@ function PlanejarPage() {
 
   const activeConversation =
     conversations.find(
-      (conversation) =>
+      (
+        conversation,
+      ) =>
         conversation.id ===
         activeConversationId,
     ) || null;
@@ -586,6 +718,9 @@ function PlanejarPage() {
       conversationId,
     );
 
+    setLoading(false);
+    setInput("");
+
     const conversation =
       conversations.find(
         (item) =>
@@ -595,8 +730,8 @@ function PlanejarPage() {
 
     if (
       conversation &&
-      conversation.messages.length ===
-        0 &&
+      conversation.messages
+        .length === 0 &&
       !conversationId.startsWith(
         "local-",
       )
@@ -609,7 +744,7 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * SCROLL AUTOMÁTICO
+   * SCROLL
    * =========================================================
    */
 
@@ -617,14 +752,17 @@ function PlanejarPage() {
     const container =
       chatContainerRef.current;
 
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     const timeout =
       setTimeout(() => {
         container.scrollTo({
           top:
             container.scrollHeight,
-          behavior: "smooth",
+          behavior:
+            "smooth",
         });
       }, 50);
 
@@ -638,7 +776,7 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * UPDATE CONVERSA
+   * UPDATE
    * =========================================================
    */
 
@@ -651,7 +789,9 @@ function PlanejarPage() {
     setConversations(
       (current) =>
         current.map(
-          (conversation) =>
+          (
+            conversation,
+          ) =>
             conversation.id ===
             conversationId
               ? updater(
@@ -664,12 +804,13 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * ENVIAR MENSAGEM
+   * ENVIAR
    * =========================================================
    */
 
   async function sendMessage() {
-    const text = input.trim();
+    const text =
+      input.trim();
 
     if (
       !text ||
@@ -679,11 +820,11 @@ function PlanejarPage() {
       return;
     }
 
-    const userMessage: ChatMessage =
-      {
-        role: "user",
-        content: text,
-      };
+    const userMessage:
+      ChatMessage = {
+      role: "user",
+      content: text,
+    };
 
     const conversationId =
       activeConversation.id;
@@ -695,7 +836,9 @@ function PlanejarPage() {
 
     updateConversation(
       conversationId,
-      (conversation) => ({
+      (
+        conversation,
+      ) => ({
         ...conversation,
 
         title:
@@ -715,7 +858,6 @@ function PlanejarPage() {
     );
 
     setInput("");
-
     setLoading(true);
 
     try {
@@ -723,9 +865,11 @@ function PlanejarPage() {
         await fetch(
           `${API_URL}/api/ai/chat`,
           {
-            method: "POST",
+            method:
+              "POST",
 
-            credentials: "include",
+            credentials:
+              "include",
 
             headers: {
               "Content-Type":
@@ -749,7 +893,9 @@ function PlanejarPage() {
       const data =
         await response
           .json()
-          .catch(() => ({}));
+          .catch(
+            () => ({}),
+          );
 
       if (!response.ok) {
         throw new Error(
@@ -793,9 +939,11 @@ function PlanejarPage() {
 
                       messages: [
                         ...conversation.messages,
+
                         {
                           role:
                             "assistant",
+
                           content:
                             answer,
                         },
@@ -813,15 +961,20 @@ function PlanejarPage() {
       } else {
         updateConversation(
           conversationId,
-          (conversation) => ({
+          (
+            conversation,
+          ) => ({
             ...conversation,
 
             messages: [
               ...conversation.messages,
 
               {
-                role: "assistant",
-                content: answer,
+                role:
+                  "assistant",
+
+                content:
+                  answer,
               },
             ],
           }),
@@ -835,14 +988,17 @@ function PlanejarPage() {
 
       updateConversation(
         conversationId,
-        (conversation) => ({
+        (
+          conversation,
+        ) => ({
           ...conversation,
 
           messages: [
             ...conversation.messages,
 
             {
-              role: "assistant",
+              role:
+                "assistant",
 
               content:
                 error instanceof Error
@@ -871,14 +1027,13 @@ function PlanejarPage() {
       !event.shiftKey
     ) {
       event.preventDefault();
-
       sendMessage();
     }
   }
 
   /*
    * =========================================================
-   * EXCLUIR CONVERSA
+   * RESET
    * =========================================================
    */
 
@@ -898,7 +1053,9 @@ function PlanejarPage() {
       setConversations(
         (current) =>
           current.filter(
-            (conversation) =>
+            (
+              conversation,
+            ) =>
               conversation.id !==
               conversationId,
           ),
@@ -909,6 +1066,7 @@ function PlanejarPage() {
       );
 
       setInput("");
+      setLoading(false);
 
       return;
     }
@@ -918,9 +1076,11 @@ function PlanejarPage() {
         await fetch(
           `${API_URL}/api/ai/reset`,
           {
-            method: "POST",
+            method:
+              "POST",
 
-            credentials: "include",
+            credentials:
+              "include",
 
             headers: {
               "Content-Type":
@@ -936,7 +1096,9 @@ function PlanejarPage() {
       const data =
         await response
           .json()
-          .catch(() => ({}));
+          .catch(
+            () => ({}),
+          );
 
       if (!response.ok) {
         throw new Error(
@@ -948,7 +1110,9 @@ function PlanejarPage() {
       setConversations(
         (current) =>
           current.filter(
-            (conversation) =>
+            (
+              conversation,
+            ) =>
               conversation.id !==
               conversationId,
           ),
@@ -959,6 +1123,7 @@ function PlanejarPage() {
       );
 
       setInput("");
+      setLoading(false);
     } catch (error) {
       console.error(
         "Erro ao excluir conversa:",
@@ -969,7 +1134,7 @@ function PlanejarPage() {
 
   /*
    * =========================================================
-   * VERIFICAÇÃO
+   * LOADING
    * =========================================================
    */
 
@@ -1004,7 +1169,8 @@ function PlanejarPage() {
     profileName
       .trim()
       .charAt(0)
-      .toUpperCase() || "U";
+      .toUpperCase() ||
+    "U";
 
   return (
     <main className="flex h-screen overflow-hidden bg-background text-foreground">
@@ -1068,7 +1234,9 @@ function PlanejarPage() {
           ) : (
             <div className="space-y-1">
               {conversations.map(
-                (conversation) => (
+                (
+                  conversation,
+                ) => (
                   <button
                     key={
                       conversation.id
@@ -1114,7 +1282,9 @@ function PlanejarPage() {
                 src={
                   authUser.picture
                 }
-                alt={profileName}
+                alt={
+                  profileName
+                }
                 className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-border"
                 referrerPolicy="no-referrer"
               />
@@ -1128,13 +1298,17 @@ function PlanejarPage() {
 
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-foreground">
-                {profileName}
+                {
+                  profileName
+                }
               </p>
 
               {authUser?.email &&
                 authUser.name && (
                   <p className="truncate text-[10px] text-muted-foreground">
-                    {authUser.email}
+                    {
+                      authUser.email
+                    }
                   </p>
                 )}
             </div>
@@ -1158,10 +1332,6 @@ function PlanejarPage() {
 
           <div className="absolute inset-0 opacity-[0.025] [background-image:linear-gradient(to_right,hsl(var(--foreground))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--foreground))_1px,transparent_1px)] [background-size:64px_64px]" />
         </div>
-
-        {/* =================================================
-            HEADER
-        ================================================= */}
 
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/70 px-4 backdrop-blur-xl sm:px-6">
           <div className="flex items-center gap-3">
@@ -1208,10 +1378,6 @@ function PlanejarPage() {
 
           <Sparkles className="h-4 w-4 animate-pulse text-primary/50" />
         </header>
-
-        {/* =================================================
-            MENSAGENS
-        ================================================= */}
 
         <div
           ref={
@@ -1273,7 +1439,6 @@ function PlanejarPage() {
                             : "justify-start"
                         }`}
                       >
-
                         {!isUser && (
                           <div className="mt-1 flex h-8 w-8 shrink-0 animate-in items-center justify-center rounded-lg border border-primary/20 bg-primary/10 shadow-[0_0_20px_rgba(180,255,80,0.04)] duration-500">
                             <Bot className="h-4 w-4 text-primary" />
@@ -1317,10 +1482,6 @@ function PlanejarPage() {
             )}
           </div>
         </div>
-
-        {/* =================================================
-            INPUT
-        ================================================= */}
 
         <div className="shrink-0 bg-gradient-to-t from-background via-background to-transparent px-4 pb-5 pt-3 sm:px-6">
           <div className="mx-auto w-full max-w-3xl">
@@ -1399,13 +1560,7 @@ function PlanejarPage() {
                     aria-label="Enviar mensagem"
                   >
                     {loading ? (
-                      <span
-                        className="block h-4 w-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground"
-                        style={{
-                          animation:
-                            "wattiq-spinner 0.75s linear infinite",
-                        }}
-                      />
+                      <LoadingSpinner />
                     ) : (
                       <Send className="h-4 w-4 transition-transform duration-300" />
                     )}
