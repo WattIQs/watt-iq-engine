@@ -40,7 +40,10 @@ type AuthUser = {
 };
 
 const API_URL =
-  import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
+  import.meta.env.VITE_API_URL?.replace(
+    /\/$/,
+    "",
+  ) || "";
 
 const INITIAL_MESSAGE: ChatMessage = {
   role: "assistant",
@@ -48,7 +51,9 @@ const INITIAL_MESSAGE: ChatMessage = {
     "Olá. Sou a WattIQ AI. Como posso ajudar?",
 };
 
-export const Route = createFileRoute("/planejar")({
+export const Route = createFileRoute(
+  "/planejar",
+)({
   component: PlanejarPage,
 });
 
@@ -81,12 +86,6 @@ function PlanejarPage() {
   const [input, setInput] =
     useState("");
 
-  /*
-   * loading = esperando a resposta da API
-   *
-   * isTypingResponse = a resposta já chegou
-   * e está sendo exibida letra por letra
-   */
   const [loading, setLoading] =
     useState(false);
 
@@ -100,12 +99,6 @@ function PlanejarPage() {
 
   const chatContainerRef =
     useRef<HTMLDivElement>(null);
-
-  /*
-   * =========================================================
-   * AUTENTICAÇÃO
-   * =========================================================
-   */
 
   useEffect(() => {
     let mounted = true;
@@ -198,12 +191,6 @@ function PlanejarPage() {
     };
   }, [navigate]);
 
-  /*
-   * =========================================================
-   * NOVA CONVERSA
-   * =========================================================
-   */
-
   function createNewConversation() {
     const id =
       `local-${Date.now()}-${Math.random()
@@ -227,12 +214,6 @@ function PlanejarPage() {
     setIsTypingResponse(false);
     setLoading(false);
   }
-
-  /*
-   * =========================================================
-   * CARREGAR HISTÓRICO
-   * =========================================================
-   */
 
   async function loadConversationMessages(
     conversationId: string,
@@ -272,7 +253,8 @@ function PlanejarPage() {
             (message: any) =>
               (
                 message?.role === "user" ||
-                message?.role === "assistant"
+                message?.role ===
+                  "assistant"
               ) &&
               typeof message?.content ===
                 "string",
@@ -326,12 +308,6 @@ function PlanejarPage() {
       );
     }
   }
-
-  /*
-   * =========================================================
-   * CARREGAR CONVERSAS
-   * =========================================================
-   */
 
   useEffect(() => {
     if (!authenticated) return;
@@ -437,12 +413,6 @@ function PlanejarPage() {
         activeConversationId,
     ) || null;
 
-  /*
-   * =========================================================
-   * SELECIONAR CONVERSA
-   * =========================================================
-   */
-
   async function selectConversation(
     conversationId: string,
   ) {
@@ -465,12 +435,6 @@ function PlanejarPage() {
     }
   }
 
-  /*
-   * =========================================================
-   * SCROLL AUTOMÁTICO
-   * =========================================================
-   */
-
   useEffect(() => {
     const container =
       chatContainerRef.current;
@@ -489,12 +453,6 @@ function PlanejarPage() {
     typingMessage,
   ]);
 
-  /*
-   * =========================================================
-   * ATUALIZAR CONVERSA
-   * =========================================================
-   */
-
   function updateConversation(
     conversationId: string,
     updater: (
@@ -511,23 +469,6 @@ function PlanejarPage() {
     );
   }
 
-  /*
-   * =========================================================
-   * DIGITAÇÃO DA RESPOSTA
-   * =========================================================
-   *
-   * A duração é proporcional ao tamanho da resposta.
-   *
-   * Respostas pequenas:
-   * rápidas.
-   *
-   * Respostas grandes:
-   * exibidas mais rápido por caractere.
-   *
-   * Assim uma resposta grande não fica demorando
-   * dezenas de segundos para aparecer.
-   */
-
   async function typeAssistantMessage(
     conversationId: string,
     text: string,
@@ -536,50 +477,40 @@ function PlanejarPage() {
     setIsTypingResponse(true);
     setTypingMessage("");
 
-    const length =
-      text.length;
+    const length = text.length;
 
     /*
-     * Duração aproximada da animação.
+     * A animação fica proporcional ao tamanho.
      *
-     * 1-80 caracteres:
-     * ~0.8s
+     * Respostas pequenas:
+     * aproximadamente 0.7s - 1.2s
      *
-     * 80-250:
-     * ~1.5s
+     * Respostas médias:
+     * aproximadamente 1.5s - 2.5s
      *
-     * 250-600:
-     * ~2.3s
+     * Respostas grandes:
+     * aceleram automaticamente.
      *
-     * 600+:
-     * aumenta gradualmente até 4.5s.
+     * Limite máximo:
+     * aproximadamente 4.5s
      */
-    const targetDuration =
-      Math.min(
-        4500,
-        Math.max(
-          750,
-          650 +
-            Math.sqrt(length) *
-              145,
-        ),
-      );
-
-    /*
-     * Tempo médio por caractere.
-     */
-    const baseDelay =
+    const targetDuration = Math.min(
+      4500,
       Math.max(
-        2,
-        Math.min(
-          18,
-          targetDuration /
-            Math.max(
-              length,
-              1,
-            ),
-        ),
-      );
+        700,
+        600 +
+          Math.sqrt(length) * 145,
+      ),
+    );
+
+    const baseDelay = Math.max(
+      2,
+      Math.min(
+        18,
+        targetDuration /
+          Math.max(length, 1),
+      ),
+    );
 
     let currentText = "";
 
@@ -588,22 +519,17 @@ function PlanejarPage() {
       index < text.length;
       index++
     ) {
-      currentText +=
-        text[index];
+      currentText += text[index];
 
       setTypingMessage(
         currentText,
       );
 
-      let delay =
-        baseDelay;
+      let delay = baseDelay;
 
       const character =
         text[index];
 
-      /*
-       * Pausas naturais.
-       */
       if (
         character === "." ||
         character === "!" ||
@@ -663,12 +589,6 @@ function PlanejarPage() {
     setIsTypingResponse(false);
   }
 
-  /*
-   * =========================================================
-   * ENVIAR MENSAGEM
-   * =========================================================
-   */
-
   async function sendMessage() {
     const text =
       input.trim();
@@ -682,11 +602,10 @@ function PlanejarPage() {
       return;
     }
 
-    const userMessage: ChatMessage =
-      {
-        role: "user",
-        content: text,
-      };
+    const userMessage: ChatMessage = {
+      role: "user",
+      content: text,
+    };
 
     let conversationId =
       activeConversation.id;
@@ -695,12 +614,6 @@ function PlanejarPage() {
       ...activeConversation.messages,
       userMessage,
     ];
-
-    /*
-     * =======================================================
-     * CRIAR CONVERSA NO BANCO
-     * =======================================================
-     */
 
     if (
       conversationId.startsWith(
@@ -846,17 +759,16 @@ function PlanejarPage() {
     setTypingMessage("");
     setIsTypingResponse(false);
 
-    /*
-     * IMPORTANTE:
-     *
-     * O loading continua TRUE durante toda a chamada
-     * da API.
-     *
-     * Isso mantém as três bolinhas visíveis enquanto
-     * a Gemini está processando.
-     */
-
     try {
+      /*
+       * O loading permanece TRUE durante
+       * TODA a chamada da API.
+       *
+       * Portanto as bolinhas ficam visíveis
+       * até a resposta do Gemini chegar.
+       */
+      setLoading(true);
+
       const response =
         await fetch(
           `${API_URL}/api/ai/chat`,
@@ -926,15 +838,6 @@ function PlanejarPage() {
         }),
       );
 
-      /*
-       * A resposta chegou.
-       *
-       * Aqui o loading é desligado dentro
-       * de typeAssistantMessage().
-       *
-       * Em seguida começa a animação.
-       */
-
       await typeAssistantMessage(
         conversationId,
         answer,
@@ -970,12 +873,6 @@ function PlanejarPage() {
       );
     }
   }
-
-  /*
-   * =========================================================
-   * EXCLUIR CONVERSA
-   * =========================================================
-   */
 
   async function resetConversation() {
     if (!activeConversation) {
@@ -1070,12 +967,6 @@ function PlanejarPage() {
     }
   }
 
-  /*
-   * =========================================================
-   * TECLADO
-   * =========================================================
-   */
-
   function handleInputKeyDown(
     event: React.KeyboardEvent<HTMLTextAreaElement>,
   ) {
@@ -1088,12 +979,6 @@ function PlanejarPage() {
       sendMessage();
     }
   }
-
-  /*
-   * =========================================================
-   * LOADING DA AUTENTICAÇÃO
-   * =========================================================
-   */
 
   if (checkingAuth) {
     return (
@@ -1126,12 +1011,6 @@ function PlanejarPage() {
       .charAt(0)
       .toUpperCase() ||
     "U";
-
-  /*
-   * =========================================================
-   * INTERFACE
-   * =========================================================
-   */
 
   return (
     <main className="flex h-screen overflow-hidden bg-background text-foreground">
@@ -1403,51 +1282,56 @@ function PlanejarPage() {
                 )}
 
                 {/*
-                 * =================================================
-                 * BOLINHAS DE PROCESSAMENTO
-                 * =================================================
+                 * =====================================================
+                 * WATTIQ THINKING
+                 * =====================================================
                  *
-                 * Essas bolinhas aparecem enquanto:
+                 * Não depende de animate-bounce do Tailwind.
+                 * A animação é CSS puro e inline.
                  *
-                 * loading === true
-                 *
-                 * Ou seja, enquanto estamos esperando a Gemini.
-                 *
-                 * Quando a resposta chega:
-                 *
-                 * loading -> false
-                 * isTypingResponse -> true
-                 *
-                 * Então as bolinhas saem e a resposta começa
-                 * a aparecer letra por letra.
+                 * Isso garante que as três bolinhas apareçam
+                 * mesmo se alguma configuração do Tailwind não
+                 * gerar a classe de animação.
                  */}
+                {loading && (
+                  <div className="mb-6 flex animate-in gap-3 duration-300">
+                    <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
+                      <Bot className="h-4 w-4 text-primary" />
+                    </div>
 
-                {loading &&
-                  !isTypingResponse && (
-                    <div className="mb-6 flex animate-in gap-3 duration-300">
-                      <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
-                        <Bot className="h-4 w-4 text-primary" />
-                      </div>
-
-                      <div className="flex min-h-[48px] items-center rounded-2xl rounded-bl-md border border-border bg-card px-5 shadow-sm">
-                        <div
-                          className="wattiq-thinking-dots"
-                          aria-label="WattIQ AI está pensando"
-                        >
-                          <span />
-                          <span />
-                          <span />
-                        </div>
+                    <div
+                      className="flex h-[48px] min-w-[70px] items-center justify-center rounded-2xl rounded-bl-md border border-border bg-card px-5 shadow-sm"
+                      aria-label="WattIQ AI está pensando"
+                    >
+                      <div className="wattiq-thinking-dots">
+                        <span
+                          style={{
+                            animationDelay:
+                              "0ms",
+                          }}
+                        />
+                        <span
+                          style={{
+                            animationDelay:
+                              "160ms",
+                          }}
+                        />
+                        <span
+                          style={{
+                            animationDelay:
+                              "320ms",
+                          }}
+                        />
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
 
                 {/*
-                 * =================================================
+                 * =====================================================
                  * RESPOSTA SENDO DIGITADA
-                 * =================================================
+                 * =====================================================
                  */}
-
                 {isTypingResponse && (
                   <div className="mb-6 flex animate-in gap-3 duration-300">
                     <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
@@ -1545,68 +1429,50 @@ function PlanejarPage() {
       </section>
 
       <style>{`
-        /*
-         * =========================================================
-         * WATTIQ AI - BOLINHAS DE PROCESSAMENTO
-         * =========================================================
-         */
-
         .wattiq-thinking-dots {
-          display: inline-flex;
+          display: flex;
           align-items: center;
           justify-content: center;
           gap: 6px;
-          width: 34px;
+          width: 28px;
           height: 20px;
         }
 
         .wattiq-thinking-dots span {
           display: block;
-          width: 7px;
-          height: 7px;
-          flex: 0 0 7px;
+          width: 6px;
+          height: 6px;
+          min-width: 6px;
+          min-height: 6px;
           border-radius: 9999px;
           background-color: hsl(var(--primary));
           opacity: 0.35;
-          transform: translateY(0) scale(0.8);
-          animation-name: wattiq-dot-bounce;
-          animation-duration: 1.2s;
+          transform: translateY(0) scale(0.75);
+          animation-name: wattiq-thinking-dot;
+          animation-duration: 900ms;
           animation-timing-function: ease-in-out;
           animation-iteration-count: infinite;
-          will-change: transform, opacity;
+          animation-fill-mode: both;
         }
 
-        .wattiq-thinking-dots span:nth-child(1) {
-          animation-delay: 0ms;
-        }
-
-        .wattiq-thinking-dots span:nth-child(2) {
-          animation-delay: 160ms;
-        }
-
-        .wattiq-thinking-dots span:nth-child(3) {
-          animation-delay: 320ms;
-        }
-
-        @keyframes wattiq-dot-bounce {
-          0% {
+        @keyframes wattiq-thinking-dot {
+          0%,
+          100% {
             opacity: 0.3;
-            transform: translateY(0) scale(0.8);
+            transform: translateY(0) scale(0.75);
           }
 
-          20% {
+          50% {
             opacity: 1;
             transform: translateY(-5px) scale(1);
           }
+        }
 
-          40% {
-            opacity: 0.65;
-            transform: translateY(0) scale(0.9);
-          }
-
-          100% {
-            opacity: 0.3;
-            transform: translateY(0) scale(0.8);
+        @media (prefers-reduced-motion: reduce) {
+          .wattiq-thinking-dots span {
+            animation: none;
+            opacity: 0.75;
+            transform: scale(0.9);
           }
         }
       `}</style>
