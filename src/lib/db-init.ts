@@ -68,15 +68,48 @@ export async function initDatabase() {
       ON otp_challenges(expires_at);
     `);
 
+    /*
+     * =====================================================
+     * PERFIL DOS USUÁRIOS
+     * =====================================================
+     *
+     * O e-mail identifica o usuário.
+     *
+     * Assim, se a pessoa entrar primeiro pelo Google
+     * e depois pelo login por e-mail, conseguimos recuperar
+     * o mesmo nome e a mesma foto.
+     */
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_profiles (
+        email TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        picture TEXT NOT NULL DEFAULT '',
+        google_sub TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_user_profiles_google_sub
+      ON user_profiles(google_sub);
+    `);
+
     await client.query("COMMIT");
 
     initialized = true;
 
-    console.log("Banco WattIQ inicializado com sucesso.");
+    console.log(
+      "Banco WattIQ inicializado com sucesso.",
+    );
   } catch (error) {
     await client.query("ROLLBACK");
 
-    console.error("Erro ao inicializar banco:", error);
+    console.error(
+      "Erro ao inicializar banco:",
+      error,
+    );
 
     throw error;
   } finally {
