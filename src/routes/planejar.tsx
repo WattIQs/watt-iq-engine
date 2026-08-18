@@ -11,8 +11,6 @@ import {
 
 import {
   Bot,
-  ChevronLeft,
-  ChevronRight,
   Loader2,
   MessageSquare,
   Plus,
@@ -1196,7 +1194,7 @@ function PlanejarPage() {
           SIDEBAR
       ===================================================== */}
 
-      {/* Área invisível na borda: aproximação do mouse abre a sidebar. */}
+      {/* Área de ativação: aproximar o mouse da borda abre a sidebar. */}
       <div
         className="fixed inset-y-0 left-0 z-40 w-3"
         onMouseEnter={() => setSidebarHovered(true)}
@@ -1372,7 +1370,7 @@ function PlanejarPage() {
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-300 hover:scale-105 hover:border-primary/30 hover:bg-primary/5 hover:text-foreground active:scale-95"
               aria-label="Abrir ou fechar menu"
             >
-              {sidebarOpen || sidebarHovered ? (
+              {sidebarOpen ? (
                 <ChevronLeft className="h-4 w-4 transition-transform duration-300" />
               ) : (
                 <ChevronRight className="h-4 w-4 transition-transform duration-300" />
