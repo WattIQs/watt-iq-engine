@@ -421,15 +421,7 @@ function PlanejarPage() {
   ] =
     useState(false);
 
-  const [
-    sidebarOpen,
-    setSidebarOpen,
-  ] = useState(false);
 
-  const [
-    sidebarHovered,
-    setSidebarHovered,
-  ] = useState(false);
 
   const [
     input,
@@ -1194,22 +1186,10 @@ function PlanejarPage() {
           SIDEBAR
       ===================================================== */}
 
-      {/* Área de ativação: aproximar o mouse da borda abre a sidebar. */}
-      <div
-        className="fixed inset-y-0 left-0 z-40 w-3"
-        onMouseEnter={() => setSidebarHovered(true)}
-        aria-hidden="true"
-      />
-
-      <aside
-        onMouseEnter={() => setSidebarHovered(true)}
-        onMouseLeave={() => setSidebarHovered(false)}
-        className={`fixed inset-y-0 left-0 z-50 flex w-[280px] shrink-0 flex-col border-r border-border bg-card/40 shadow-2xl shadow-black/20 backdrop-blur-xl transition-transform duration-500 ease-out ${
-          sidebarOpen || sidebarHovered
-            ? "translate-x-0"
-            : "-translate-x-[calc(100%-12px)]"
-        }`}
-      >
+      <div className="group fixed inset-y-0 left-0 z-50 w-3">
+        <aside
+          className="absolute inset-y-0 left-0 flex w-[280px] shrink-0 -translate-x-[calc(100%-12px)] flex-col border-r border-border bg-card/40 shadow-2xl shadow-black/20 backdrop-blur-xl transition-transform duration-500 ease-out group-hover:translate-x-0"
+        >
         <div className="flex h-16 items-center border-b border-border px-4">
           <a
             href="/"
@@ -1343,7 +1323,8 @@ function PlanejarPage() {
             />
           </div>
         </div>
-      </aside>
+        </aside>
+      </div>
 
       {/* =====================================================
           CHAT
@@ -1359,24 +1340,6 @@ function PlanejarPage() {
 
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/70 px-4 backdrop-blur-xl sm:px-6">
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() =>
-                setSidebarOpen(
-                  (value) =>
-                    !value,
-                )
-              }
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-300 hover:scale-105 hover:border-primary/30 hover:bg-primary/5 hover:text-foreground active:scale-95"
-              aria-label="Abrir ou fechar menu"
-            >
-              {sidebarOpen ? (
-                <ChevronLeft className="h-4 w-4 transition-transform duration-300" />
-              ) : (
-                <ChevronRight className="h-4 w-4 transition-transform duration-300" />
-              )}
-            </button>
-
             <div className="flex items-center gap-3">
               <div className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/10">
                 <div className="absolute inset-0 animate-ping rounded-lg bg-primary/5" />
