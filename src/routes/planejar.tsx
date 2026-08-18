@@ -426,7 +426,12 @@ function PlanejarPage() {
   const [
     sidebarOpen,
     setSidebarOpen,
-  ] = useState(true);
+  ] = useState(false);
+
+  const [
+    sidebarHovered,
+    setSidebarHovered,
+  ] = useState(false);
 
   const [
     input,
@@ -1191,11 +1196,20 @@ function PlanejarPage() {
           SIDEBAR
       ===================================================== */}
 
+      {/* Área invisível na borda: aproximação do mouse abre a sidebar. */}
+      <div
+        className="fixed inset-y-0 left-0 z-40 w-3"
+        onMouseEnter={() => setSidebarHovered(true)}
+        aria-hidden="true"
+      />
+
       <aside
-        className={`relative flex shrink-0 flex-col border-r border-border bg-card/40 backdrop-blur-xl transition-all duration-500 ease-out ${
-          sidebarOpen
-            ? "w-[280px]"
-            : "w-0 overflow-hidden border-r-0"
+        onMouseEnter={() => setSidebarHovered(true)}
+        onMouseLeave={() => setSidebarHovered(false)}
+        className={`fixed inset-y-0 left-0 z-50 flex w-[280px] shrink-0 flex-col border-r border-border bg-card/40 shadow-2xl shadow-black/20 backdrop-blur-xl transition-transform duration-500 ease-out ${
+          sidebarOpen || sidebarHovered
+            ? "translate-x-0"
+            : "-translate-x-[calc(100%-12px)]"
         }`}
       >
         <div className="flex h-16 items-center border-b border-border px-4">
@@ -1358,7 +1372,7 @@ function PlanejarPage() {
               className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-all duration-300 hover:scale-105 hover:border-primary/30 hover:bg-primary/5 hover:text-foreground active:scale-95"
               aria-label="Abrir ou fechar menu"
             >
-              {sidebarOpen ? (
+              {sidebarOpen || sidebarHovered ? (
                 <ChevronLeft className="h-4 w-4 transition-transform duration-300" />
               ) : (
                 <ChevronRight className="h-4 w-4 transition-transform duration-300" />
