@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { autocompleteLocations } from "@/lib/geoapify.server";
+import { autocompleteLocations } from "@/lib/google-search-location.server";
 
 type Body = { input?: unknown };
 
@@ -10,8 +10,8 @@ function isAbortError(error: unknown): boolean {
 
 function statusForError(error: unknown): number {
   const message = error instanceof Error ? error.message : String(error);
-  if (message === "GEOAPIFY_API_KEY_MISSING") return 500;
-  if (message.startsWith("GEOAPIFY_AUTOCOMPLETE_")) return 502;
+  if (message === "GOOGLE_SEARCH_API_KEY_MISSING" || message === "GOOGLE_SEARCH_CX_MISSING") return 500;
+  if (message.startsWith("GOOGLE_SEARCH_")) return 502;
   if (isAbortError(error)) return 504;
   return 500;
 }
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/api/location/autocomplete")({
           const message = error instanceof Error ? error.message : String(error);
           console.error("Erro na rota /api/location/autocomplete:", message);
           const status = statusForError(error);
-          const userMessage = message === "GEOAPIFY_API_KEY_MISSING"
+          const userMessage = (message === "GOOGLE_SEARCH_API_KEY_MISSING" || message === "GOOGLE_SEARCH_CX_MISSING")
             ? "A busca de localização não está configurada no servidor."
             : status === 504
               ? "A busca demorou demais. Tente novamente."
