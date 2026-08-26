@@ -56,11 +56,17 @@ async function fetchGoogle(
 ): Promise<Response> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const requestSignal = init.signal;
+
+  if (requestSignal) {
+    if (requestSignal.aborted) controller.abort();
+    else requestSignal.addEventListener("abort", () => controller.abort(), { once: true });
+  }
 
   try {
     return await fetch(url, {
       ...init,
-      signal: init.signal ?? controller.signal,
+      signal: controller.signal,
     });
   } finally {
     clearTimeout(timeout);
@@ -103,13 +109,13 @@ export async function autocompletePlaces(
     GOOGLE_PLACES_AUTOCOMPLETE_URL,
     {
       method: "POST",
+      signal: requestSignal,
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
         "X-Goog-Api-Key": key,
         "X-Goog-FieldMask":
           "suggestions.placePrediction.placeId,suggestions.placePrediction.text.text,suggestions.placePrediction.structuredFormat.mainText.text,suggestions.placePrediction.structuredFormat.secondaryText.text",
-        ...(requestSignal ? { signal: requestSignal } : {}),
       },
       body: JSON.stringify({
         input: normalized,
@@ -194,11 +200,11 @@ export async function getPlaceDetails(
   const response = await fetchGoogle(
     url.toString(),
     {
+      signal: requestSignal,
       headers: {
         Accept: "application/json",
         "X-Goog-Api-Key": key,
         "X-Goog-FieldMask": "id,displayName,formattedAddress,location",
-        ...(requestSignal ? { signal: requestSignal } : {}),
       },
     },
   );
