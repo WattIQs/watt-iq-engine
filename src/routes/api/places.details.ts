@@ -6,15 +6,19 @@ type Body = {
   sessionToken?: unknown;
 };
 
+function isAbortError(error: unknown): boolean {
+  return (
+    (typeof DOMException !== "undefined" && error instanceof DOMException && error.name === "AbortError") ||
+    (error instanceof Error && error.name === "AbortError")
+  );
+}
+
 function statusForError(error: unknown): number {
   const message = error instanceof Error ? error.message : String(error);
-  if (
-    message === "PLACE_ID_REQUIRED" ||
-    message === "SESSION_TOKEN_REQUIRED" ||
-    message === "GOOGLE_PLACES_API_KEY_MISSING"
-  ) return 400;
+  if (message === "GOOGLE_PLACES_API_KEY_MISSING") return 500;
+  if (message === "PLACE_ID_REQUIRED" || message === "SESSION_TOKEN_REQUIRED") return 400;
   if (message.startsWith("GOOGLE_PLACES_DETAILS_")) return 502;
-  if (message === "AbortError") return 504;
+  if (isAbortError(error)) return 504;
   return 500;
 }
 
