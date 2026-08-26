@@ -198,7 +198,7 @@ export function LocationSearch({
           ) : !loading ? (
             <div className="px-4 py-4 text-sm text-muted-foreground">Nenhum local encontrado.</div>
           ) : null}
-          <div className="border-t border-border px-4 py-2 text-right text-[10px] font-medium text-muted-foreground">Dados de localização: Geoapify / OpenStreetMap</div>
+          <div className="border-t border-border px-4 py-2 text-right text-[10px] font-medium text-muted-foreground">Resultados da Web do Google</div>
         </div>
       )}
     </div>
