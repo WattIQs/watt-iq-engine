@@ -1375,3 +1375,34 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Google Places location search
+
+A busca de localização usa o **Google Places API (New)** exclusivamente pelo backend. `GOOGLE_SEARCH_API_KEY` e `GOOGLE_SEARCH_CX` são credenciais de Custom Search para páginas web e não devem ser reutilizadas para geolocalização.
+
+### Variável obrigatória no Render
+
+`GOOGLE_PLACES_API_KEY`
+
+A chave é lida somente no servidor e nunca é enviada ao navegador.
+
+### Configuração no Google Cloud
+
+1. Crie ou selecione um projeto no Google Cloud Console.
+2. Ative o billing do projeto.
+3. Habilite **Places API (New)**.
+4. Habilite **Geocoding API** para operações futuras de geocodificação/endereço.
+5. Crie uma API key em **APIs & Services → Credentials**.
+6. Restrinja a key por API, permitindo somente **Places API (New)** e **Geocoding API**.
+7. Restrinja também por IP usando o endereço de saída do servidor do Render quando isso estiver disponível para o serviço.
+8. Adicione a key no Render como `GOOGLE_PLACES_API_KEY`.
+
+Não coloque essa chave em `VITE_*`, React, HTML ou código do navegador.
+
+### Arquitetura
+
+`LocationSearch` aplica debounce de 300 ms, exige pelo menos 3 caracteres e cancela/ignora buscas antigas. O navegador chama apenas `/api/places/autocomplete` e `/api/places/details`; esses endpoints fazem o proxy server-side para `https://places.googleapis.com`.
+
+Autocomplete usa um session token UUID, reutilizado até a seleção. A seleção chama Place Details com o mesmo token para obter `latitude`, `longitude` e `formattedAddress`; depois um token novo é criado para a próxima sessão. Esse ciclo segue o modelo de sessão recomendado pela documentação atual do Places API (New).
+
+Autocomplete também usa cache de 60 segundos no servidor para reduzir consultas repetidas. Chamadas ao Google têm timeout de 5 segundos e erros de API são registrados no servidor com o status HTTP retornado.
