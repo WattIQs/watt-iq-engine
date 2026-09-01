@@ -1281,6 +1281,16 @@ function PlanejarPage() {
         </div>
 
         <div className="border-t border-border p-3">
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            className="mb-3 flex w-full items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-2.5 text-left transition-all duration-300 hover:border-primary/30 hover:bg-card"
+          >
+            <Settings className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Configurações</span>
+          </button>
+
+        <div className="border-t border-border p-3">
           <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-3 transition-all duration-300 hover:border-primary/20">
             {authUser?.picture ? (
               <img
@@ -1548,6 +1558,38 @@ function PlanejarPage() {
           </div>
         </div>
       </section>
+
+      {settingsOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setSettingsOpen(false);
+          }}
+        >
+          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-border bg-card shadow-2xl shadow-black/40 animate-in zoom-in-95 slide-in-from-bottom-2 duration-300">
+            <div className="flex items-start justify-between border-b border-border px-6 py-5">
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-primary">Segurança</p>
+                <h2 className="mt-1 text-xl font-semibold">Configurações</h2>
+                <p className="mt-1 text-xs text-muted-foreground">Proteja o acesso à sua conta.</p>
+              </div>
+              <button type="button" onClick={() => setSettingsOpen(false)} className="rounded-lg px-2 py-1 text-xl text-muted-foreground hover:bg-background hover:text-foreground" aria-label="Fechar">×</button>
+            </div>
+            <div className="p-6">
+              <div className="flex items-center justify-between gap-5 rounded-2xl border border-border bg-background/40 p-4">
+                <div>
+                  <h3 className="text-sm font-medium">Verificação em duas etapas</h3>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">Solicita um código enviado por e-mail em novos logins. O primeiro acesso permanece protegido.</p>
+                </div>
+                <button type="button" onClick={() => updateVerification(!settings.requireEmailVerification)} disabled={settingsLoading || settingsSaving} role="switch" aria-checked={settings.requireEmailVerification} className={`relative h-7 w-12 shrink-0 rounded-full border transition-all duration-300 ${settings.requireEmailVerification ? "border-primary/50 bg-primary/20" : "border-border bg-background"}`}>
+                  <span className={`absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border transition-all duration-300 ${settings.requireEmailVerification ? "left-6 border-primary bg-primary" : "left-1 border-border bg-card"}`} />
+                </button>
+              </div>
+              {settingsMessage && <p className="mt-3 text-xs text-muted-foreground">{settingsMessage}</p>}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
