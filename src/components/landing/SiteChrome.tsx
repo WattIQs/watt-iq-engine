@@ -249,7 +249,6 @@ export function SiteHeader() {
 
           )}
 
-          )}
 
           {settingsOpen ? (
             <div
