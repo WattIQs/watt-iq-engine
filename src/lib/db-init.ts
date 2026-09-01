@@ -40,14 +40,40 @@ export async function initDatabase() {
         email TEXT NOT NULL UNIQUE,
         name TEXT NOT NULL DEFAULT '',
         picture TEXT NOT NULL DEFAULT '',
+        email_verified_at TIMESTAMPTZ,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `);
 
     await client.query(`
+      ALTER TABLE users
+      ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ;
+    `);
+
+    await client.query(`
       CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email
       ON users(email);
+    `);
+
+    /*
+     * =========================================================
+     * CONFIGURAÇÕES DO USUÁRIO
+     *
+     * A preferência fica no PostgreSQL e nunca depende do
+     * estado do frontend/localStorage.
+     * =========================================================
+     */
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS user_settings (
+        user_id UUID PRIMARY KEY
+          REFERENCES users(id)
+          ON DELETE CASCADE,
+        require_email_verification BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
     `);
 
     /*
