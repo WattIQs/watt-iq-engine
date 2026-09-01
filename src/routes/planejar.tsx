@@ -1312,7 +1312,7 @@ function PlanejarPage() {
               title="Online"
             />
           </div>
-        </div>/div>
+        </div>
         </aside>
       </div>
 
