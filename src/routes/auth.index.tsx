@@ -124,6 +124,11 @@ function AuthPage() {
 
       const redirect = getRedirectUrl();
 
+      if (data?.authenticated === true) {
+        window.location.href = redirect;
+        return;
+      }
+
       window.location.href =
         `/auth/verify?redirect=${encodeURIComponent(redirect)}`;
     } catch (error) {
