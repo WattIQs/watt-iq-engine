@@ -1308,47 +1308,31 @@ function PlanejarPage() {
                 setSettingsLoading(false);
               }
             }}
-            className="mb-3 flex w-full items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-2.5 text-left transition-all duration-300 hover:border-primary/30 hover:bg-card"
+            className="mb-3 flex w-full items-center gap-3 rounded-xl border border-border bg-background/70 px-3 py-2.5 text-left text-sm font-medium transition-all duration-300 hover:border-primary/30 hover:bg-card"
           >
             <Settings className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Configurações</span>
+            Configurações
           </button>
 
-        <div className="border-t border-border p-3">
-          <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-3 transition-all duration-300 hover:border-primary/20">
+          <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-3">
             {authUser?.picture ? (
-              <img
-                src={authUser.picture}
-                alt={profileName}
-                className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-border"
-                referrerPolicy="no-referrer"
-              />
+              <img src={authUser.picture} alt={profileName} className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-border" referrerPolicy="no-referrer" />
             ) : (
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-primary/30 bg-primary/10 text-sm font-semibold text-primary">
                 {profileInitial}
               </div>
             )}
-
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-foreground">
-                {profileName}
-              </p>
-
+              <p className="truncate text-sm font-medium text-foreground">{profileName}</p>
               {authUser?.email && authUser.name && (
-                <p className="truncate text-[10px] text-muted-foreground">
-                  {authUser.email}
-                </p>
+                <p className="truncate text-[10px] text-muted-foreground">{authUser.email}</p>
               )}
             </div>
-
-            <span
-              className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-primary shadow-[0_0_8px_rgba(180,255,80,0.8)]"
-              title="Online"
-            />
+            <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-primary shadow-[0_0_8px_rgba(180,255,80,0.8)]" title="Online" />
           </div>
         </div>
-        </div>
         </aside>
+      </div>
 
       {/* =====================================================
           CHAT
@@ -1582,10 +1566,9 @@ function PlanejarPage() {
           </div>
         </div>
       </section>
-
       {settingsOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md animate-in fade-in duration-200"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setSettingsOpen(false);
           }}
@@ -1601,7 +1584,9 @@ function PlanejarPage() {
             </div>
             <div className="p-6">
               {settingsLoading ? (
-                <div className="flex items-center gap-3 py-6 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Carregando...</div>
+                <div className="flex items-center gap-3 py-6 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Carregando...
+                </div>
               ) : (
                 <div className="rounded-2xl border border-border bg-background/40 p-4">
                   <div className="flex items-center justify-between gap-5">
