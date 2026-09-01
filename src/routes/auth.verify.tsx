@@ -296,7 +296,8 @@ export const Route = createFileRoute(
                     THEN EXCLUDED.picture
                     ELSE users.picture
                   END,
-                  updated_at = NOW()
+                  updated_at = NOW(),
+                  email_verified_at = COALESCE(users.email_verified_at, NOW())
               `,
               [
                 user.email,
