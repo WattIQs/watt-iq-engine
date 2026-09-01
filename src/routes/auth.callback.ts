@@ -12,6 +12,8 @@ import {
 } from "../lib/otp-store";
 
 import { db } from "../lib/db";
+import { initDatabase } from "../lib/db-init";
+import { createSessionCookie, type SessionUser } from "../lib/session";
 
 export const Route = createFileRoute(
   "/auth/callback",
@@ -51,6 +53,8 @@ export const Route = createFileRoute(
         }
 
         try {
+          await initDatabase();
+
           const tokens =
             await exchangeGoogleCode(
               code,
@@ -215,7 +219,8 @@ export const Route = createFileRoute(
                   id,
                   email,
                   name,
-                  picture
+                  picture,
+                  email_verified_at
                 FROM users
                 WHERE email = $1
                 LIMIT 1
@@ -225,6 +230,62 @@ export const Route = createFileRoute(
 
           const profile =
             savedUser.rows[0];
+
+          const requireVerificationResult = await db.query(
+            `
+              SELECT COALESCE(
+                us.require_email_verification,
+                TRUE
+              ) AS require_email_verification
+              FROM users u
+              LEFT JOIN user_settings us
+                ON us.user_id = u.id
+              WHERE u.id = $1
+              LIMIT 1
+            `,
+            [userId],
+          );
+
+          const isVerified = Boolean(profile?.email_verified_at);
+          const requiresCode =
+            !isVerified ||
+            Boolean(
+              requireVerificationResult.rows[0]?.require_email_verification ?? true,
+            );
+
+          if (!requiresCode) {
+            const user: SessionUser = {
+              sub: userId || googleSub,
+              email,
+              name:
+                profile?.name ||
+                googleName ||
+                email.split("@")[0],
+              picture:
+                profile?.picture ||
+                googlePicture ||
+                "",
+            };
+
+            const headers = new Headers();
+            headers.append(
+              "Set-Cookie",
+              createSessionCookie(user),
+            );
+            headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+
+            return new Response(
+              null,
+              {
+                status: 302,
+                headers: new Headers([
+                  ["Set-Cookie", createSessionCookie(user)],
+                  ["Location", "/planejar"],
+                  ["Cache-Control", "no-store, no-cache, must-revalidate"],
+                ]),
+              },
+            );
+          }
 
           const otp =
             generateOtp();
