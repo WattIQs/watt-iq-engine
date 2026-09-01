@@ -1347,8 +1347,7 @@ function PlanejarPage() {
             />
           </div>
         </div>
-        </aside>
-      </div>
+        </aside>   </div>
 
       {/* =====================================================
           CHAT
