@@ -267,13 +267,6 @@ export const Route = createFileRoute(
                 "",
             };
 
-            const headers = new Headers();
-            headers.append(
-              "Set-Cookie",
-              createSessionCookie(user),
-            );
-            headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
-
             return new Response(
               null,
               {
