@@ -106,17 +106,15 @@ export const Route = createFileRoute(
                 : "",
           };
 
-          const isVerified = Boolean(row?.email_verified_at);
-          const requiresCode =
-            !row ||
-            !isVerified ||
-            Boolean(row.require_email_verification);
-
           /*
-           * O primeiro login por e-mail sempre passa pela
-           * verificação. Depois disso, a preferência persistida
-           * no PostgreSQL decide se novos códigos serão enviados.
+           * Usuário novo começa com a verificação habilitada.
+           * Para usuários existentes, a preferência persistida
+           * em user_settings é a única fonte de verdade:
+           * desligou nas configurações = não envia código.
            */
+          const requiresCode = row
+            ? Boolean(row.require_email_verification)
+            : true;
           if (!requiresCode) {
             const headers = new Headers();
 
