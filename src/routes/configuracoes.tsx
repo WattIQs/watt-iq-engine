@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Check, Loader2, ShieldCheck, Zap } from "lucide-react";
+import { ArrowLeft, BarChart3, Check, Loader2, ShieldCheck, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type Settings = {
@@ -156,7 +156,17 @@ function SettingsPage() {
             </div>
           </div>
 
-          <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-card/60 shadow-2xl shadow-black/10 backdrop-blur-xl">
+          <nav className="mt-8 flex flex-wrap gap-2 border-b border-border pb-4" aria-label="Menu principal">
+            <a
+              href="/planejar"
+              className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-sm font-medium text-primary transition-all hover:bg-primary/15"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Planejar
+            </a>
+          </nav>
+
+          <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card/60 shadow-2xl shadow-black/10 backdrop-blur-xl">
             {loading ? (
               <div className="flex items-center gap-3 px-6 py-8 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
