@@ -17,10 +17,7 @@ import {
   Send,
   Sparkles,
   Trash2,
-  Zap,
-  Settings,
-  LogOut,
-  ChevronUp,
+  Zap
 } from "lucide-react";
 
 type ChatMessage = {
@@ -293,7 +290,6 @@ function PlanejarPage() {
   ] =
     useState<AuthUser | null>(null);
 
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   /*
    * =========================================================
@@ -1284,34 +1280,8 @@ function PlanejarPage() {
           )}
         </div>
 
-        <div className="relative border-t border-border p-3">
-          {profileMenuOpen && (
-            <div className="absolute bottom-[calc(100%-8px)] left-3 right-3 mb-2 overflow-hidden rounded-xl border border-border bg-card/95 p-1.5 shadow-2xl shadow-black/30 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2 duration-200">
-              <a
-                href="/configuracoes"
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
-              >
-                <Settings className="h-4 w-4" />
-                Configurações
-              </a>
-
-              <a
-                href="/auth/logout"
-                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-              >
-                <LogOut className="h-4 w-4" />
-                Sair
-              </a>
-            </div>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setProfileMenuOpen((open) => !open)}
-            aria-expanded={profileMenuOpen}
-            aria-haspopup="menu"
-            className="group flex w-full items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-3 text-left transition-all duration-300 hover:border-primary/20"
-          >
+        <div className="border-t border-border p-3">
+          <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-3 transition-all duration-300 hover:border-primary/20">
             {authUser?.picture ? (
               <img
                 src={authUser.picture}
@@ -1337,13 +1307,12 @@ function PlanejarPage() {
               )}
             </div>
 
-            <ChevronUp
-              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-300 ${
-                profileMenuOpen ? "rotate-180" : ""
-              }`}
+            <span
+              className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-primary shadow-[0_0_8px_rgba(180,255,80,0.8)]"
+              title="Online"
             />
-          </button>
-        </div>
+          </div>
+        </div>/div>
         </aside>
       </div>
 
