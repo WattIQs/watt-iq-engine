@@ -252,12 +252,12 @@ export function SiteHeader() {
 
           {settingsOpen ? (
             <div
-              className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md animate-in fade-in duration-200"
+              className="fixed inset-0 z-[100] grid min-h-screen place-items-center overflow-y-auto bg-black/60 p-4 backdrop-blur-md animate-in fade-in duration-300"
               onMouseDown={(event) => {
                 if (event.target === event.currentTarget) setSettingsOpen(false);
               }}
             >
-              <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-border bg-card shadow-2xl shadow-black/50 animate-in zoom-in-95 slide-in-from-bottom-3 duration-300">
+              <div className="my-auto w-full max-w-lg overflow-hidden rounded-3xl border border-border bg-card shadow-2xl shadow-black/50 animate-in zoom-in-95 slide-in-from-bottom-3 duration-300">
                 <div className="flex items-start justify-between border-b border-border px-6 py-5">
                   <div>
                     <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-primary">Segurança</p>
