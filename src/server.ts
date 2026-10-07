@@ -15,21 +15,41 @@ type ServerEntry = {
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 let databaseInitializationPromise: Promise<void> | undefined;
 let databaseUnavailableLogged = false;
+let lastDatabaseFailureAt = 0;
+
+const DATABASE_RETRY_BACKOFF_MS = 30_000;
 
 async function ensureDatabaseInitialized() {
-  if (!databaseInitializationPromise) {
-    databaseInitializationPromise = initDatabase().catch((error) => {
-      if (!databaseUnavailableLogged) {
-        console.error(
-          "PostgreSQL indisponível. O site público continuará no ar; recursos que dependem do banco podem ficar temporariamente indisponíveis.",
-          error,
-        );
-        databaseUnavailableLogged = true;
-      }
-    });
+  const now = Date.now();
+
+  if (
+    !databaseInitializationPromise &&
+    now - lastDatabaseFailureAt >= DATABASE_RETRY_BACKOFF_MS
+  ) {
+    databaseInitializationPromise = initDatabase()
+      .then(() => {
+        databaseUnavailableLogged = false;
+        lastDatabaseFailureAt = 0;
+      })
+      .catch((error) => {
+        lastDatabaseFailureAt = Date.now();
+
+        if (!databaseUnavailableLogged) {
+          console.error(
+            "PostgreSQL indisponível. O site público continuará no ar; recursos que dependem do banco podem ficar temporariamente indisponíveis.",
+            error,
+          );
+          databaseUnavailableLogged = true;
+        }
+      })
+      .finally(() => {
+        databaseInitializationPromise = undefined;
+      });
   }
 
-  await databaseInitializationPromise;
+  if (databaseInitializationPromise) {
+    await databaseInitializationPromise;
+  }
 }
 
 async function getServerEntry(): Promise<ServerEntry> {
