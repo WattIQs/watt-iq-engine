@@ -14,10 +14,19 @@ type ServerEntry = {
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 let databaseInitializationPromise: Promise<void> | undefined;
+let databaseUnavailableLogged = false;
 
 async function ensureDatabaseInitialized() {
   if (!databaseInitializationPromise) {
-    databaseInitializationPromise = initDatabase();
+    databaseInitializationPromise = initDatabase().catch((error) => {
+      if (!databaseUnavailableLogged) {
+        console.error(
+          "PostgreSQL indisponível. O site público continuará no ar; recursos que dependem do banco podem ficar temporariamente indisponíveis.",
+          error,
+        );
+        databaseUnavailableLogged = true;
+      }
+    });
   }
 
   await databaseInitializationPromise;
@@ -89,6 +98,7 @@ export default {
     ctx: unknown,
   ) {
     try {
+      // Database availability must never take the entire public site down.
       await ensureDatabaseInitialized();
 
       const handler = await getServerEntry();
