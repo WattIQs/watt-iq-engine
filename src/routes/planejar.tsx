@@ -17,7 +17,6 @@ import {
   Send,
   Sparkles,
   Trash2,
-  Settings,
   Zap
 } from "lucide-react";
 
@@ -290,13 +289,6 @@ function PlanejarPage() {
     setAuthUser,
   ] =
     useState<AuthUser | null>(null);
-
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsLoading, setSettingsLoading] = useState(false);
-  const [settingsSaving, setSettingsSaving] = useState(false);
-  const [settingsMessage, setSettingsMessage] = useState("");
-  const [requireEmailVerification, setRequireEmailVerification] = useState(true);
-
 
   /*
    * =========================================================
@@ -1288,32 +1280,6 @@ function PlanejarPage() {
         </div>
 
         <div className="border-t border-border p-3">
-          <button
-            type="button"
-            onClick={async () => {
-              setSettingsOpen(true);
-              setSettingsLoading(true);
-              setSettingsMessage("");
-              try {
-                const response = await fetch("/api/settings", {
-                  credentials: "include",
-                  cache: "no-store",
-                });
-                const data = await response.json();
-                if (!response.ok || !data?.success) throw new Error(data?.message || "Não foi possível carregar.");
-                setRequireEmailVerification(Boolean(data.settings.requireEmailVerification));
-              } catch (error) {
-                setSettingsMessage(error instanceof Error ? error.message : "Não foi possível carregar.");
-              } finally {
-                setSettingsLoading(false);
-              }
-            }}
-            className="mb-3 flex w-full items-center gap-3 rounded-xl border border-border bg-background/70 px-3 py-2.5 text-left text-sm font-medium transition-all duration-300 hover:border-primary/30 hover:bg-card"
-          >
-            <Settings className="h-4 w-4 text-muted-foreground" />
-            Configurações
-          </button>
-
           <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 px-3 py-3">
             {authUser?.picture ? (
               <img src={authUser.picture} alt={profileName} className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-border" referrerPolicy="no-referrer" />
@@ -1566,74 +1532,6 @@ function PlanejarPage() {
           </div>
         </div>
       </section>
-      {settingsOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md animate-in fade-in duration-200"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setSettingsOpen(false);
-          }}
-        >
-          <div className="w-full max-w-lg overflow-hidden rounded-3xl border border-border bg-card shadow-2xl shadow-black/50 animate-in zoom-in-95 slide-in-from-bottom-3 duration-300">
-            <div className="flex items-start justify-between border-b border-border px-6 py-5">
-              <div>
-                <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-primary">Segurança</p>
-                <h2 className="mt-1 text-xl font-semibold">Configurações</h2>
-                <p className="mt-1 text-xs text-muted-foreground">Controle a segurança da sua conta.</p>
-              </div>
-              <button type="button" onClick={() => setSettingsOpen(false)} className="rounded-lg px-2 py-1 text-xl text-muted-foreground transition hover:bg-background hover:text-foreground" aria-label="Fechar">×</button>
-            </div>
-            <div className="p-6">
-              {settingsLoading ? (
-                <div className="flex items-center gap-3 py-6 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" /> Carregando...
-                </div>
-              ) : (
-                <div className="rounded-2xl border border-border bg-background/40 p-4">
-                  <div className="flex items-center justify-between gap-5">
-                    <div>
-                      <h3 className="text-sm font-medium">Verificação em duas etapas</h3>
-                      <p className="mt-1 text-xs leading-5 text-muted-foreground">Exige um código enviado por e-mail em novos logins. O primeiro acesso sempre exige verificação.</p>
-                    </div>
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={requireEmailVerification}
-                      disabled={settingsSaving}
-                      onClick={async () => {
-                        const next = !requireEmailVerification;
-                        setRequireEmailVerification(next);
-                        setSettingsSaving(true);
-                        setSettingsMessage("");
-                        try {
-                          const response = await fetch("/api/settings", {
-                            method: "PATCH",
-                            credentials: "include",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ requireEmailVerification: next }),
-                          });
-                          const data = await response.json();
-                          if (!response.ok || !data?.success) throw new Error(data?.message || "Não foi possível salvar.");
-                          setRequireEmailVerification(Boolean(data.settings.requireEmailVerification));
-                          setSettingsMessage("Configuração salva.");
-                        } catch (error) {
-                          setRequireEmailVerification(!next);
-                          setSettingsMessage(error instanceof Error ? error.message : "Não foi possível salvar.");
-                        } finally {
-                          setSettingsSaving(false);
-                        }
-                      }}
-                      className={`relative h-7 w-12 shrink-0 rounded-full border transition-all duration-300 ${requireEmailVerification ? "border-primary/50 bg-primary/20" : "border-border bg-background"}`}
-                    >
-                      <span className={`absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full border transition-all duration-300 ${requireEmailVerification ? "left-6 border-primary bg-primary" : "left-1 border-border bg-card"}`} />
-                    </button>
-                  </div>
-                  {settingsMessage && <p className="mt-3 text-xs text-muted-foreground">{settingsMessage}</p>}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
