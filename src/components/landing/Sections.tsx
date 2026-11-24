@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from "react";
+
 import { Reveal, SectionHeading } from "./primitives";
 
 const cardClass =
@@ -127,26 +129,15 @@ export function ContextSection() {
           />
         </Reveal>
 
-        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="frt-band mt-14">
           {marketData.map((item, i) => (
             <Reveal key={item.value + item.label} delay={i * 80}>
-              <HoverCard className="h-full p-6">
-                <p className="text-4xl font-semibold tracking-tight text-gradient-energy">
-                  {item.value}
-                </p>
-
-                <p className="mt-4 text-sm font-medium text-foreground">
-                  {item.label}
-                </p>
-
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {item.detail}
-                </p>
-
-                <p className="mt-5 border-t border-border pt-4 text-[10px] leading-relaxed tracking-wide text-muted-foreground uppercase">
-                  {item.source}
-                </p>
-              </HoverCard>
+              <div className="frt-band-item">
+                <p className="frt-band-value">{item.value}</p>
+                <p className="frt-band-label">{item.label}</p>
+                <p className="frt-band-detail">{item.detail}</p>
+                <p className="frt-band-source">{item.source}</p>
+              </div>
             </Reveal>
           ))}
         </div>
@@ -249,6 +240,44 @@ export function HowSection() {
     },
   ];
 
+  const listRef = useRef<HTMLOListElement>(null);
+  const [progress, setProgress] = useState(0);
+  const [reached, setReached] = useState(0);
+
+  useEffect(() => {
+    let raf = 0;
+
+    const update = () => {
+      raf = 0;
+      const list = listRef.current;
+      if (!list) return;
+
+      const line = window.innerHeight * 0.62;
+      const r = list.getBoundingClientRect();
+      setProgress(Math.min(1, Math.max(0, (line - r.top) / r.height)));
+
+      let hit = 0;
+      Array.from(list.children).forEach((li, i) => {
+        if (li.getBoundingClientRect().top < line) hit = i;
+      });
+      setReached(hit);
+    };
+
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
   return (
     <section
       id="como-funciona"
@@ -263,29 +292,42 @@ export function HowSection() {
           />
         </Reveal>
 
-        <ol className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {steps.map((s, i) => (
-            <Reveal as="li" key={s.n} delay={i * 70}>
-              <HoverCard className="h-full p-6">
-                <span className="text-sm font-mono text-primary">
-                  {s.n}
+        <div className="frt-method mt-14">
+          <div className="frt-method-side" aria-hidden>
+            <p className="frt-label">Etapa</p>
+
+            <div className="frt-method-big">
+              <div className="frt-roller">
+                <span style={{ transform: `translate3d(0, ${reached * -1}em, 0)` }}>
+                  {steps.map((s) => (
+                    <span key={s.n}>{s.n}</span>
+                  ))}
                 </span>
+              </div>
 
-                <h3 className="mt-3 text-lg font-semibold">
-                  {s.t}
-                </h3>
+              <span className="frt-method-total">/ {String(steps.length).padStart(2, "0")}</span>
+            </div>
+          </div>
 
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {s.d}
-                </p>
+          <ol ref={listRef} className="frt-method-list">
+            <span className="frt-rail" aria-hidden>
+              <i style={{ transform: `scaleY(${progress})` }} />
+            </span>
 
-                <div className="mt-5 h-px w-full overflow-hidden bg-border">
-                  <div className="h-full w-0 bg-gradient-energy transition-all duration-700 ease-out group-hover:w-full" />
-                </div>
-              </HoverCard>
-            </Reveal>
-          ))}
-        </ol>
+            {steps.map((s, i) => (
+              <li
+                key={s.n}
+                className="frt-step"
+                data-on={i <= reached}
+              >
+                <span className="frt-dot" aria-hidden />
+                <p className="frt-label frt-sig">{s.n}</p>
+                <h3>{s.t}</h3>
+                <p className="frt-step-d">{s.d}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </section>
   );

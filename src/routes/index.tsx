@@ -64,7 +64,7 @@ function Index() {
   useSmoothScroll();
 
   return (
-    <div className="frt min-h-screen bg-background">
+    <div id="top" className="frt min-h-screen bg-background">
       <SiteHeader />
 
       <main>

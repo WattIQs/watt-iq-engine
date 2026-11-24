@@ -1228,3 +1228,79 @@ button.bg-gradient-energy:hover::after {
   .sc-kenburns, .sc-in, .sc-out, .sc-fade, .frt-drift, .sc-title .sc-rise { animation: none !important; }
   .sc-progress { animation-duration: 6000ms !important; }
 }
+
+/* =========================================================
+   FRT v2 — reflexos suavizados + estrutura inspirada no modelo
+   ========================================================= */
+
+/* reflexos: sem brilhos borrados, sem faixa de luz nos cards */
+.frt .animate-energy-pulse { display: none; }
+.frt .glow-energy { box-shadow: none; }
+.frt .tilt-card-shine,
+.frt .tilt-card::before,
+.frt .tilt-card::after { display: none !important; }
+.frt .smooth-hover-card-wrapper::before,
+.frt .smooth-hover-card-wrapper::after,
+.frt .surface-card::before,
+.frt .surface-card::after { display: none !important; }
+.frt .shadow-2xl { box-shadow: 0 24px 60px -34px rgb(0 0 0 / 0.55); }
+.frt #cta > div:first-child { display: none; }
+.frt .frt-hero-photo img { opacity: 0.7; }
+
+/* numeração técnica dos títulos de seção: 01 / ... */
+.frt { counter-reset: eb; }
+.frt .section-eyebrow { counter-increment: eb; border: 0; background: none; padding: 0; color: var(--primary); }
+.frt .section-eyebrow::before { content: counter(eb, decimal-leading-zero) " / "; }
+.frt .section-eyebrow-dot { display: none; }
+
+.frt-label { font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-foreground); }
+.frt-sig { color: var(--primary); }
+
+/* faixa de números (contexto de mercado) */
+.frt-band { display: grid; background: var(--primary); color: var(--primary-foreground); }
+.frt-band-item { padding: 2rem 1.5rem; border-bottom: 1px solid color-mix(in oklab, var(--primary-foreground) 25%, transparent); height: 100%; }
+.frt-band-value { font-size: clamp(2rem, 4.4vw, 3.5rem); font-weight: 500; letter-spacing: -0.03em; line-height: 1; }
+.frt-band-label { margin-top: 0.9rem; font-size: 0.875rem; font-weight: 600; }
+.frt-band-detail { margin-top: 0.35rem; font-size: 0.8125rem; opacity: 0.8; }
+.frt-band-source { margin-top: 1rem; font-size: 0.625rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; }
+@media (min-width: 640px) { .frt-band { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1024px) {
+  .frt-band { grid-template-columns: repeat(4, 1fr); }
+  .frt-band > .reveal + .reveal .frt-band-item { border-left: 1px solid color-mix(in oklab, var(--primary-foreground) 25%, transparent); }
+  .frt-band-item { border-bottom: 0; padding: 2.5rem 1.75rem; }
+}
+
+/* método com trilho e rolo de número */
+.frt-method { display: grid; gap: 2rem; }
+.frt-method-side { display: none; }
+.frt-method-list { position: relative; list-style: none; margin: 0; padding: 0; }
+.frt-rail { position: absolute; inset: 0 auto 0 0; width: 1px; background: color-mix(in oklab, var(--foreground) 18%, transparent); }
+.frt-rail i { position: absolute; inset: 0; background: var(--primary); transform-origin: top; }
+.frt-step { position: relative; padding: 2rem 0 2rem 2rem; transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1); }
+.frt-step[data-on="false"] { opacity: 0.32; }
+.frt-dot { position: absolute; left: -4px; top: 2.25rem; width: 9px; height: 9px; background: var(--primary); transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.frt-step[data-on="false"] .frt-dot { transform: scale(0); }
+.frt-step h3 { margin-top: 0.9rem; font-size: 1.75rem; }
+.frt-step-d { margin-top: 0.8rem; max-width: 32rem; line-height: 1.6; color: var(--muted-foreground); }
+@media (min-width: 768px) {
+  .frt-method { grid-template-columns: repeat(12, 1fr); gap: 3rem; }
+  .frt-method-side { display: block; grid-column: span 4; }
+  .frt-method-side > div { position: sticky; top: 8rem; }
+  .frt-method-list { grid-column: 6 / 13; }
+  .frt-step { padding: 3.25rem 0 3.25rem 3.25rem; }
+  .frt-dot { top: 3.5rem; }
+  .frt-step h3 { font-size: 2.6rem; }
+  .frt-step-d { font-size: 1.0625rem; }
+  .frt-method-big { display: flex; align-items: baseline; gap: 1rem; margin-top: 1.25rem; font-weight: 500; }
+  .frt-roller { height: 1em; overflow: hidden; line-height: 1; font-size: clamp(6rem, 12vw, 10rem); letter-spacing: -0.04em; font-variant-numeric: tabular-nums; color: var(--primary); }
+  .frt-roller > span { display: flex; flex-direction: column; transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1); }
+  .frt-roller > span > span { height: 1em; }
+  .frt-method-total { font-size: 1.5rem; color: var(--muted-foreground); }
+}
+
+/* rodapé com marca gigante */
+.frt-footer { overflow: hidden; }
+.frt-footer-mark { margin: 2rem 0 0; user-select: none; white-space: nowrap; text-align: center; font-size: 24vw; font-weight: 700; line-height: 0.8; letter-spacing: -0.03em; color: color-mix(in oklab, var(--foreground) 6%, transparent); }
+@media (prefers-reduced-motion: reduce) {
+  .frt-roller > span, .frt-step, .frt-dot { transition: none; }
+}
