@@ -11,6 +11,17 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden border-b border-border">
+      <div className="frt-hero-photo pointer-events-none absolute inset-0" aria-hidden>
+        <img
+          src="https://images.unsplash.com/photo-1786913508324-13b77bf4e299?auto=format&fit=crop&w=2400&h=1500&q=60"
+          alt=""
+          className="frt-drift h-full w-full object-cover"
+          fetchPriority="high"
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+          }}
+        />
+      </div>
       <div className="grid-backdrop pointer-events-none absolute inset-0 opacity-70" aria-hidden />
       <div
         className="pointer-events-none absolute -top-40 left-1/2 h-[320px] w-[620px] -translate-x-1/2 rounded-full opacity-[0.14] blur-3xl animate-energy-pulse"

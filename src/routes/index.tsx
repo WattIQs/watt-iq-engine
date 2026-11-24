@@ -20,6 +20,8 @@ import {
   CtaSection,
 } from "@/components/landing/Sections";
 
+import { ShowcaseSection } from "@/components/landing/ShowcaseSection";
+
 const title =
   "WattIQ — Energia medida. Inteligência aplicada.";
 
@@ -62,7 +64,7 @@ function Index() {
   useSmoothScroll();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="frt min-h-screen bg-background">
       <SiteHeader />
 
       <main>
@@ -71,6 +73,8 @@ function Index() {
         <ProblemSection />
 
         <ContextSection />
+
+        <ShowcaseSection />
 
         <SolutionSection />
 
