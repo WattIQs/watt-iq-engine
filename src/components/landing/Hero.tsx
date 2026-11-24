@@ -1,5 +1,7 @@
+import { useEffect, useRef } from "react";
+
 import { useParallax } from "@/hooks/use-scroll-progress";
-import { TiltCard } from "./primitives";
+import { RiseWords, TiltCard } from "./primitives";
 
 const logo = "/wattiq-logo.png";
 
@@ -8,9 +10,40 @@ const bars = [38, 52, 44, 66, 58, 79, 71, 92];
 export function Hero() {
   const ambient = useParallax(0.055);
   const panelOffset = useParallax(-0.025);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const el = sectionRef.current;
+
+    if (!el) return;
+
+    let raf = 0;
+
+    const update = () => {
+      raf = 0;
+
+      const p = Math.min(1, Math.max(0, window.scrollY / el.offsetHeight));
+
+      el.style.setProperty("--hero-p", p.toFixed(3));
+    };
+
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
 
   return (
-    <section className="relative overflow-hidden border-b border-border">
+    <section ref={sectionRef} className="frt-hero relative overflow-hidden border-b border-border">
       <div className="frt-hero-photo pointer-events-none absolute inset-0" aria-hidden>
         <img
           src="https://images.unsplash.com/photo-1786913508324-13b77bf4e299?auto=format&fit=crop&w=2400&h=1500&q=60"
@@ -28,7 +61,7 @@ export function Hero() {
         style={{ background: "var(--gradient-energy)", transform: `translate3d(-50%, ${ambient}px, 0)` }}
         aria-hidden
       />
-      <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 py-20 lg:grid-cols-[1.05fr_1fr] lg:py-28">
+      <div className="frt-hero-copy relative mx-auto grid max-w-6xl items-center gap-14 px-5 py-20 lg:grid-cols-[1.05fr_1fr] lg:py-24">
         <div className="animate-rise">
           <img
             src={logo}
@@ -37,12 +70,16 @@ export function Hero() {
             width={320}
             height={128}
           />
-          <p className="mt-8 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium tracking-widest text-primary uppercase">
+          <p className="frt-eyebrow mt-8">
+            <i aria-hidden />
             Energia medida. Inteligência aplicada.
           </p>
           <h1 className="mt-5 text-4xl leading-[1.05] font-semibold text-balance sm:text-5xl lg:text-6xl">
-            Transforme o consumo de energia da sua empresa em{" "}
-            <span className="text-gradient-energy">inteligência</span>.
+            <RiseWords text="Transforme o consumo de energia da sua empresa em" />{" "}
+            <span className="text-gradient-energy">
+              <RiseWords text="inteligência" from={9} />
+            </span>
+            <span aria-hidden>.</span>
           </h1>
           <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
             A WattIQ monitora e analisa o consumo energético da sua operação, transforma dados em

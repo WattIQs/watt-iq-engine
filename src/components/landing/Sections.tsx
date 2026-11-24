@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
-import { Reveal, SectionHeading } from "./primitives";
+import {
+  CountValue,
+  Reveal,
+  ScrubText,
+  SectionHeading,
+} from "./primitives";
 
 const cardClass =
   "surface-card smooth-hover-card group rounded-lg border border-border bg-card";
@@ -133,7 +138,9 @@ export function ContextSection() {
           {marketData.map((item, i) => (
             <Reveal key={item.value + item.label} delay={i * 80}>
               <div className="frt-band-item">
-                <p className="frt-band-value">{item.value}</p>
+                <p className="frt-band-value">
+                  <CountValue value={item.value} />
+                </p>
                 <p className="frt-band-label">{item.label}</p>
                 <p className="frt-band-detail">{item.detail}</p>
                 <p className="frt-band-source">{item.source}</p>
@@ -191,16 +198,11 @@ export function SolutionSection() {
           ))}
         </div>
 
-        <Reveal delay={200}>
-          <HoverCard className="mx-auto mt-14 max-w-3xl border-primary/30 p-8 text-center">
-            <p className="text-lg leading-relaxed">
-              Não existe um <strong>consumo ideal universal</strong>.
-              Eficiência precisa ser avaliada dentro do contexto da
-              operação: atividade, porte, área, horários, equipamentos,
-              setores e histórico.
-            </p>
-          </HoverCard>
-        </Reveal>
+        <div className="mx-auto mt-20 max-w-4xl border-t border-border pt-12">
+          <ScrubText className="frt-lead">
+            Não existe um consumo ideal universal. Eficiência precisa ser avaliada dentro do contexto da operação: atividade, porte, área, horários, equipamentos, setores e histórico.
+          </ScrubText>
+        </div>
       </div>
     </section>
   );
@@ -497,7 +499,7 @@ export function IntelligenceSection() {
                   </p>
 
                   <p className="mt-1 text-2xl font-semibold text-gradient-energy">
-                    +14%
+                    <CountValue value="+14%" />
                   </p>
                 </div>
 
