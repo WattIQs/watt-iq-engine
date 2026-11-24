@@ -305,11 +305,12 @@ export function RiseWords({
 }) {
   return (
     <>
-      {text.split(" ").map((w, i) => (
+      {text.split(" ").map((w, i, arr) => (
         <span key={`${w}-${i}`} className={cn("frt-w", className)}>
           <span style={{ animationDelay: `${(from + i) * step + 200}ms` }}>
             {w}
-          </span>{" "}
+          </span>
+          {i < arr.length - 1 ? " " : null}
         </span>
       ))}
     </>
